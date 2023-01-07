@@ -1,48 +1,69 @@
 import consts from "./consts";
-import rayAxis from "./rayAxis";
+import RayAxis from "./rayAxis";
 import { RayAction, Side, Vector } from "./types";
 
+export type BlockHandler =  (x: number, y: number, distance: number) => RayAction;
+class Ray {
+    private blockHandler: BlockHandler;
+    private axisX: RayAxis;
+    private axisY: RayAxis;
+    private distance: number;
+    private side: Side;
+    private mirrors: number;
 
-function goto(v: Vector, stepX: number, stepY: number, max: number, blockHandler: (x: number, y: number, distance: number) => RayAction): boolean {
-    const axisX = new rayAxis(0, v.x, stepX);
-    const axisY = new rayAxis(0, v.y, stepY);
-    let distance = 0;
-    const getSide = (): Side => {
-        const dx = axisX.getDistance();
-        const dy = axisY.getDistance();
+    constructor(vector: Vector, blockHandler: BlockHandler) {
+        this.blockHandler = blockHandler;
+
+        const stepX = consts.blockSize / Math.cos(vector.angle);
+        const stepY = consts.blockSize / Math.sin(vector.angle);
+        this.axisX = new RayAxis(0, vector.x, stepX);
+        this.axisY = new RayAxis(0, vector.y, stepY);
+        this.distance = 0;
+        this.side = this.getSide();
+        this.mirrors = 0;
+    }
+
+    private getSide(): Side {
+        const dx = this.axisX.getDistance();
+        const dy = this.axisY.getDistance();
         return dx == dy ? Side.corner : dx > dy ? Side.x : Side.y;
-    };
-    let side = getSide();
-    let mirrors = 0;
-    while(distance + (mirrors * consts.blockSize) < max) {
-        const action = blockHandler(axisX.getBlock(), axisY.getBlock(), distance);
+    }
+
+    private handleStep(): boolean {
+        const action = this.blockHandler(this.axisX.getBlock(), this.axisY.getBlock(), this.distance);
         if (action == RayAction.stop) {
             return true;
         }
 
         if (action == RayAction.mirror) {
-            if (side == Side.corner || side == Side.x) {
-                mirrors += 1;//Math.abs(stepY);
-                axisY.mirror();
+            if (this.side == Side.corner || this.side == Side.x) {
+                this.mirrors += 1;
+                this.axisY.mirror();
             }
-            if (side == Side.corner || side == Side.y) {
-                mirrors += 1; //Math.abs(stepX);
-                axisX.mirror();
+            if (this.side == Side.corner || this.side == Side.y) {
+                this.mirrors += 1;
+                this.axisX.mirror();
             }
         }
 
-        side = getSide();
-        if (side == Side.corner || side == Side.x) {
-            distance = axisY.step();
+        this.side = this.getSide();
+        if (this.side == Side.corner || this.side == Side.x) {
+            this.distance = this.axisY.step();
         }
-        if (side == Side.corner || side == Side.y) {
-            distance = axisX.step();
+        if (this.side == Side.corner || this.side == Side.y) {
+            this.distance = this.axisX.step();
         }
+
+        return false;
     }
-    
-    return false;
+
+    public send(max: number): boolean {
+        while(this.distance + (this.mirrors * consts.blockSize) < max) {
+            const stop = this.handleStep();
+            if (stop) return true;
+        }
+        return false;
+    }
 }
 
-export default {
-    goto    
-}
+export default Ray;

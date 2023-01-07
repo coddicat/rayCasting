@@ -14,8 +14,8 @@
 import map from '@/data/map';
 import player from '@/data/player';
 import { defineComponent, ref } from 'vue';
-import rayCasting from '@/data/rayCasting';
 import consts from '@/data/consts';
+import RayCasting from '@/data/rayCasting';
 
 export default defineComponent({
   name: 'HomeView',
@@ -50,7 +50,7 @@ export default defineComponent({
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'white';
-      map.drawMap(1.7, ctx);
+      map.drawMap(ctx);
       player.drawOnMap(1.7, ctx);
       ctx.restore();
     }
@@ -66,9 +66,9 @@ export default defineComponent({
       const tempCtx = tempCanvas.getContext("2d");
       if (!tempCtx) return;
       const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);
-      rayCasting.draw3D(imageData);
+      const rayCasting = new RayCasting(imageData);
+      rayCasting.draw3D();
       tempCtx.putImageData(imageData, 0, 0);
-
 
       ctx.save();
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -96,7 +96,6 @@ export default defineComponent({
     } 
 
     const stopped = ref(false);
-    let updates = true;
     function tick() {
       if (stopped.value) return;
       const now = new Date().getTime();
@@ -105,13 +104,10 @@ export default defineComponent({
         fps = Math.ceil(1000 / diff);
         fpsDisplay.value = fps;
       }
-      renderMap();
-      updates = keyHandler(now) || updates;
-      updates = player.tick(now) || updates;
-      if(updates) {
-        renderMain();
-        updates = false;
-      }
+      //renderMap();
+      keyHandler(now);
+      player.tick(now);
+      renderMain();
       lastTime = now;
       //setTimeout(tick, 0);
       window.requestAnimationFrame(tick);

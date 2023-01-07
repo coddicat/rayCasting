@@ -1,17 +1,9 @@
 import consts from "./consts";
-export default class {
+export default class RayAxis {
     private _sign: number;
     private _step: number;
     private _block: number;
     private _distance: number;
-
-    private getRest(position: number): number {
-        const rest = Math.abs(position % consts.blockSize);
-        if (position < 0) {
-            return this._sign < 0 ? consts.blockSize - rest : rest; 
-        }
-        return this._sign < 0 ? rest : consts.blockSize - rest; 
-    }
 
     constructor(initDistance: number, from: number, step: number) {
         this._sign = Math.sign(step);
@@ -19,6 +11,14 @@ export default class {
         const rest = this.getRest(from);
         this._block = Math.floor(from / consts.blockSize);
         this._distance = initDistance + this._step * rest / consts.blockSize
+    }
+
+    private getRest(position: number): number {
+        const rest = Math.abs(position % consts.blockSize);
+        if (position < 0) {
+            return this._sign < 0 ? consts.blockSize - rest : rest; 
+        }
+        return this._sign < 0 ? rest : consts.blockSize - rest; 
     }
 
     public step(): number {

@@ -1,6 +1,8 @@
 import consts from "./consts";
-import map from "./map";
-import ray from "./ray";
+import map, { MapItemType } from "./map";
+import Ray from "./ray";
+import { BlockHandler } from "./ray";
+import RayHandler from "./rayHandler";
 import { RayAction, Vector } from "./types";
 
 const player = {
@@ -23,24 +25,29 @@ function drawLook(scale: number, ctx: CanvasRenderingContext2D) {
     const from = player.angle - consts.lookAngle / 2;
     const to = player.angle + consts.lookAngle / 2;
     for (let angle = from; angle < to; angle += consts.lookMapStep) {
-        const stepX = consts.blockSize / Math.cos(angle);
-        const stepY = consts.blockSize / Math.sin(angle);
-        const fix = Math.cos(player.angle - angle);
-        
-        const found = ray.goto({
+        const fixDistance = Math.cos(player.angle - angle);
+        const rayVector: Vector = {
             x: player.x,
             y: player.y,
             angle: angle
-        }, stepX, stepY, consts.deep / fix, (x,y,d) => blockHandler(angle, x, y, d));
+        }
+        const handler: BlockHandler = (x, y, d) => blockHandler(angle, x, y, d);
+        const maxDistance = consts.deep / fixDistance;
+        const ray = new Ray(rayVector, handler);
+        const completed = ray.send(maxDistance);    
         
-        if (!found) drawLookRay(scale, ctx, angle, consts.deep / fix);
+        if (!completed) drawLookRay(scale, ctx, angle, consts.deep / fixDistance);
     }
     return;
 
     function blockHandler(angle: number, blockX: number, blockY: number, distance: number): RayAction {
         const found = map.check(blockX, blockY);
-        if (found == '#') drawLookRay(scale, ctx, angle, distance);
-        return  found == '#' ? RayAction.stop : RayAction.continue;
+        if (!found) return RayAction.continue;
+        const item = map.getItem(found);
+        if (!item.stopRay) return RayAction.continue;
+
+        drawLookRay(scale, ctx, angle, distance)
+        return RayAction.stop;
     }
 }
 
@@ -59,6 +66,20 @@ function drawOnMap(scale: number, ctx: CanvasRenderingContext2D) {
     drawLook(scale, ctx);
 }
 
+function checkMoveCollision(bx: number, by: number): RayAction {
+    const collision = [MapItemType.Wall, MapItemType.ColoredWall, MapItemType.Mirror];
+    const found = map.check(bx, by);
+    if (found && collision.includes(found)) {
+        return RayAction.stop
+    } 
+    return RayAction.continue;
+}
+const collisionDistance = 0.5;
+function fixDistance(d: number): number {
+    d -= collisionDistance;
+    if (d < 0) d = 0;
+    return d;
+}
 function moveForward(moving: boolean, now: number, direction: number): boolean {    
     if (!moving) {
         player.moving = null;
@@ -66,16 +87,53 @@ function moveForward(moving: boolean, now: number, direction: number): boolean {
     }
     if (player.moving) {
         const t = (now - player.moving);
-        const nx = player.x + Math.cos(player.angle) * consts.moveSpeed * t * direction;
-        const ny = player.y + Math.sin(player.angle) * consts.moveSpeed * t * direction;
-        if (checkNewPos(nx, ny)) {
-            player.x = nx;
-            player.y = ny;
-        } else if(checkNewPos(nx, player.y)) {
-            player.x = nx;
-        } else if(checkNewPos(player.x, ny)) {
-            player.y = ny;
-        }
+        const cos = Math.cos(player.angle);
+        const sin = Math.sin(player.angle);
+        const distance = consts.moveSpeed * t;
+        const xDistance = cos * distance;
+        const yDistance = sin * distance;
+
+        let nx = player.x + xDistance * direction;
+        let ny = player.y + yDistance * direction;
+
+        const xSign = Math.sign(cos * direction);
+        const ySign = Math.sign(sin * direction);
+        const xAngle = xSign < 0 ? Math.PI : 0;
+        const yAngle = ySign < 0 ? Math.PI * 1.5 : Math.PI / 2;
+        const vx: Vector = {
+            x: player.x,
+            y: player.y,
+            angle: xAngle
+        };
+        const vy: Vector = {
+            x: player.x,
+            y: player.y,
+            angle: yAngle
+        };
+        const handleX: BlockHandler = (bx, by, d) => {
+            const rayAction = checkMoveCollision(bx, by);
+            if (rayAction == RayAction.stop) {
+                d = fixDistance(d);
+                nx = player.x + d * xSign;
+            }
+            return rayAction;
+        };
+        const handleY: BlockHandler = (bx, by, d) => {
+            const rayAction = checkMoveCollision(bx, by);
+            if (rayAction == RayAction.stop) {
+                d = fixDistance(d);
+                ny = player.y + d * ySign;
+            }
+            return rayAction;
+        };
+        const rayX = new Ray(vx, handleX);
+        const rayY = new Ray(vy, handleY);
+
+        rayX.send(Math.abs(xDistance) + collisionDistance);
+        rayY.send(Math.abs(yDistance) + collisionDistance);
+
+        player.x = nx;
+        player.y = ny;
         checkFloor();
     }
     player.moving = now;
@@ -98,32 +156,6 @@ function checkFloor() {
 function fall() {
     player.jumping = player.jumping ?? new Date().getTime();
 }
-function checkNewPos(x: number, y: number): boolean {
-    const collision = ['#','@', 'M'];
-
-    const c = [0, 0.5, -0.5];
-    for(let i = 0; i < c.length; i++)
-        for(let j = 0; j < c.length; j++) {
-            const mx = Math.floor((x+c[i]) / consts.blockSize);
-            const my = Math.floor((y+c[i]) / consts.blockSize);
-            const found = map.check(mx, my);
-            if (found) {
-                if(collision.includes(found)) {
-                    return false;
-                }
-                const item = map.getItem(found);
-                const fw = item.walls.find(w => w.bottom < player.z && w.top > player.z - consts.playerHeight + 0.01);
-                if(fw) {
-                    return false;
-                }
-                const fl = item.levels.find(w => player.z > w.bottom && player.z - consts.playerHeight + 0.01 < w.bottom);
-                if(fl) {
-                    return false;
-                }
-            }
-        }
-    return true;
-}
 
 function turn(turning: boolean, now: number, direction: number): boolean {
     if (!turning) {
@@ -137,11 +169,6 @@ function turn(turning: boolean, now: number, direction: number): boolean {
     player.turning = now;
     return true;
 }
-
-
-// function turn(direction: number) {
-//     player.angle += direction * consts.playerTurn;
-// }
 
 function jump(now: number): void {
     if (player.jumping) {

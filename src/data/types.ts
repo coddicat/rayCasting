@@ -31,6 +31,6 @@ export enum RayAction {
 
 export enum Side {
     x,
-    y, 
+    y,
     corner
 }
