@@ -1,4 +1,3 @@
-//import { Color } from "./color";
 import consts from "./consts";
 class Painter {
     private static limitX(x: number ): number {

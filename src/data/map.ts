@@ -1,7 +1,6 @@
 import consts from "./consts";
-import { getPlayerVector, Level, MapItem, PlayerState } from "./types";
-//import { Color } from './color';
-//   012345678901234567890123456789012345678901234567890
+import { Level, MapItem, PlayerState } from "./types";
+
 const map = [
     "#####@@@@#####@@@@########MMMMM#############MMMMMM#",
     "#                   KK      L                     M",
@@ -49,9 +48,8 @@ const map = [
 
 
 function drawMap(ctx: CanvasRenderingContext2D, playerState: PlayerState) {
-    const v = getPlayerVector(playerState);
-    const sx = v.x - ctx.canvas.width / 2;
-    const sy = v.y - ctx.canvas.height / 2;
+    const sx = playerState.x - ctx.canvas.width / 2;
+    const sy = playerState.y - ctx.canvas.height / 2;
     for(let row = 0; row < map.length; row++) {
         for(let col = 0; col < map[row].length; col++) {
             const key = fixedMap[row][col];
@@ -67,12 +65,12 @@ function drawMap(ctx: CanvasRenderingContext2D, playerState: PlayerState) {
 } 
 
 const ceil: Level = {
-    color: 0xCD9BCD, //new Color(205, 155, 205),
+    color: 0xCD9BCD,
     bottom: 6
 };
 
 const floor: Level = {
-    color: 0xC8C8DC, //new Color(200, 200, 220),
+    color: 0xC8C8DC,
     bottom: 0
 };
 

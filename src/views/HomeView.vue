@@ -32,9 +32,17 @@ export default defineComponent({
       this.currentKey.set(e.code, false);
     };
 
+    if (!this.mainCanvas) throw "no canvas";
+    const ctx = this.mainCanvas.getContext("2d", { alpha: false });
+    if (!ctx) throw "cannot get context";
+    this.context = ctx;
+    
     this.renderMap();
     this.start();
   },
+
+
+  
   unmounted(){
     this.stop();
   },
@@ -71,27 +79,28 @@ export default defineComponent({
     //   }
     // }
 
+    const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
+    tempCanvas.width = consts.lookWidth;
+    tempCanvas.height = consts.lookHeight;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) {
+      throw "Cannot get context";
+    }
+    const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
+    const rayCasting = new RayCasting(imageData, playerState);
+    const context = ref(null as null | CanvasRenderingContext2D);
+
     async function renderMain(): Promise<void> {
-      if (!mainCanvas.value) return;
-      const ctx = mainCanvas.value.getContext("2d", { alpha: false });
-      if (!ctx) return;
-
-      const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
-      tempCanvas.width = consts.lookWidth;
-      tempCanvas.height = consts.lookHeight;
-      const tempCtx = tempCanvas.getContext("2d");
-      if (!tempCtx) return;
-
-      const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
-      const rayCasting1 = new RayCasting(imageData, playerState);
-      rayCasting1.draw3D();
+      if (!tempCtx || !context.value) return;
+      rayCasting.reset();
+      rayCasting.draw3D();
       tempCtx.putImageData(imageData, 0, 0);
 
-      ctx.save();
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.scale(ctx.canvas.width / consts.lookWidth, ctx.canvas.height / consts.lookHeight);
-      ctx.drawImage(tempCanvas, 0, 0);
-      ctx.restore();
+      context.value.save();
+      context.value.clearRect(0, 0, context.value.canvas.width, context.value.canvas.height);
+      context.value.scale(context.value.canvas.width / consts.lookWidth, context.value.canvas.height / consts.lookHeight);
+      context.value.drawImage(tempCanvas, 0, 0);
+      context.value.restore();
     }
 
     function keyHandler(now: number): boolean {
@@ -131,6 +140,7 @@ export default defineComponent({
     }
 
     return {
+      context,
       currentKey,
       mainCanvas,
       mapCanvas,

@@ -3,26 +3,38 @@ import Ray, { BlockHandler } from "./ray";
 import RayAxis from "./rayAxis";
 import RayHandler from "./rayHandler";
 import Render from "./render";
-import { getPlayerVector, PlayerState, Side, Vector } from "./types";
+import { PlayerState, Side, Vector } from "./types";
 const angleStep = consts.lookAngle / consts.lookWidth;
 const halfLookAngle = consts.lookAngle / 2;
+
+const buf = new ArrayBuffer(consts.lookHeight * consts.lookWidth * 4);
+const buf8 = new Uint8ClampedArray(buf);
+const data = new Uint32Array(buf);
+
 class RayCasting {
     private imageData: ImageData;
-    private vector: Vector;
+    // private vector: Vector;
     private playerState: PlayerState;
-    private data: Uint32Array;
-    private buf8: Uint8ClampedArray;
+    // private data: Uint32Array;
+    // private buf8: Uint8ClampedArray;
 
     constructor(imageData: ImageData, playerState: PlayerState) {
         this.imageData = imageData;
         this.playerState = playerState;
-        this.vector = getPlayerVector(playerState);
+        // this.vector = playerState;
         
-        const buf = new ArrayBuffer(imageData.data.length);
-        this.buf8 = new Uint8ClampedArray(buf);
-        this.data = new Uint32Array(buf);
+
+        // const buf = new ArrayBuffer(imageData.data.length);
+        // this.buf8 = new Uint8ClampedArray(buf);
+        // this.data = new Uint32Array(buf);
+
+        data.fill(0);
     }
 
+    public reset(): void {
+      data.fill(0);
+      //this.vector = getPlayerVector(playerState);
+    }
 
     private findIntersection(point: {x: number, y: number}, angle: number, cycleCenter: {x: number, y: number}, cycleRadius: number): number | null {
         // Find the intersection of the line defined by the point and angle with the circle defined by the cycle
@@ -59,11 +71,11 @@ class RayCasting {
       }
       
     private handleAngle(angle: number, displayX: number): void {
-        const fixDistance = Math.cos(this.vector.angle - angle);
-        const rayHandler = new RayHandler(this.data, { fixDistance, displayX }, this.playerState);
+        const fixDistance = Math.cos(this.playerState.angle - angle);
+        const rayHandler = new RayHandler(data, { fixDistance, displayX }, this.playerState);
         const rayVector: Vector = {
-            x: this.vector.x,
-            y: this.vector.y,
+            x: this.playerState.x,
+            y: this.playerState.y,
             angle: angle,
         }
 
@@ -104,8 +116,8 @@ class RayCasting {
     }
 
     public draw3D(): void {
-        let from = this.vector.angle - halfLookAngle;
-        const to = this.vector.angle + halfLookAngle;
+        let from = this.playerState.angle - halfLookAngle;
+        const to = this.playerState.angle + halfLookAngle;
         let displayX = 0;
 
         while(from < to) {
@@ -114,7 +126,7 @@ class RayCasting {
             displayX ++;
         }
 
-        this.imageData.data.set(this.buf8);
+        this.imageData.data.set(buf8);
     }
 }
 

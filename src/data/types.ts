@@ -52,10 +52,10 @@ export class PlayerState {
 
 
 
-export function getPlayerVector (state: PlayerState): Vector {
-    return {
-        x: state.x,
-        y: state.y,
-        angle: state.angle
-    }
-}
+// export function getPlayerVector (state: PlayerState): Vector {
+//     return {
+//         x: state.x,
+//         y: state.y,
+//         angle: state.angle
+//     }
+// }
