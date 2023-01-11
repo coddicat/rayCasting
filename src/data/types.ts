@@ -1,4 +1,5 @@
-import { Color } from "./color"
+//import { Color } from "./color"
+import consts from "./consts"
 
 export type Vector = {
     x: number,
@@ -7,11 +8,11 @@ export type Vector = {
 }
 
 export type Level = {
-    color: Color,
+    color: number,
     bottom: number
 }
 export type Wall = {
-    color: Color,
+    color: number,
     top: number,
     bottom: number
 }
@@ -33,4 +34,28 @@ export enum Side {
     x,
     y,
     corner
+}
+
+export class PlayerState {
+    public x: number = consts.blockSize * 2;
+    public y: number = consts.blockSize * 1.5;
+    public z: number = consts.playerHeight;
+    public angle = 0;
+    public jumping: number | null = null;
+    public jumpingFloor: number | null = null;
+    public jumpingSpeed: number | null= null;
+    public moving: number | null = null;
+    public moveSpeed = 0;
+    public turning: number | null = null;
+    public turnSpeed = 0;
+}
+
+
+
+export function getPlayerVector (state: PlayerState): Vector {
+    return {
+        x: state.x,
+        y: state.y,
+        angle: state.angle
+    }
 }

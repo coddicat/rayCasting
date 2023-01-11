@@ -1,21 +1,26 @@
 <template>
   <div class="home">
     <span>{{ fpsDisplay }}</span>
-    <div>
+    <!-- <div>
       <canvas width="200" height="100" class="canvas" ref="mapCanvas"></canvas>
-    </div>
+    </div> -->
     <div>
-      <canvas width="640" height="480" class="canvas" ref="mainCanvas"></canvas>
+      <canvas width="800" height="600" class="canvas" ref="mainCanvas"></canvas>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import map from '@/data/map';
-import player from '@/data/player';
 import { defineComponent, ref } from 'vue';
 import consts from '@/data/consts';
 import RayCasting from '@/data/rayCasting';
+import { PlayerState } from '@/data/types';
+import Player from '@/data/player';
+import player2d from '@/data/player2d';
+
+const playerState = new PlayerState();
+const player = new Player(playerState);
 
 export default defineComponent({
   name: 'HomeView',
@@ -50,12 +55,23 @@ export default defineComponent({
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'white';
-      map.drawMap(ctx);
-      player.drawOnMap(1.7, ctx);
+      map.drawMap(ctx, playerState);
+      player2d.drawOnMap(playerState, ctx);
       ctx.restore();
-    }
+    }    
     
-    function renderMain() {
+    // function determinateLittleEndian() {
+    //   //Determine whether Uint32 is little- or big-endian.
+    //   data[1] = 0x0a0b0c0d;
+      
+    //   var isLittleEndian = true;
+    //   if (buf[4] === 0x0a && buf[5] === 0x0b && buf[6] === 0x0c &&
+    //       buf[7] === 0x0d) {
+    //       isLittleEndian = false;
+    //   }
+    // }
+
+    async function renderMain(): Promise<void> {
       if (!mainCanvas.value) return;
       const ctx = mainCanvas.value.getContext("2d", { alpha: false });
       if (!ctx) return;
@@ -65,9 +81,10 @@ export default defineComponent({
       tempCanvas.height = consts.lookHeight;
       const tempCtx = tempCanvas.getContext("2d");
       if (!tempCtx) return;
-      const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);
-      const rayCasting = new RayCasting(imageData);
-      rayCasting.draw3D();
+
+      const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
+      const rayCasting1 = new RayCasting(imageData, playerState);
+      rayCasting1.draw3D();
       tempCtx.putImageData(imageData, 0, 0);
 
       ctx.save();
@@ -96,18 +113,18 @@ export default defineComponent({
     } 
 
     const stopped = ref(false);
-    function tick() {
+    async function tick() {
       if (stopped.value) return;
       const now = new Date().getTime();
       if (now % 10 === 0) {
         const diff = now - lastTime;
-        fps = Math.ceil(1000 / diff);
+        fps = (1000 / diff) << 0;
         fpsDisplay.value = fps;
       }
       //renderMap();
       keyHandler(now);
       player.tick(now);
-      renderMain();
+      await renderMain();
       lastTime = now;
       //setTimeout(tick, 0);
       window.requestAnimationFrame(tick);

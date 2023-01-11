@@ -1,44 +1,80 @@
 import consts from "./consts";
 import map from "./map";
 import Render from "./render";
-import { MapItem, RayAction } from "./types";
+import { MapItem, PlayerState, RayAction } from "./types";
 
 class RayHandler {
-    private render: Render;
     private item: MapItem | null;
-    private fixDistance: number;
     private distance: number;
     private mirrorFact: number;
+    private emptyPixels: boolean;
+    private pixelsCounter: { count: number};
+    private data: Uint32Array;
+    private playerState: PlayerState;
+    private params: { fixDistance: number, displayX: number };
 
-    constructor(render: Render, fixDistance: number) {
-        this.render = render;
+    constructor(data: Uint32Array, params: { fixDistance: number, displayX: number }, playerState: PlayerState) {
         this.item = null;
-        this.fixDistance = fixDistance;
         this.distance = 0.5;
         this.mirrorFact = 1;
+        this.emptyPixels = true;
+        this.pixelsCounter = {
+            count: 0
+        }
+        this.data = data;
+        this.playerState = playerState;
+        this.params = params;
     }
 
-    public handle(bx: number, by: number, newDistance: number): RayAction {
-        const found = map.check(bx, by);
+    public handle(params: { bx: number, by: number, distance: number }, obj: { distance: number | null }): RayAction {
+        const found = map.check(params);
         const newItem = found ? map.getItem(found) : null;
-        newDistance *= this.fixDistance;
-    
-        if (newItem != this.item) {
-            this.render.handleLevels(this.item, this.distance, newDistance, this.mirrorFact);
-            this.render.handleWalls(newItem, newDistance, this.mirrorFact);
+        const newDistance = params.distance * this.params.fixDistance;
+
+        
+        // if (obj.distance) {
+        //     const distance = obj.distance * this.fixDistance;
+        //     if (distance <= newDistance && distance > 0.6) {
+        //         this.emptyPixels = this.emptyPixels 
+        //             && this.render.handleObject(distance, this.mirrorFact);
+        //     }
+        // }
+
+
+        if (newItem !== this.item) {
+            const _params = {
+                displayX: this.params.displayX, 
+                distance: newDistance,
+                distance1: this.distance, 
+                mirrorFact: this.mirrorFact 
+            }
+            this.emptyPixels = this.emptyPixels && 
+                Render.handleLevels(this.data, this.item, _params, this.playerState, this.pixelsCounter);
+            
+            this.emptyPixels = this.emptyPixels &&
+                Render.handleWalls(this.data, newItem, _params, this.playerState, this.pixelsCounter)
+
             this.item = newItem;
             this.distance = newDistance < 0.5 ? 0.5 : newDistance;
         }
 
-        if (newItem?.mirror) {
+        if (newItem && newItem.mirror) {
             this.mirrorFact *= 0.75;
             return RayAction.mirror;
         }
 
-        return newItem?.stopRay ? RayAction.stop : RayAction.continue;
+        return (!this.emptyPixels || (newItem && newItem.stopRay)) 
+            ? RayAction.stop 
+            : RayAction.continue;
     }
     public complete(): void {
-        this.render.handleLevels(this.item, this.distance, consts.deep, this.mirrorFact);
+        if (!this.emptyPixels) return;
+        Render.handleLevels(this.data, this.item, { 
+            displayX: this.params.displayX, 
+            distance: this.distance, 
+            distance1: consts.deep,
+            mirrorFact: this.mirrorFact 
+        }, this.playerState, this.pixelsCounter);
     }
 }
 

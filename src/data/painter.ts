@@ -1,57 +1,76 @@
-import { Color } from "./color";
-
+//import { Color } from "./color";
+import consts from "./consts";
 class Painter {
-    private imageData: ImageData;
-    private width: number;
-    private height: number;
-    private dataWidth: number;
-    
-    constructor(imageData: ImageData) {
-        this.imageData = imageData;
-        this.width = imageData.width;
-        this.height = imageData.height;
-        this.dataWidth = this.width * 4;
-    }
-    
-    private limit(x: number, max: number): number {
+    private static limitX(x: number ): number {
         if (x < 0) return 0;
-        if (x >= max) x = max;
-        return x;
-    }
-    
-    private drawPoint(index: number, color: Color, alpha: number): void {
-        if (this.imageData.data[index + 3]) {
-            return;
-        }
-        this.imageData.data[index] = color.r;
-        this.imageData.data[index + 1] = color.g;
-        this.imageData.data[index + 2] = color.b;
-        this.imageData.data[index + 3] = alpha;
+        if (x >= consts.lookWidth) return consts.lookWidth - 1;
+        return x << 0;
     }
 
-    private getIndex(x: number, y: number): number {
-        return y * this.dataWidth + x * 4;
+    private static limitY(y: number ): number {
+        if (y < 0) return 0;
+        if (y >= consts.lookHeight) return consts.lookHeight - 1;
+        return y << 0;
     }
 
-    private getTopBottom(y0: number, y1: number): { top: number, bottom: number} {
-        y0 = this.limit(y0, this.height);
-        y1 = this.limit(y1, this.height);
-        return y1 > y0 ? { top: y0, bottom: y1 } : { top: y1, bottom: y0 };
+    private static getTopBottom(params: { y0: number, y1: number }): { top: number, bottom: number} {
+        return params.y1 > params.y0 
+            ? { top: this.limitY(params.y0), bottom: this.limitY(params.y1) } 
+            : { top: this.limitY(params.y1), bottom: this.limitY(params.y0) };
     }    
 
-    public drawLine(x: number, y0: number, y1: number, color: Color, getAlpha: (y: number) => number): void {
-        x = this.limit(x, this.width);
-        const { top, bottom } = this.getTopBottom(y0, y1);
-        const max = this.getIndex(x, bottom);
-        let index = this.getIndex(x, top);
-        let y = top;
-        while (index < max) {
-            const alpha = getAlpha(y); 
-            this.drawPoint(index, color, alpha);
-            y++;
-            index += this.dataWidth;
+
+    public static drawLine(data: Uint32Array, params: { x: number, y0: number, y1: number, color: number}, pixelsCounter: { count: number}, getAlpha: (y: number) => number): void {
+        const topBottom = this.getTopBottom(params);
+        //let counter = 0;
+        let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+        while(topBottom.top <= topBottom.bottom) {
+            const alpha = getAlpha(topBottom.top);
+            if (alpha < 1) break;
+            
+            if(data[index] !== 0) {
+                topBottom.top++;
+                index += consts.lookWidth;
+                continue;
+            }
+
+            data[index] =
+                (alpha << 24) |
+                params.color
+                // (color.b << 16) |
+                // (color.g << 8) |
+                // (color.r);
+
+            pixelsCounter.count ++;
+            topBottom.top ++;
+            index += consts.lookWidth;
         }
-    }    
+        //return counter;
+    }
+
+    public static drawLineStatic(data: Uint32Array, params: { x: number, y0: number, y1: number, color: number}, pixelsCounter: { count: number}, alpha: number): void {
+        if (alpha < 1) return;
+        const topBottom = this.getTopBottom(params);
+        let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+        while(topBottom.top <= topBottom.bottom) {
+            if(data[index] !== 0) {
+                topBottom.top++;
+                index += consts.lookWidth;
+                continue;
+            }
+
+            data[index] =
+                (alpha << 24) |
+                params.color
+                // (color.b << 16) |
+                // (color.g << 8) |
+                // (color.r);
+
+            pixelsCounter.count ++;
+            topBottom.top ++;
+            index += consts.lookWidth;
+        }
+    }
 }
 
 export default Painter;
