@@ -8,7 +8,7 @@ const halfHeight = consts.lookHeight / 2;
 class Render {
     private static drawWall(data: Uint32Array, params: { displayX: number, distance: number}, light: number, wall: Wall, playerState: PlayerState, pixelCounter: { count: number }): void {
         const fact = consts.lookWidth / params.distance;
-        const a = halfHeight + fact * playerState.z;
+        const a = halfHeight + fact * (playerState.z + playerState.height);
 
         const _params = { 
             y0: (a - wall.top * fact),
@@ -21,7 +21,7 @@ class Render {
     }
     
     private static drawLevel(data: Uint32Array, params: { displayX: number, distance: number, distance1: number, mirrorFact: number }, level: Level, playerState: PlayerState, pixelCounter: { count: number }): void {        
-        const d = consts.lookWidth * (playerState.z - level.bottom);
+        const d = consts.lookWidth * (playerState.z + playerState.height - level.bottom);
         const _params = { 
             y0: halfHeight + d / params.distance,
             y1: halfHeight + d / params.distance1,
@@ -33,15 +33,15 @@ class Render {
         Painter.drawLineDynamic(data, _params, pixelCounter);
     }
 
-    public static handleObject(data: Uint32Array, params: { displayX: number, distance: number, mirrorFact: number }, playerState: PlayerState, pixelCounter: { count: number }): boolean {
+    public static handleObject(data: Uint32Array, params: { displayX: number, distance: number, mirrorFact: number, color: number, top: number, bottom: number }, playerState: PlayerState, pixelCounter: { count: number }): boolean {
         if (params.distance <= 0) return true;
         const light =  maxLight * (consts.deep - params.distance) / consts.deep * params.mirrorFact;
         if (light < 1) return true;
         
         this.drawWall(data, params, light, {
-            color: 0x0000FF,
-            top: 2, //playerState.z - consts.playerHeight + 2.1,
-            bottom: 0, //playerState.z - consts.playerHeight
+            color: params.color,
+            top: params.top, //playerState.z - consts.playerHeight + 2.1,
+            bottom: params.bottom, //playerState.z - consts.playerHeight
         }, playerState, pixelCounter);
 
         return pixelCounter.count < consts.lookHeight;
@@ -64,8 +64,8 @@ class Render {
 
     public static handleLevels(data: Uint32Array, item: MapItem | null, params: { displayX: number, distance: number, distance1: number, mirrorFact: number }, playerState: PlayerState, pixelCounter: { count: number }) : boolean {
         if (!item || params.distance1 < 0.5) return true;
-        const light =  maxLight * (consts.deep - params.distance) / consts.deep * params.mirrorFact;       
-        if (light < 1) return true;
+        // const light =  maxLight * (consts.deep - params.distance1) / consts.deep * params.mirrorFact;       
+        // if (light < 1) return true;
 
         let i = 0;
         while(i < item.levels.length) {

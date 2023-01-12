@@ -102,7 +102,7 @@ export default defineComponent({
     }
 
     const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
-    const rayCasting = new RayCasting(imageData, playerState);
+    const rayCasting = new RayCasting(imageData, playerState, playerState);
     const context = ref(null as null | CanvasRenderingContext2D);
 
     async function renderMain(): Promise<void> {

@@ -112,7 +112,7 @@ class Player {
             return;
         }
         const item = map.getItem(found);
-        const fl = item.levels.find(w => this.state.z > w.bottom + consts.playerHeight + 0.01);
+        const fl = item.levels.find(w => this.state.z > w.bottom + 0.01);
         if (!fl) return;
         this.fall();
     }
@@ -152,13 +152,13 @@ class Player {
         const m = map.check({ bx: mx, by: my });
         const levels = m ? map.getItem(m).levels : [];
         const collisionLevels = levels
-            .filter(x => this.state.z < consts.playerHeight + x.bottom && this.state.z > consts.playerHeight + x.bottom - 1)
+            .filter(x => this.state.z < x.bottom && this.state.z > x.bottom - 1)
             .map(x => x.bottom);
         const level = Math.max.apply(null, collisionLevels);
         if (collisionLevels.length > 0) {
             this.state.jumping = null;
             this.state.jumpingSpeed = 0;
-            this.state.z = consts.playerHeight + level;
+            this.state.z = level;
             this.state.jumpingFloor = this.state.z;
         } else {
             const t = now - this.state.jumping;

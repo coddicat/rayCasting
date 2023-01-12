@@ -13,4 +13,5 @@ export default {
     lookAngle: lookAngleDegrees * rad,
     lookMapStep: lookAngleDegrees * rad / 20,
     playerHeight: 1.8,
+    playerWidth: 1,
 }

@@ -1,14 +1,17 @@
 import consts from "./consts";
 import map from "./map";
 import Render from "./render";
-import { MapItem, PlayerState, RayAction } from "./types";
+import { MapItem, PlayerState, RayAction, Sprite, SpriteAngleState } from "./types";
 
 
-const obj = {
-    x: 30,
-    y: 5,
-    w: 2
-}
+// const obj = {
+//     x: 30,
+//     y: 5,
+//     w: 2
+// }
+
+
+
 
 class RayHandler {
     private item: MapItem | null;
@@ -42,54 +45,29 @@ class RayHandler {
         }        
         this.params = params;
     }
-
-
-    public handle(params: { bx: number, by: number, distance: number }/*, obj: { distance: number | null }*/): RayAction {
+    
+    public handle(params: { bx: number, by: number, distance: number }, spriteState: SpriteAngleState, sprite: Sprite) : RayAction {
         if (!this.params) throw 'Not init';
         
         const found = map.check(params);
         const newItem = found ? map.getItem(found) : null;
         const newDistance = params.distance * this.params.fixDistance;
 
-        
-        // if (obj.distance) {
-        //     const distance = obj.distance * this.fixDistance;
-        //     if (distance <= newDistance && distance > 0.6) {
-        //         this.emptyPixels = this.emptyPixels 
-        //             && this.render.handleObject(distance, this.mirrorFact);
-        //     }
-        // }
 
-        const dx = obj.x - this.playerState.x;
-        const dy = obj.y - this.playerState.y;
-        const sign = Math.sign(dx);
-        const d = Math.sqrt(dx ** 2 + dy ** 2);
-        const angle = Math.atan(dy/dx) * sign;
-
-
-        function fixAngle(a: number) {
-            a = a % (Math.PI * 2);
-            if (a > Math.PI) {
-                a = -Math.PI + a % Math.PI
-            } else if (a < -Math.PI) {
-                a = Math.PI + a % Math.PI
-            }   
-            return a;
-        }
-
-        const angle0 = Math.sign(dx) < 0 ? Math.PI - this.playerState.angle : this.playerState.angle;
-        const diff = (angle - fixAngle(angle0)) * Math.sign(dx);
-        const x = (consts.lookWidth / consts.lookAngle * (diff + consts.lookAngle/2)) << 0;
-        const xf = consts.lookWidth / d;
-        if (newDistance >= d && this.params.displayX >= x - obj.w / 2 * xf && this.params.displayX <= x + obj.w / 2 * xf) {
+        if (!spriteState.status && spriteState.distance > 1 && newDistance >= spriteState.distance && this.params.displayX >= spriteState.x0 && this.params.displayX <= spriteState.x1) {
             const _params = {
                 displayX: this.params.displayX, 
-                distance: d, // / this.params.fixDistance,
-                mirrorFact: this.mirrorFact 
+                distance: spriteState.distance,
+                mirrorFact: this.mirrorFact,
+                color: 0x0000FF,
+                top: sprite.z + sprite.height,
+                bottom: sprite.z
             }
 
             this.emptyPixels = this.emptyPixels &&
                 Render.handleObject(this.data, _params, this.playerState, this.pixelsCounter);
+            
+            spriteState.status = true;
         }
 
 
@@ -122,7 +100,7 @@ class RayHandler {
     }
     
     public complete(): void {
-        if (!this.emptyPixels || !this.params) return;
+        if (!this.emptyPixels || !this.params) return;   
         Render.handleLevels(this.data, this.item, { 
             displayX: this.params.displayX, 
             distance: this.distance, 

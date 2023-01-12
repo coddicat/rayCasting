@@ -9,7 +9,7 @@ export class DynamicAlpha {
     private f = 0
 
     public init(playerState: PlayerState, level: Level, params: { mirrorFact: number }): void {
-        this.b = consts.lookWidth * (playerState.z - level.bottom);
+        this.b = consts.lookWidth * (playerState.z + playerState.height - level.bottom);
         this.f = maxLight / consts.deep * params.mirrorFact;
     }
     public getAlpha(y: number): number {
@@ -50,9 +50,9 @@ class Painter {
         let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
         while(topBottom.top <= topBottom.bottom) {
             const alpha = this.dynamicAlpha.getAlpha(topBottom.top);
-            if (alpha < 1) break;
+            //if (alpha < 1) break;
             
-            if(data[index] !== 0) {
+            if(data[index] !== 0 || alpha < 1) {
                 topBottom.top++;
                 index += consts.lookWidth;
                 continue;
