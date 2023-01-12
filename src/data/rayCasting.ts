@@ -4,36 +4,27 @@ import RayAxis from "./rayAxis";
 import RayHandler from "./rayHandler";
 import Render from "./render";
 import { PlayerState, Side, Vector } from "./types";
+
 const angleStep = consts.lookAngle / consts.lookWidth;
 const halfLookAngle = consts.lookAngle / 2;
-
 const buf = new ArrayBuffer(consts.lookHeight * consts.lookWidth * 4);
 const buf8 = new Uint8ClampedArray(buf);
 const data = new Uint32Array(buf);
 
 class RayCasting {
     private imageData: ImageData;
-    // private vector: Vector;
     private playerState: PlayerState;
-    // private data: Uint32Array;
-    // private buf8: Uint8ClampedArray;
+    private rayHandler: RayHandler;
 
     constructor(imageData: ImageData, playerState: PlayerState) {
         this.imageData = imageData;
         this.playerState = playerState;
-        // this.vector = playerState;
-        
-
-        // const buf = new ArrayBuffer(imageData.data.length);
-        // this.buf8 = new Uint8ClampedArray(buf);
-        // this.data = new Uint32Array(buf);
-
         data.fill(0);
+        this.rayHandler = new RayHandler(data, playerState);
     }
 
     public reset(): void {
       data.fill(0);
-      //this.vector = getPlayerVector(playerState);
     }
 
     private findIntersection(point: {x: number, y: number}, angle: number, cycleCenter: {x: number, y: number}, cycleRadius: number): number | null {
@@ -72,7 +63,7 @@ class RayCasting {
       
     private handleAngle(angle: number, displayX: number): void {
         const fixDistance = Math.cos(this.playerState.angle - angle);
-        const rayHandler = new RayHandler(data, { fixDistance, displayX }, this.playerState);
+        this.rayHandler.init({ fixDistance, displayX });
         const rayVector: Vector = {
             x: this.playerState.x,
             y: this.playerState.y,
@@ -85,34 +76,34 @@ class RayCasting {
         //     { x: this.playerState.x, y: this.playerState.y},
         //     0.5
         // );
-        const obj = {
-            x: this.playerState.x,
-            y: this.playerState.y,
-            distance: 0//objDist
-        }
+        // const obj = {
+        //     x: this.playerState.x,
+        //     y: this.playerState.y,
+        //     distance: 0//objDist
+        // }
 
-        const handler: BlockHandler = (p) => rayHandler.handle(p, obj);
-        const mirrorHandle = (side: Side, rayX: RayAxis, rayY: RayAxis) => {
-            // const blockX = rayX.getBlock() + (rayX.getSign() > 0 ? 1: 0);
-            // const blockY = rayY.getBlock() + (rayY.getSign() > 0 ? 1: 0);
-            // const x = blockX * consts.blockSize;
-            // const y = blockY * consts.blockSize;
+        const handler: BlockHandler = (p) => this.rayHandler.handle(p/*, obj*/);
+        // const mirrorHandle = (side: Side, rayX: RayAxis, rayY: RayAxis) => {
+        //     const blockX = rayX.getBlock() + (rayX.getSign() > 0 ? 1: 0);
+        //     const blockY = rayY.getBlock() + (rayY.getSign() > 0 ? 1: 0);
+        //     const x = blockX * consts.blockSize;
+        //     const y = blockY * consts.blockSize;
             
-            // obj.x = side === Side.x ? obj.x : 2 * x - obj.x;
-            // obj.y = side === Side.y ? obj.y : 2 * y - obj.y;
-            // obj.distance = this.findIntersection(
-            //     { x: this.vector.x, y: this.vector.y },
-            //     angle,
-            //     { x: obj.x, y: obj.y },
-            //     0.5
-            // );
-        };
+        //     obj.x = side === Side.x ? obj.x : 2 * x - obj.x;
+        //     obj.y = side === Side.y ? obj.y : 2 * y - obj.y;
+        //     obj.distance = this.findIntersection(
+        //         { x: this.vector.x, y: this.vector.y },
+        //         angle,
+        //         { x: obj.x, y: obj.y },
+        //         0.5
+        //     );
+        // };
         const maxDistance = consts.deep / fixDistance;
-        const ray = new Ray(rayVector, handler, mirrorHandle);
+        const ray = new Ray(rayVector, handler/*, mirrorHandle*/);
         const completed = ray.send(maxDistance);
         
         if (completed) return;
-        rayHandler.complete();
+        this.rayHandler.complete();
     }
 
     public draw3D(): void {

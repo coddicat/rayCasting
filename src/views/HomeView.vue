@@ -1,5 +1,6 @@
 <template>
   <div class="home">
+    <!-- <img src="@/assets/person_front.png"/> -->
     <span>{{ fpsDisplay }}</span>
     <!-- <div>
       <canvas width="200" height="100" class="canvas" ref="mapCanvas"></canvas>
@@ -79,6 +80,19 @@ export default defineComponent({
     //   }
     // }
 
+
+    // const spriteCanvas = document.createElement('canvas') as HTMLCanvasElement;
+    // spriteCanvas.width = 200;
+    // spriteCanvas.width = 100;
+    // const img = new Image();
+    // img.src = '/img/person_front.f04f6938.png';      
+    // const sptCtx = spriteCanvas.getContext("2d");
+    // img.onload = function () {
+    //     sptCtx?.drawImage(img, 0, 0);
+    // }
+  
+    
+
     const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
     tempCanvas.width = consts.lookWidth;
     tempCanvas.height = consts.lookHeight;
@@ -86,6 +100,7 @@ export default defineComponent({
     if (!tempCtx) {
       throw "Cannot get context";
     }
+
     const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
     const rayCasting = new RayCasting(imageData, playerState);
     const context = ref(null as null | CanvasRenderingContext2D);
@@ -94,12 +109,17 @@ export default defineComponent({
       if (!tempCtx || !context.value) return;
       rayCasting.reset();
       rayCasting.draw3D();
+      
       tempCtx.putImageData(imageData, 0, 0);
+      // if (sptCtx) {
+      //   tempCtx.putImageData(sptCtx?.getImageData(0, 0, 200, 100), 0, 0);
+      // }
+      
 
       context.value.save();
       context.value.clearRect(0, 0, context.value.canvas.width, context.value.canvas.height);
       context.value.scale(context.value.canvas.width / consts.lookWidth, context.value.canvas.height / consts.lookHeight);
-      context.value.drawImage(tempCanvas, 0, 0);
+      context.value.drawImage(tempCanvas, 0, 0);      
       context.value.restore();
     }
 

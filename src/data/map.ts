@@ -66,7 +66,7 @@ function drawMap(ctx: CanvasRenderingContext2D, playerState: PlayerState) {
 
 const ceil: Level = {
     color: 0xCD9BCD,
-    bottom: 6
+    bottom: 5
 };
 
 const floor: Level = {
@@ -117,7 +117,7 @@ const mapItems = new Map<MapItemType, MapItem>([
     [MapItemType.Wall, {
         walls: [{
             color: 0xFFFFFF,
-            top: 6,
+            top: 5,
             bottom: 0
         }], 
         levels: [],
@@ -126,7 +126,7 @@ const mapItems = new Map<MapItemType, MapItem>([
     [MapItemType.ColoredWall, {
         walls: [{
             color: 0xDCC8C8,
-            top: 6,
+            top: 5,
             bottom: 0
         }], 
         levels: [],
@@ -135,12 +135,12 @@ const mapItems = new Map<MapItemType, MapItem>([
     [MapItemType.Stair1, {
         walls: [{
             color: 0xC80FFF, 
-            top: 0.5,
+            top: 1,
             bottom: 0
         }], 
         levels: [{
             color: 0x6496FA,
-            bottom:0.5
+            bottom: 1
         }, ceil],
         stopRay: false
     }],
@@ -171,31 +171,31 @@ const mapItems = new Map<MapItemType, MapItem>([
     [MapItemType.Ledge, {
         walls: [{
             color: 0xFFFFFF,
-            top: 6,
-            bottom: 5
+            top: 5,
+            bottom: 4
         }], 
         levels: [{
             color: 0x969696,
-            bottom: 5
+            bottom: 4
         }, floor],
         stopRay: false
     }],
     [MapItemType.ColoredLedge, {
         walls: [{
             color: 0xDCC8C8, 
-            top: 6,
-            bottom: 5
+            top: 5,
+            bottom: 4
         }], 
         levels: [{
             color: 0x969696, 
-            bottom: 5
+            bottom: 4
         }, floor],
         stopRay: false
     }],    
     [MapItemType.Mirror, {
         walls: [{
             color: 0xFFFFFF, 
-            top: 6,
+            top: 5,
             bottom: 4
         }, {
             color: 0xFFFFFF, 

@@ -3,6 +3,13 @@ import map from "./map";
 import Render from "./render";
 import { MapItem, PlayerState, RayAction } from "./types";
 
+
+const obj = {
+    x: 30,
+    y: 5,
+    w: 2
+}
+
 class RayHandler {
     private item: MapItem | null;
     private distance: number;
@@ -11,22 +18,35 @@ class RayHandler {
     private pixelsCounter: { count: number};
     private data: Uint32Array;
     private playerState: PlayerState;
-    private params: { fixDistance: number, displayX: number };
+    private params: { fixDistance: number, displayX: number } | null;
 
-    constructor(data: Uint32Array, params: { fixDistance: number, displayX: number }, playerState: PlayerState) {
+    constructor(data: Uint32Array, playerState: PlayerState) {
+        this.data = data;
+
+        this.item = null;
+        this.distance = 0.5;
+        this.mirrorFact = 1;
+        this.emptyPixels = true;
+        this.pixelsCounter = { count: 0 }        
+        this.params = null;
+        this.playerState = playerState;
+    }
+
+    public init(params: { fixDistance: number, displayX: number }): void {
         this.item = null;
         this.distance = 0.5;
         this.mirrorFact = 1;
         this.emptyPixels = true;
         this.pixelsCounter = {
             count: 0
-        }
-        this.data = data;
-        this.playerState = playerState;
+        }        
         this.params = params;
     }
 
-    public handle(params: { bx: number, by: number, distance: number }, obj: { distance: number | null }): RayAction {
+
+    public handle(params: { bx: number, by: number, distance: number }/*, obj: { distance: number | null }*/): RayAction {
+        if (!this.params) throw 'Not init';
+        
         const found = map.check(params);
         const newItem = found ? map.getItem(found) : null;
         const newDistance = params.distance * this.params.fixDistance;
@@ -40,6 +60,38 @@ class RayHandler {
         //     }
         // }
 
+        const dx = obj.x - this.playerState.x;
+        const dy = obj.y - this.playerState.y;
+        const sign = Math.sign(dx);
+        const d = Math.sqrt(dx ** 2 + dy ** 2);
+        const angle = Math.atan(dy/dx) * sign;
+
+
+        function fixAngle(a: number) {
+            a = a % (Math.PI * 2);
+            if (a > Math.PI) {
+                a = -Math.PI + a % Math.PI
+            } else if (a < -Math.PI) {
+                a = Math.PI + a % Math.PI
+            }   
+            return a;
+        }
+
+        const angle0 = Math.sign(dx) < 0 ? Math.PI - this.playerState.angle : this.playerState.angle;
+        const diff = (angle - fixAngle(angle0)) * Math.sign(dx);
+        const x = (consts.lookWidth / consts.lookAngle * (diff + consts.lookAngle/2)) << 0;
+        const xf = consts.lookWidth / d;
+        if (newDistance >= d && this.params.displayX >= x - obj.w / 2 * xf && this.params.displayX <= x + obj.w / 2 * xf) {
+            const _params = {
+                displayX: this.params.displayX, 
+                distance: d, // / this.params.fixDistance,
+                mirrorFact: this.mirrorFact 
+            }
+
+            this.emptyPixels = this.emptyPixels &&
+                Render.handleObject(this.data, _params, this.playerState, this.pixelsCounter);
+        }
+
 
         if (newItem !== this.item) {
             const _params = {
@@ -48,6 +100,7 @@ class RayHandler {
                 distance1: this.distance, 
                 mirrorFact: this.mirrorFact 
             }
+    
             this.emptyPixels = this.emptyPixels && 
                 Render.handleLevels(this.data, this.item, _params, this.playerState, this.pixelsCounter);
             
@@ -67,8 +120,9 @@ class RayHandler {
             ? RayAction.stop 
             : RayAction.continue;
     }
+    
     public complete(): void {
-        if (!this.emptyPixels) return;
+        if (!this.emptyPixels || !this.params) return;
         Render.handleLevels(this.data, this.item, { 
             displayX: this.params.displayX, 
             distance: this.distance, 

@@ -37,10 +37,10 @@ export enum Side {
 }
 
 export class PlayerState {
-    public x: number = consts.blockSize * 2;
+    public x: number = consts.blockSize * 40;
     public y: number = consts.blockSize * 1.5;
     public z: number = consts.playerHeight;
-    public angle = 0;
+    public angle = Math.PI;
     public jumping: number | null = null;
     public jumpingFloor: number | null = null;
     public jumpingSpeed: number | null= null;

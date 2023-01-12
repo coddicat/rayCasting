@@ -4,6 +4,7 @@ import { Level, MapItem, PlayerState, Wall } from "./types";
 
 const maxLight = 255;
 const halfHeight = consts.lookHeight / 2;
+
 class Render {
     private static drawWall(data: Uint32Array, params: { displayX: number, distance: number}, light: number, wall: Wall, playerState: PlayerState, pixelCounter: { count: number }): void {
         const fact = consts.lookWidth / params.distance;
@@ -27,29 +28,24 @@ class Render {
             x: params.displayX,
             color: level.color
         }
-
-        const b = consts.lookWidth * (playerState.z - level.bottom);
-        const f = maxLight / consts.deep * params.mirrorFact;
-        const getAlpha = (y: number) => {
-            const a = y - halfHeight;
-            if (a === 0) return 0; 
-            return (consts.deep - b / a) * f;
-        }
         
-        Painter.drawLine(data, _params, pixelCounter, getAlpha);
+        Painter.InitDynamicAlpha(playerState, level, params);
+        Painter.drawLineDynamic(data, _params, pixelCounter);
     }
 
-    // public handleObject(distance: number | null, mirrorFact: number): boolean {
-    //     if (!distance || distance <= 0) return true;
-    //     const light = this.getLight({ distance, mirrorFact });
-    //     if (light <= 0) return true;
-    //     this.drawWall(distance, {
-    //         color: 0xFF0000,
-    //         top: this.playerState.z - consts.playerHeight + 2.1,
-    //         bottom: this.playerState.z - consts.playerHeight
-    //     }, light);
-    //     return this.pixelCounter < this.height;
-    // }
+    public static handleObject(data: Uint32Array, params: { displayX: number, distance: number, mirrorFact: number }, playerState: PlayerState, pixelCounter: { count: number }): boolean {
+        if (params.distance <= 0) return true;
+        const light =  maxLight * (consts.deep - params.distance) / consts.deep * params.mirrorFact;
+        if (light < 1) return true;
+        
+        this.drawWall(data, params, light, {
+            color: 0x0000FF,
+            top: 2, //playerState.z - consts.playerHeight + 2.1,
+            bottom: 0, //playerState.z - consts.playerHeight
+        }, playerState, pixelCounter);
+
+        return pixelCounter.count < consts.lookHeight;
+    }
 
     public static handleWalls(data: Uint32Array, item: MapItem | null, params: { displayX: number, distance: number, mirrorFact: number }, playerState: PlayerState, pixelCounter: { count: number }): boolean {
         if (!item || params.distance <= 0) return true;
