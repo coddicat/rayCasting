@@ -6,7 +6,7 @@ export class PlayerState implements Sprite {
     public y: number = consts.blockSize * 1.5;
     public z = 0;
 
-    public width: number = consts.playerHeight
+    public width: number = consts.playerWidth;
     public height: number = consts.playerHeight;
     public lookHeight: number = consts.playerHeight * 0.9;
     

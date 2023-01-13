@@ -1,5 +1,5 @@
 const lookAngleDegrees = 60;
-const lookWidth = 1000;
+const lookWidth = 800;
 const lookHeight = 600;
 const rad = Math.PI / 180;
 export default {
@@ -13,5 +13,5 @@ export default {
     lookAngle: lookAngleDegrees * rad,
     lookMapStep: lookAngleDegrees * rad / 20,
     playerHeight: 1.8,
-    playerWidth: 1,
+    playerWidth: 0.9,
 }

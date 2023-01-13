@@ -1,12 +1,12 @@
 <template>
   <div class="home">
-    <!-- <img src="@/assets/person_front.png"/> -->
+    <!-- <img src="@/assets/duke_front.png" width="100" height="200"/> -->
     <span>{{ fpsDisplay }}</span>
     <!-- <div>
       <canvas width="200" height="100" class="canvas" ref="mapCanvas"></canvas>
     </div> -->
     <div>
-      <canvas width="1000" height="600" class="canvas" ref="mainCanvas"></canvas>
+      <canvas width="800" height="600" class="canvas" ref="mainCanvas"></canvas>
     </div>
   </div>
 </template>
@@ -19,6 +19,7 @@ import RayCasting from '@/data/rayCasting';
 import Player from '@/data/player';
 import player2d from '@/data/player2d';
 import { PlayerState } from '@/data/playerState';
+const getUrl = () => require('../assets/duke_front.png');
 
 const playerState = new PlayerState();
 const player = new Player(playerState);
@@ -38,7 +39,7 @@ export default defineComponent({
     if (!ctx) throw "cannot get context";
     this.context = ctx;
     
-    this.renderMap();
+    //this.renderMap();
     this.start();
   },
 
@@ -48,7 +49,7 @@ export default defineComponent({
     this.stop();
   },
   setup() {
-    const mapCanvas = ref(null as HTMLCanvasElement | null);
+    //const mapCanvas = ref(null as HTMLCanvasElement | null);
     const mainCanvas = ref(null as HTMLCanvasElement | null);
     const keyMap = new Map<string, boolean>();
     const currentKey = ref(keyMap);
@@ -56,18 +57,18 @@ export default defineComponent({
     const fpsDisplay = ref(0);
     let lastTime = new Date().getTime();
     
-    function renderMap() {
-      if (!mapCanvas.value) return;
-      var ctx = mapCanvas.value.getContext("2d", { alpha: false });
-      if (!ctx) return;
-      ctx.save();
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.fillStyle = 'white';
-      ctx.strokeStyle = 'white';
-      map.drawMap(ctx, playerState);
-      player2d.drawOnMap(playerState, ctx);
-      ctx.restore();
-    }    
+    // function renderMap() {
+    //   if (!mapCanvas.value) return;
+    //   var ctx = mapCanvas.value.getContext("2d", { alpha: false });
+    //   if (!ctx) return;
+    //   ctx.save();
+    //   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    //   ctx.fillStyle = 'white';
+    //   ctx.strokeStyle = 'white';
+    //   map.drawMap(ctx, playerState);
+    //   player2d.drawOnMap(playerState, ctx);
+    //   ctx.restore();
+    // }    
     
     // function determinateLittleEndian() {
     //   //Determine whether Uint32 is little- or big-endian.
@@ -81,16 +82,27 @@ export default defineComponent({
     // }
 
 
-    // const spriteCanvas = document.createElement('canvas') as HTMLCanvasElement;
-    // spriteCanvas.width = 200;
+    const spriteCanvas = document.createElement('canvas') as HTMLCanvasElement;
+    if (!spriteCanvas) throw 'fuck';
+    // spriteCanvas.height = 200;
     // spriteCanvas.width = 100;
-    // const img = new Image();
-    // img.src = '/img/person_front.f04f6938.png';      
-    // const sptCtx = spriteCanvas.getContext("2d");
-    // img.onload = function () {
-    //     sptCtx?.drawImage(img, 0, 0);
-    // }
-  
+    const img = new Image(/*100, 200*/);
+    img.src = getUrl();      
+    const sptCtx = spriteCanvas.getContext("2d");
+    if (!sptCtx) {
+      throw 'no context';
+    }
+    img.onload = function () {
+      // var hRatio = spriteCanvas.width / img.width    ;
+      // var vRatio = spriteCanvas.height / img.height  ;
+      // var ratio  = Math.min ( hRatio, vRatio );
+      sptCtx?.drawImage(img, 0,0, img.width, img.height);//, 0,0,img.width*ratio, img.height*ratio);
+      //const data = sptCtx?.getImageData(0,0, spriteCanvas.width, spriteCanvas.height);
+      
+    }
+
+
+
     
 
     const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
@@ -102,8 +114,9 @@ export default defineComponent({
     }
 
     const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
-    const rayCasting = new RayCasting(imageData, playerState, playerState);
+    const rayCasting = new RayCasting(imageData, playerState, playerState, sptCtx);
     const context = ref(null as null | CanvasRenderingContext2D);
+
 
     async function renderMain(): Promise<void> {
       if (!tempCtx || !context.value) return;
@@ -111,8 +124,10 @@ export default defineComponent({
       rayCasting.draw3D();
       
       tempCtx.putImageData(imageData, 0, 0);
+
+      // const sptCtx = mapCanvas.value?.getContext("2d");
       // if (sptCtx) {
-      //   tempCtx.putImageData(sptCtx?.getImageData(0, 0, 200, 100), 0, 0);
+      //   tempCtx.putImageData(sptCtx.getImageData(0, 0, 100, 200), 0, 0);
       // }
       
 
@@ -163,9 +178,9 @@ export default defineComponent({
       context,
       currentKey,
       mainCanvas,
-      mapCanvas,
+      //mapCanvas,
       keyHandler,
-      renderMap,
+      //renderMap,
       start: () => {
         stopped.value = false;
         tick();

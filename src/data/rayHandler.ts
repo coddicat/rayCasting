@@ -12,8 +12,8 @@ class RayHandler {
     private data: Uint32Array;
     private playerState: PlayerState;
     private params: { fixDistance: number, displayX: number };
-
-    constructor(data: Uint32Array, playerState: PlayerState, params: { fixDistance: number, displayX: number }) {
+    private sptCtx: CanvasRenderingContext2D;
+    constructor(data: Uint32Array, playerState: PlayerState, params: { fixDistance: number, displayX: number }, sptCtx: CanvasRenderingContext2D) {
         this.data = data;
 
         this.item = null;
@@ -23,6 +23,7 @@ class RayHandler {
         this.pixelsCounter = { count: 0 }        
         this.params = params;
         this.playerState = playerState;
+        this.sptCtx = sptCtx;
     }
 
     public reset(): void {
@@ -72,7 +73,9 @@ class RayHandler {
     
     private handleSprite(spriteState: SpriteAngleState, sprite: Sprite, newDistance: number) : void {
         if (!spriteState.status && spriteState.distance > 1 && newDistance >= spriteState.distance && this.params.displayX >= spriteState.x0 && this.params.displayX <= spriteState.x1) {
+            const wRate = 41 / (spriteState.x1 - spriteState.x0 + 1);
             const _params = {
+                spriteX: ((this.params.displayX - spriteState.x0) * wRate) << 0,
                 displayX: this.params.displayX, 
                 distance: spriteState.distance,
                 mirrorFact: this.mirrorFact,
@@ -82,7 +85,7 @@ class RayHandler {
             }
 
             this.emptyPixels = this.emptyPixels &&
-                Render.handleObject(this.data, _params, this.playerState, this.pixelsCounter);
+                Render.handleSprite(this.data, _params, this.playerState, this.pixelsCounter, this.sptCtx);
             
             spriteState.status = true;
         }

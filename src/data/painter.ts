@@ -95,6 +95,39 @@ class Painter {
             index += consts.lookWidth;
         }
     }
+
+    public static drawSpriteLine(data: Uint32Array, 
+        params: { x: number, spriteX: number, y0: number, y1: number, color: number}, 
+        pixelsCounter: { count: number}, alpha: number, 
+        sptCtx: CanvasRenderingContext2D): void {
+        if (alpha < 1) return;
+        const topBottom = this.getTopBottom(params);
+        let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+        const spriteImageData = sptCtx.getImageData(params.spriteX, 0, 1, sptCtx.canvas.height);
+        let y = 0;
+        const hRate = 82 / (Math.abs(params.y1 - params.y0) + 1);
+        while(topBottom.top <= topBottom.bottom) { 
+            const spriteIndex = ((y * hRate) << 0) * 4;
+            if(data[index] !== 0 || spriteImageData.data[spriteIndex + 3] === 0) {
+                topBottom.top++;
+                index += consts.lookWidth;
+                y++;
+                continue;
+            }
+            
+            data[index] =
+                spriteImageData.data[spriteIndex + 3] << 24 |
+                spriteImageData.data[spriteIndex] |
+                spriteImageData.data[spriteIndex + 1] << 8 |
+                spriteImageData.data[spriteIndex + 2] << 16;
+
+            pixelsCounter.count ++;
+            topBottom.top ++;
+            index += consts.lookWidth;
+            y++;
+            //spriteIndex += 4;
+        }
+    }    
 }
 
 export default Painter;
