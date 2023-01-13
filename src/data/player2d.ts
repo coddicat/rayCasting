@@ -1,7 +1,8 @@
 import consts from "./consts";
 import map from "./map";
+import { PlayerState } from "./playerState";
 import Ray, { BlockHandler } from "./ray";
-import { PlayerState, RayAction, Vector } from "./types";
+import { RayAction, Vector } from "./types";
 
 function drawLook(playerState: PlayerState, ctx: CanvasRenderingContext2D) {
     const from = playerState.angle - consts.lookAngle / 2;

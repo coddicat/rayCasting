@@ -1,18 +1,8 @@
 import consts from "./consts";
 import map from "./map";
+import { PlayerState } from "./playerState";
 import Render from "./render";
-import { MapItem, PlayerState, RayAction, Sprite, SpriteAngleState } from "./types";
-
-
-// const obj = {
-//     x: 30,
-//     y: 5,
-//     w: 2
-// }
-
-
-
-
+import { MapItem, RayAction, Sprite, SpriteAngleState } from "./types";
 class RayHandler {
     private item: MapItem | null;
     private distance: number;
@@ -21,9 +11,9 @@ class RayHandler {
     private pixelsCounter: { count: number};
     private data: Uint32Array;
     private playerState: PlayerState;
-    private params: { fixDistance: number, displayX: number } | null;
+    private params: { fixDistance: number, displayX: number };
 
-    constructor(data: Uint32Array, playerState: PlayerState) {
+    constructor(data: Uint32Array, playerState: PlayerState, params: { fixDistance: number, displayX: number }) {
         this.data = data;
 
         this.item = null;
@@ -31,45 +21,26 @@ class RayHandler {
         this.mirrorFact = 1;
         this.emptyPixels = true;
         this.pixelsCounter = { count: 0 }        
-        this.params = null;
+        this.params = params;
         this.playerState = playerState;
     }
 
-    public init(params: { fixDistance: number, displayX: number }): void {
+    public reset(): void {
         this.item = null;
         this.distance = 0.5;
         this.mirrorFact = 1;
         this.emptyPixels = true;
         this.pixelsCounter = {
             count: 0
-        }        
-        this.params = params;
+        }
     }
     
     public handle(params: { bx: number, by: number, distance: number }, spriteState: SpriteAngleState, sprite: Sprite) : RayAction {
-        if (!this.params) throw 'Not init';
-        
         const found = map.check(params);
         const newItem = found ? map.getItem(found) : null;
-        const newDistance = params.distance * this.params.fixDistance;
+        const newDistance = params.distance * this.params.fixDistance; 
 
-
-        if (!spriteState.status && spriteState.distance > 1 && newDistance >= spriteState.distance && this.params.displayX >= spriteState.x0 && this.params.displayX <= spriteState.x1) {
-            const _params = {
-                displayX: this.params.displayX, 
-                distance: spriteState.distance,
-                mirrorFact: this.mirrorFact,
-                color: 0x0000FF,
-                top: sprite.z + sprite.height,
-                bottom: sprite.z
-            }
-
-            this.emptyPixels = this.emptyPixels &&
-                Render.handleObject(this.data, _params, this.playerState, this.pixelsCounter);
-            
-            spriteState.status = true;
-        }
-
+        this.handleSprite(spriteState, sprite, newDistance);
 
         if (newItem !== this.item) {
             const _params = {
@@ -99,8 +70,30 @@ class RayHandler {
             : RayAction.continue;
     }
     
-    public complete(): void {
-        if (!this.emptyPixels || !this.params) return;   
+    private handleSprite(spriteState: SpriteAngleState, sprite: Sprite, newDistance: number) : void {
+        if (!spriteState.status && spriteState.distance > 1 && newDistance >= spriteState.distance && this.params.displayX >= spriteState.x0 && this.params.displayX <= spriteState.x1) {
+            const _params = {
+                displayX: this.params.displayX, 
+                distance: spriteState.distance,
+                mirrorFact: this.mirrorFact,
+                color: 0x0000FF,
+                top: sprite.z + sprite.height,
+                bottom: sprite.z
+            }
+
+            this.emptyPixels = this.emptyPixels &&
+                Render.handleObject(this.data, _params, this.playerState, this.pixelsCounter);
+            
+            spriteState.status = true;
+        }
+    }
+
+    public complete(spriteState: SpriteAngleState, sprite: Sprite): void {
+        if (!this.emptyPixels) return;
+
+        this.handleSprite(spriteState, sprite, consts.deep);
+
+
         Render.handleLevels(this.data, this.item, { 
             displayX: this.params.displayX, 
             distance: this.distance, 

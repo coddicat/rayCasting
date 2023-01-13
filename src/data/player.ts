@@ -1,8 +1,9 @@
 import consts from "./consts";
 import map, { MapItemType } from "./map";
+import { PlayerState } from "./playerState";
 import Ray from "./ray";
 import { BlockHandler } from "./ray";
-import { PlayerState, RayAction, Vector } from "./types";
+import { RayAction, Vector } from "./types";
 
 const collisionDistance = 0.6;
 const halfPi = Math.PI / 2;

@@ -1,5 +1,6 @@
 import consts from "./consts";
-import { Level, MapItem, PlayerState } from "./types";
+import { PlayerState } from "./playerState";
+import { Level, MapItem } from "./types";
 
 const map = [
     "#####@@@@#####@@@@########MMMMM#############MMMMMM#",

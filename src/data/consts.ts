@@ -1,5 +1,5 @@
 const lookAngleDegrees = 60;
-const lookWidth = 800;
+const lookWidth = 1000;
 const lookHeight = 600;
 const rad = Math.PI / 180;
 export default {

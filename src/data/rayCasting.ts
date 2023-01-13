@@ -1,8 +1,10 @@
 import consts from "./consts";
+import { PlayerState } from "./playerState";
 import Ray, { BlockHandler } from "./ray";
 import RayAxis from "./rayAxis";
 import RayHandler from "./rayHandler";
-import { PlayerState, Side, Sprite, SpriteAngle, Vector } from "./types";
+import { SpriteAngle } from "./spriteAngle";
+import { Side, Sprite, Vector } from "./types";
 
 const angleStep = consts.lookAngle / consts.lookWidth;
 const halfLookAngle = consts.lookAngle / 2;
@@ -16,15 +18,17 @@ class RayCasting {
     private rayHandler: RayHandler;
     private sprite: Sprite;
     private spriteAngle: SpriteAngle;
+    private params: { angle: number, fixDistance: number, displayX: number };
 
     constructor(imageData: ImageData, playerState: PlayerState, sprite: Sprite) {
         this.imageData = imageData;
         this.playerState = playerState;
-        this.spriteAngle = new SpriteAngle(sprite, this.playerState);
+        this.params = { angle: 0, fixDistance: 1, displayX: 0};
+        this.spriteAngle = new SpriteAngle(sprite, this.playerState, this.params);
         this.sprite = sprite;
 
         data.fill(0);
-        this.rayHandler = new RayHandler(data, playerState);
+        this.rayHandler = new RayHandler(data, playerState, this.params);
     }
 
     public reset(): void {
@@ -65,37 +69,41 @@ class RayCasting {
     //     }
     //   }
       
-    private handleAngle(angle: number, displayX: number): void {
-        const fixDistance = Math.cos(this.playerState.angle - angle);
-        this.rayHandler.init({ fixDistance, displayX });
+    private handleAngle(): void {
         const rayVector: Vector = {
             x: this.playerState.x,
             y: this.playerState.y,
-            angle: angle,
+            angle: this.params.angle,
         }
         const spriteAngleState = this.spriteAngle.getState();
         const handler: BlockHandler = (p) => this.rayHandler.handle(p, spriteAngleState, this.sprite);
         const mirrorHandle = (side: Side, rayX: RayAxis, rayY: RayAxis) => {
           this.spriteAngle.mirrorHandler(side, rayX, rayY);            
         };
-        const maxDistance = consts.deep / fixDistance;
+        const maxDistance = consts.deep / this.params.fixDistance;
         const ray = new Ray(rayVector, handler, mirrorHandle);
         const completed = ray.send(maxDistance);
         
         if (completed) return;
-        this.rayHandler.complete();
+        this.rayHandler.complete(spriteAngleState, this.sprite);
     }
 
     public draw3D(): void {
-        let from = this.playerState.angle - halfLookAngle;
+        this.params.angle = this.playerState.angle - halfLookAngle;
+        this.params.displayX = 0;
         const to = this.playerState.angle + halfLookAngle;
-        let displayX = 0;
         this.spriteAngle.initState();
-        while(from < to) {
-            this.handleAngle(from, displayX);
-            from += angleStep;
-            displayX ++;
+
+        while(this.params.angle < to) {
+            this.params.fixDistance = Math.cos(this.playerState.angle - this.params.angle);
+    
+            this.handleAngle();
+
+            this.params.displayX ++;
+            this.params.angle += angleStep;
+
             this.spriteAngle.reset();
+            this.rayHandler.reset();
         }
 
         this.imageData.data.set(buf8);

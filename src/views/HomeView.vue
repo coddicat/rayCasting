@@ -6,7 +6,7 @@
       <canvas width="200" height="100" class="canvas" ref="mapCanvas"></canvas>
     </div> -->
     <div>
-      <canvas width="800" height="600" class="canvas" ref="mainCanvas"></canvas>
+      <canvas width="1000" height="600" class="canvas" ref="mainCanvas"></canvas>
     </div>
   </div>
 </template>
@@ -16,9 +16,9 @@ import map from '@/data/map';
 import { defineComponent, ref } from 'vue';
 import consts from '@/data/consts';
 import RayCasting from '@/data/rayCasting';
-import { PlayerState } from '@/data/types';
 import Player from '@/data/player';
 import player2d from '@/data/player2d';
+import { PlayerState } from '@/data/playerState';
 
 const playerState = new PlayerState();
 const player = new Player(playerState);

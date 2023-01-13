@@ -1,5 +1,6 @@
 import consts from "./consts";
-import { Level, PlayerState } from "./types";
+import { PlayerState } from "./playerState";
+import { Level } from "./types";
 
 const maxLight = 255;
 const halfHeight = consts.lookHeight / 2;
@@ -9,7 +10,7 @@ export class DynamicAlpha {
     private f = 0
 
     public init(playerState: PlayerState, level: Level, params: { mirrorFact: number }): void {
-        this.b = consts.lookWidth * (playerState.z + playerState.height - level.bottom);
+        this.b = consts.lookWidth * (playerState.z + playerState.lookHeight - level.bottom);
         this.f = maxLight / consts.deep * params.mirrorFact;
     }
     public getAlpha(y: number): number {

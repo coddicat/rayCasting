@@ -1,6 +1,7 @@
 import consts from "./consts";
 import Painter from "./painter";
-import { Level, MapItem, PlayerState, Wall } from "./types";
+import { PlayerState } from "./playerState";
+import { Level, MapItem, Wall } from "./types";
 
 const maxLight = 255;
 const halfHeight = consts.lookHeight / 2;
@@ -8,7 +9,7 @@ const halfHeight = consts.lookHeight / 2;
 class Render {
     private static drawWall(data: Uint32Array, params: { displayX: number, distance: number}, light: number, wall: Wall, playerState: PlayerState, pixelCounter: { count: number }): void {
         const fact = consts.lookWidth / params.distance;
-        const a = halfHeight + fact * (playerState.z + playerState.height);
+        const a = halfHeight + fact * (playerState.z + playerState.lookHeight);
 
         const _params = { 
             y0: (a - wall.top * fact),
@@ -21,7 +22,7 @@ class Render {
     }
     
     private static drawLevel(data: Uint32Array, params: { displayX: number, distance: number, distance1: number, mirrorFact: number }, level: Level, playerState: PlayerState, pixelCounter: { count: number }): void {        
-        const d = consts.lookWidth * (playerState.z + playerState.height - level.bottom);
+        const d = consts.lookWidth * (playerState.z + playerState.lookHeight - level.bottom);
         const _params = { 
             y0: halfHeight + d / params.distance,
             y1: halfHeight + d / params.distance1,
