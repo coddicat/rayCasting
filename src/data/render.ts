@@ -1,7 +1,7 @@
 import consts from "./consts";
 import Painter from "./painter";
 import { PlayerState } from "./playerState";
-import { Level, MapItem, Wall } from "./types";
+import { Level, MapItem, SpriteData, Wall } from "./types";
 
 const maxLight = 255;
 const halfHeight = consts.lookHeight / 2;
@@ -15,10 +15,11 @@ class Render {
             y0: (a - wall.top * fact),
             y1: (a - wall.bottom * fact),
             x: params.displayX,
-            color: wall.color
+            color: wall.color,
+            alpha: light
         }
         
-        Painter.drawLineStatic(data, _params, pixelCounter, light);
+        Painter.drawLineStatic(data, _params, pixelCounter);
     }
 
     private static drawSprite(data: Uint32Array, 
@@ -27,7 +28,8 @@ class Render {
         wall: Wall, 
         playerState: PlayerState, 
         pixelCounter: { count: number },
-        sptCtx: CanvasRenderingContext2D): void {
+        spriteData: SpriteData): void {
+
         const fact = consts.lookWidth / params.distance;
         const a = halfHeight + fact * (playerState.z + playerState.lookHeight);
 
@@ -36,10 +38,11 @@ class Render {
             y1: (a - wall.bottom * fact),
             x: params.displayX,
             spriteX: params.spriteX,
-            color: wall.color
+            color: wall.color,
+            alpha: light
         }
         
-        Painter.drawSpriteLine(data, _params, pixelCounter, light, sptCtx);
+        Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
     }    
     
     private static drawLevel(data: Uint32Array, params: { displayX: number, distance: number, distance1: number, mirrorFact: number }, level: Level, playerState: PlayerState, pixelCounter: { count: number }): void {        
@@ -58,16 +61,17 @@ class Render {
     public static handleSprite(data: Uint32Array, 
         params: { displayX: number, spriteX: number, distance: number, mirrorFact: number, color: number, top: number, bottom: number }, 
         playerState: PlayerState, pixelCounter: { count: number },
-        sptCtx: CanvasRenderingContext2D): boolean {
+        spriteData: SpriteData): boolean {
+        
         if (params.distance <= 0) return true;
         const light =  maxLight * (consts.deep - params.distance) / consts.deep * params.mirrorFact;
         if (light < 1) return true;
         
         this.drawSprite(data, params, light, {
             color: params.color,
-            top: params.top, //playerState.z - consts.playerHeight + 2.1,
-            bottom: params.bottom, //playerState.z - consts.playerHeight
-        }, playerState, pixelCounter, sptCtx);
+            top: params.top,
+            bottom: params.bottom,
+        }, playerState, pixelCounter, spriteData);
 
         return pixelCounter.count < consts.lookHeight;
     }

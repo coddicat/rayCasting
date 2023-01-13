@@ -4,7 +4,7 @@ import Ray, { BlockHandler } from "./ray";
 import RayAxis from "./rayAxis";
 import RayHandler from "./rayHandler";
 import { SpriteAngle } from "./spriteAngle";
-import { Side, Sprite, Vector } from "./types";
+import { Side, Sprite, SpriteData, Vector } from "./types";
 
 const angleStep = consts.lookAngle / consts.lookWidth;
 const halfLookAngle = consts.lookAngle / 2;
@@ -21,7 +21,7 @@ class RayCasting {
     private params: { angle: number, fixDistance: number, displayX: number };
     //private sptCtx: CanvasRenderingContext2D;
 
-    constructor(imageData: ImageData, playerState: PlayerState, sprite: Sprite, sptCtx: CanvasRenderingContext2D) {
+    constructor(imageData: ImageData, playerState: PlayerState, sprite: Sprite, spriteData: SpriteData) {
         this.imageData = imageData;
         this.playerState = playerState;
         this.params = { angle: 0, fixDistance: 1, displayX: 0};
@@ -29,7 +29,7 @@ class RayCasting {
         this.sprite = sprite;
         //this.sptCtx = sptCtx;
         data.fill(0);
-        this.rayHandler = new RayHandler(data, playerState, this.params, sptCtx);
+        this.rayHandler = new RayHandler(data, playerState, this.params, spriteData);
     }
 
     public reset(): void {

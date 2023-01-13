@@ -2,7 +2,7 @@ import consts from "./consts";
 import map from "./map";
 import { PlayerState } from "./playerState";
 import Render from "./render";
-import { MapItem, RayAction, Sprite, SpriteAngleState } from "./types";
+import { MapItem, RayAction, Sprite, SpriteAngleState, SpriteData } from "./types";
 class RayHandler {
     private item: MapItem | null;
     private distance: number;
@@ -12,8 +12,9 @@ class RayHandler {
     private data: Uint32Array;
     private playerState: PlayerState;
     private params: { fixDistance: number, displayX: number };
-    private sptCtx: CanvasRenderingContext2D;
-    constructor(data: Uint32Array, playerState: PlayerState, params: { fixDistance: number, displayX: number }, sptCtx: CanvasRenderingContext2D) {
+    private spriteData: SpriteData;
+
+    constructor(data: Uint32Array, playerState: PlayerState, params: { fixDistance: number, displayX: number }, spriteData: SpriteData) {
         this.data = data;
 
         this.item = null;
@@ -23,7 +24,7 @@ class RayHandler {
         this.pixelsCounter = { count: 0 }        
         this.params = params;
         this.playerState = playerState;
-        this.sptCtx = sptCtx;
+        this.spriteData = spriteData;
     }
 
     public reset(): void {
@@ -73,7 +74,7 @@ class RayHandler {
     
     private handleSprite(spriteState: SpriteAngleState, sprite: Sprite, newDistance: number) : void {
         if (!spriteState.status && spriteState.distance > 1 && newDistance >= spriteState.distance && this.params.displayX >= spriteState.x0 && this.params.displayX <= spriteState.x1) {
-            const wRate = 41 / (spriteState.x1 - spriteState.x0 + 1);
+            const wRate = this.spriteData.width / (spriteState.x1 - spriteState.x0 + 1);
             const _params = {
                 spriteX: ((this.params.displayX - spriteState.x0) * wRate) << 0,
                 displayX: this.params.displayX, 
@@ -85,7 +86,7 @@ class RayHandler {
             }
 
             this.emptyPixels = this.emptyPixels &&
-                Render.handleSprite(this.data, _params, this.playerState, this.pixelsCounter, this.sptCtx);
+                Render.handleSprite(this.data, _params, this.playerState, this.pixelsCounter, this.spriteData);
             
             spriteState.status = true;
         }

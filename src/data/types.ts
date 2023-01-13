@@ -41,6 +41,11 @@ export interface Sprite {
     height: number,
 }
 
+export type SpriteData = {
+    width: number,
+    height: number,
+    data: Uint32Array
+}
 
 export type SpriteAngleState = {
     distance: number,

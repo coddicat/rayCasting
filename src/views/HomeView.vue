@@ -1,6 +1,5 @@
 <template>
   <div class="home">
-    <!-- <img src="@/assets/duke_front.png" width="100" height="200"/> -->
     <span>{{ fpsDisplay }}</span>
     <!-- <div>
       <canvas width="200" height="100" class="canvas" ref="mapCanvas"></canvas>
@@ -12,21 +11,20 @@
 </template>
 
 <script lang="ts">
-import map from '@/data/map';
+// import map from '@/data/map';
 import { defineComponent, ref } from 'vue';
-import consts from '@/data/consts';
-import RayCasting from '@/data/rayCasting';
+// import consts from '@/data/consts';
 import Player from '@/data/player';
-import player2d from '@/data/player2d';
+// import player2d from '@/data/player2d';
 import { PlayerState } from '@/data/playerState';
-const getUrl = () => require('../assets/duke_front.png');
+import { Main3D } from '@/data/main3D';
 
 const playerState = new PlayerState();
 const player = new Player(playerState);
 
 export default defineComponent({
   name: 'HomeView',
-  mounted() {
+  async mounted() {
     window.onkeydown = (e: KeyboardEvent) => {      
       this.currentKey.set(e.code, true);
     };
@@ -35,21 +33,18 @@ export default defineComponent({
     };
 
     if (!this.mainCanvas) throw "no canvas";
-    const ctx = this.mainCanvas.getContext("2d", { alpha: false });
-    if (!ctx) throw "cannot get context";
-    this.context = ctx;
-    
-    //this.renderMap();
+    await this.main3D.initAsync(this.mainCanvas);
+
     this.start();
   },
 
-
   
-  unmounted(){
+  unmounted() {
+    window.onkeydown = null;
+    window.onkeyup = null;
     this.stop();
   },
   setup() {
-    //const mapCanvas = ref(null as HTMLCanvasElement | null);
     const mainCanvas = ref(null as HTMLCanvasElement | null);
     const keyMap = new Map<string, boolean>();
     const currentKey = ref(keyMap);
@@ -79,64 +74,19 @@ export default defineComponent({
     //       buf[7] === 0x0d) {
     //       isLittleEndian = false;
     //   }
+    // }    
+
+    // const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
+    // tempCanvas.width = consts.lookWidth;
+    // tempCanvas.height = consts.lookHeight;
+    // const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
+    // if (!tempCtx) {
+    //   throw "Cannot get context";
     // }
 
-
-    const spriteCanvas = document.createElement('canvas') as HTMLCanvasElement;
-    if (!spriteCanvas) throw 'fuck';
-    // spriteCanvas.height = 200;
-    // spriteCanvas.width = 100;
-    const img = new Image(/*100, 200*/);
-    img.src = getUrl();      
-    const sptCtx = spriteCanvas.getContext("2d");
-    if (!sptCtx) {
-      throw 'no context';
-    }
-    img.onload = function () {
-      // var hRatio = spriteCanvas.width / img.width    ;
-      // var vRatio = spriteCanvas.height / img.height  ;
-      // var ratio  = Math.min ( hRatio, vRatio );
-      sptCtx?.drawImage(img, 0,0, img.width, img.height);//, 0,0,img.width*ratio, img.height*ratio);
-      //const data = sptCtx?.getImageData(0,0, spriteCanvas.width, spriteCanvas.height);
-      
-    }
-
-
-
-    
-
-    const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
-    tempCanvas.width = consts.lookWidth;
-    tempCanvas.height = consts.lookHeight;
-    const tempCtx = tempCanvas.getContext("2d");
-    if (!tempCtx) {
-      throw "Cannot get context";
-    }
-
-    const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
-    const rayCasting = new RayCasting(imageData, playerState, playerState, sptCtx);
-    const context = ref(null as null | CanvasRenderingContext2D);
-
-
-    async function renderMain(): Promise<void> {
-      if (!tempCtx || !context.value) return;
-      rayCasting.reset();
-      rayCasting.draw3D();
-      
-      tempCtx.putImageData(imageData, 0, 0);
-
-      // const sptCtx = mapCanvas.value?.getContext("2d");
-      // if (sptCtx) {
-      //   tempCtx.putImageData(sptCtx.getImageData(0, 0, 100, 200), 0, 0);
-      // }
-      
-
-      context.value.save();
-      context.value.clearRect(0, 0, context.value.canvas.width, context.value.canvas.height);
-      context.value.scale(context.value.canvas.width / consts.lookWidth, context.value.canvas.height / consts.lookHeight);
-      context.value.drawImage(tempCanvas, 0, 0);      
-      context.value.restore();
-    }
+    // const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
+    //const rayCasting = new RayCasting(imageData, playerState, playerState, sptCtx);
+    // const context = ref(null as null | CanvasRenderingContext2D);
 
     function keyHandler(now: number): boolean {
       const up = currentKey.value.get('ArrowUp');
@@ -157,6 +107,8 @@ export default defineComponent({
     } 
 
     const stopped = ref(false);
+    const main3D = new Main3D(playerState);
+
     async function tick() {
       if (stopped.value) return;
       const now = new Date().getTime();
@@ -168,19 +120,16 @@ export default defineComponent({
       //renderMap();
       keyHandler(now);
       player.tick(now);
-      await renderMain();
+      main3D.renderMain();
       lastTime = now;
-      //setTimeout(tick, 0);
       window.requestAnimationFrame(tick);
     }
 
     return {
-      context,
       currentKey,
       mainCanvas,
       //mapCanvas,
       keyHandler,
-      //renderMap,
       start: () => {
         stopped.value = false;
         tick();
@@ -188,7 +137,8 @@ export default defineComponent({
       stop: () => {
         stopped.value = true;
       },
-      fpsDisplay
+      fpsDisplay,
+      main3D
     }
   }
 });

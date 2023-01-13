@@ -1,6 +1,6 @@
 import consts from "./consts";
 import { PlayerState } from "./playerState";
-import { Level } from "./types";
+import { Level, SpriteData } from "./types";
 
 const maxLight = 255;
 const halfHeight = consts.lookHeight / 2;
@@ -72,8 +72,10 @@ class Painter {
         }
     }
 
-    public static drawLineStatic(data: Uint32Array, params: { x: number, y0: number, y1: number, color: number}, pixelsCounter: { count: number}, alpha: number): void {
-        if (alpha < 1) return;
+    public static drawLineStatic(data: Uint32Array, 
+        params: { x: number, y0: number, y1: number, color: number, alpha: number}, 
+        pixelsCounter: { count: number}): void {
+        if (params.alpha < 1) return;
         const topBottom = this.getTopBottom(params);
         let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
         while(topBottom.top <= topBottom.bottom) {
@@ -84,7 +86,7 @@ class Painter {
             }
 
             data[index] =
-                (alpha << 24) |
+                (params.alpha << 24) |
                 params.color
                 // (color.b << 16) |
                 // (color.g << 8) |
@@ -97,35 +99,34 @@ class Painter {
     }
 
     public static drawSpriteLine(data: Uint32Array, 
-        params: { x: number, spriteX: number, y0: number, y1: number, color: number}, 
-        pixelsCounter: { count: number}, alpha: number, 
-        sptCtx: CanvasRenderingContext2D): void {
-        if (alpha < 1) return;
+        params: { x: number, spriteX: number, y0: number, y1: number, color: number, alpha: number}, 
+        pixelsCounter: { count: number}, 
+        spriteData: SpriteData): void {
+        
+        if (params.alpha < 1) return;
         const topBottom = this.getTopBottom(params);
         let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
-        const spriteImageData = sptCtx.getImageData(params.spriteX, 0, 1, sptCtx.canvas.height);
+
         let y = 0;
-        const hRate = 82 / (Math.abs(params.y1 - params.y0) + 1);
+        const hRate = spriteData.height / (Math.abs(params.y1 - params.y0) + 1);
+
         while(topBottom.top <= topBottom.bottom) { 
-            const spriteIndex = ((y * hRate) << 0) * 4;
-            if(data[index] !== 0 || spriteImageData.data[spriteIndex + 3] === 0) {
+            const spriteIndex = ((y * hRate) << 0) * spriteData.width + params.spriteX;
+            if(data[index] !== 0 || spriteData.data[spriteIndex] === 0) {
                 topBottom.top++;
                 index += consts.lookWidth;
                 y++;
                 continue;
             }
             
-            data[index] =
-                spriteImageData.data[spriteIndex + 3] << 24 |
-                spriteImageData.data[spriteIndex] |
-                spriteImageData.data[spriteIndex + 1] << 8 |
-                spriteImageData.data[spriteIndex + 2] << 16;
+            data[index] = 
+                (params.alpha << 24) |
+                (spriteData.data[spriteIndex] & 0x00FFFFFF );
 
             pixelsCounter.count ++;
             topBottom.top ++;
             index += consts.lookWidth;
             y++;
-            //spriteIndex += 4;
         }
     }    
 }
