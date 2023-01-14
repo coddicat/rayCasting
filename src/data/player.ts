@@ -7,7 +7,7 @@ import { RayAction, Vector } from "./types";
 
 const collisionDistance = 0.6;
 const quartPi = Math.PI / 4;
-const Pi_34 = Math.PI / 4 * 3;
+const Pi_34 = (Math.PI / 4) * 3;
 const halfPi = Math.PI / 2;
 const Pi1_5 = Math.PI * 1.5;
 const acc = 0.0001;
@@ -23,9 +23,7 @@ class Player {
     if (!item || item.walls.length === 0) return RayAction.continue;
     const top = this.state.z + this.state.height;
     const bottom = this.state.z;
-    const collision = item.walls.find(x =>
-      top > x.bottom && bottom < x.top
-    );
+    const collision = item.walls.find((x) => top > x.bottom && bottom < x.top);
 
     if (collision && collision.top <= bottom + 0.301) {
       this.state.z = collision.top;
@@ -139,7 +137,7 @@ class Player {
     if (fl) {
       //item.levels.find((w) => this.state.z < w.bottom);
       return;
-    };
+    }
     this.fall();
   }
   private fall() {
@@ -184,7 +182,11 @@ class Player {
     const levels = m ? map.getItem(m).levels : [];
 
     const topLevels = levels
-      .filter((x) => this.state.z + this.state.height <= x.bottom && newZ + this.state.height >= x.bottom)
+      .filter(
+        (x) =>
+          this.state.z + this.state.height <= x.bottom &&
+          newZ + this.state.height >= x.bottom
+      )
       .map((x) => x.bottom);
 
     const topLevel = Math.min.apply(null, topLevels);

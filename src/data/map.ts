@@ -98,7 +98,7 @@ export enum MapItemType {
   Ledge,
   ColoredLedge,
   Mirror,
-  LowLedge
+  LowLedge,
 }
 
 const mapKeys = new Map<string, MapItemType>([
@@ -201,7 +201,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           bottom: 0.3,
         },
         ceil,
-        floor
+        floor,
       ],
       stopRay: false,
     },
@@ -227,7 +227,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           bottom: 0.6,
         },
         ceil,
-        floor
+        floor,
       ],
       stopRay: false,
     },
@@ -253,7 +253,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           bottom: 0.9,
         },
         ceil,
-        floor
+        floor,
       ],
       stopRay: false,
     },
@@ -279,7 +279,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           bottom: 1.2,
         },
         ceil,
-        floor
+        floor,
       ],
       stopRay: false,
     },
@@ -305,7 +305,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           bottom: 1.5,
         },
         ceil,
-        floor
+        floor,
       ],
       stopRay: false,
     },
@@ -331,7 +331,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           bottom: 1.8,
         },
         ceil,
-        floor
+        floor,
       ],
       stopRay: false,
     },
@@ -383,7 +383,7 @@ const mapItems = new Map<MapItemType, MapItem>([
     {
       walls: [
         {
-          color: 0xF4c8c8,
+          color: 0xf4c8c8,
           top: 5,
           bottom: 2,
           render: true,
@@ -391,7 +391,7 @@ const mapItems = new Map<MapItemType, MapItem>([
       ],
       levels: [
         {
-          color: 0x96F906,
+          color: 0x96f906,
           bottom: 2,
         },
         floor,
@@ -420,7 +420,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           color: 0,
           top: 4,
           bottom: 0,
-          render: false
+          render: false,
         },
       ],
       levels: [],

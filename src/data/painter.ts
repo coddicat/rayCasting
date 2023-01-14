@@ -60,7 +60,7 @@ class Painter {
 
   public static drawLineDynamic(
     data: Uint32Array,
-    params: { x: number; y0: number; y1: number; shift: number, color: number },
+    params: { x: number; y0: number; y1: number; shift: number; color: number },
     pixelsCounter: { count: number }
   ): void {
     const topBottom = this.getTopBottom(params);

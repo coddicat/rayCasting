@@ -16,7 +16,10 @@ class Render {
     pixelCounter: { count: number }
   ): void {
     const fact = consts.lookWidth / params.distance;
-    const a = halfHeight + playerState.lookVertical + fact * (playerState.z + playerState.lookHeight);
+    const a =
+      halfHeight +
+      playerState.lookVertical +
+      fact * (playerState.z + playerState.lookHeight);
 
     const _params = {
       y0: a - wall.top * fact,
@@ -39,7 +42,10 @@ class Render {
     spriteData: SpriteData
   ): void {
     const fact = consts.lookWidth / params.distance;
-    const a = halfHeight + playerState.lookVertical + fact * (playerState.z + playerState.lookHeight);
+    const a =
+      halfHeight +
+      playerState.lookVertical +
+      fact * (playerState.z + playerState.lookHeight);
 
     const _params = {
       y0: a - wall.top * fact,

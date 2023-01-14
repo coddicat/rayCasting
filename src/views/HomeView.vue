@@ -12,19 +12,19 @@
 
 <script lang="ts">
 // import map from '@/data/map';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref } from "vue";
 // import consts from '@/data/consts';
-import Player from '@/data/player';
+import Player from "@/data/player";
 // import player2d from '@/data/player2d';
-import { PlayerState } from '@/data/playerState';
-import { Main3D } from '@/data/main3D';
-import consts from '@/data/consts';
+import { PlayerState } from "@/data/playerState";
+import { Main3D } from "@/data/main3D";
+import consts from "@/data/consts";
 
 const playerState = new PlayerState();
 const player = new Player(playerState);
 
 export default defineComponent({
-  name: 'HomeView',
+  name: "HomeView",
   async mounted() {
     window.onkeydown = (e: KeyboardEvent) => {
       this.currentKey.set(e.code, true);
@@ -33,7 +33,7 @@ export default defineComponent({
       this.currentKey.set(e.code, false);
     };
 
-    if (!this.mainCanvas) throw 'no canvas';
+    if (!this.mainCanvas) throw "no canvas";
     const canvas = this.mainCanvas;
     canvas.onclick = (e: MouseEvent) => {
       canvas.requestPointerLock();
@@ -118,11 +118,11 @@ export default defineComponent({
 
     function keyHandler(now: number): boolean {
       const up =
-        currentKey.value.get('ArrowUp') || currentKey.value.get('KeyW');
+        currentKey.value.get("ArrowUp") || currentKey.value.get("KeyW");
       const down =
-        currentKey.value.get('ArrowDown') || currentKey.value.get('KeyS');
-      const moveLeft = currentKey.value.get('KeyA');
-      const moveRight = currentKey.value.get('KeyD');
+        currentKey.value.get("ArrowDown") || currentKey.value.get("KeyS");
+      const moveLeft = currentKey.value.get("KeyA");
+      const moveRight = currentKey.value.get("KeyD");
 
       let updates = false;
       // updates =
@@ -146,13 +146,13 @@ export default defineComponent({
           moveRight ? 1 : moveLeft ? -1 : 0
         ) || updates;
 
-      const left = currentKey.value.get('ArrowLeft');
-      const right = currentKey.value.get('ArrowRight');
+      const left = currentKey.value.get("ArrowLeft");
+      const right = currentKey.value.get("ArrowRight");
       updates =
         player.turn((left || right) ?? false, now, right ? 1 : left ? -1 : 0) ||
         updates;
 
-      if (currentKey.value.get('Space')) {
+      if (currentKey.value.get("Space")) {
         player.jump(now);
         updates = true;
       }
