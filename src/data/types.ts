@@ -1,55 +1,56 @@
 export type Vector = {
-    x: number,
-    y: number,
-    angle: number
-}
+  x: number;
+  y: number;
+  angle: number;
+};
 
 export type Level = {
-    color: number,
-    bottom: number
-}
+  color: number;
+  bottom: number;
+};
 export type Wall = {
-    color: number,
-    top: number,
-    bottom: number
-}
+  color: number;
+  top: number;
+  bottom: number;
+  render: boolean;
+};
 
 export type MapItem = {
-    walls: Wall[],
-    levels: Level[],
-    stopRay: boolean,
-    mirror?: boolean
-}
+  walls: Wall[];
+  levels: Level[];
+  stopRay: boolean;
+  mirror?: boolean;
+};
 
 export enum RayAction {
-    stop,
-    mirror,
-    continue
+  stop,
+  mirror,
+  continue,
 }
 
 export enum Side {
-    x,
-    y,
-    corner
+  x,
+  y,
+  corner,
 }
 
 export interface Sprite {
-    x: number;
-    y: number,
-    z: number,
-    width: number,
-    height: number,
+  x: number;
+  y: number;
+  z: number;
+  width: number;
+  height: number;
 }
 
 export type SpriteData = {
-    width: number,
-    height: number,
-    data: Uint32Array
-}
+  width: number;
+  height: number;
+  data: Uint32Array;
+};
 
 export type SpriteAngleState = {
-    distance: number,
-    x0: number,
-    x1: number,
-    status: boolean,    
-}
+  distance: number;
+  x0: number;
+  x1: number;
+  status: boolean;
+};

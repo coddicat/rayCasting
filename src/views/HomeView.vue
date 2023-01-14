@@ -18,6 +18,7 @@ import Player from '@/data/player';
 // import player2d from '@/data/player2d';
 import { PlayerState } from '@/data/playerState';
 import { Main3D } from '@/data/main3D';
+import consts from '@/data/consts';
 
 const playerState = new PlayerState();
 const player = new Player(playerState);
@@ -25,20 +26,59 @@ const player = new Player(playerState);
 export default defineComponent({
   name: 'HomeView',
   async mounted() {
-    window.onkeydown = (e: KeyboardEvent) => {      
+    window.onkeydown = (e: KeyboardEvent) => {
       this.currentKey.set(e.code, true);
     };
     window.onkeyup = (e: KeyboardEvent) => {
       this.currentKey.set(e.code, false);
     };
 
-    if (!this.mainCanvas) throw "no canvas";
+    if (!this.mainCanvas) throw 'no canvas';
+    const canvas = this.mainCanvas;
+    canvas.onclick = (e: MouseEvent) => {
+      canvas.requestPointerLock();
+    };
+    canvas.onmousemove = (ev: MouseEvent) => {
+      if (document.pointerLockElement !== canvas) return;
+
+      playerState.angle += consts.turnSpeed * ev.movementX;
+      playerState.lookVertical -= ev.movementY;
+      if (playerState.lookVertical > 200) {
+        playerState.lookVertical = 200;
+      }
+      if (playerState.lookVertical < -200) {
+        playerState.lookVertical = -200;
+      }
+    };
+
+    // if ('onpointerlockchange' in document) {
+    //   document.addEventListener('pointerlockchange', lockChangeAlert, false);
+    // } else if ('onmozpointerlockchange' in document) {
+    //   (document as Document).addEventListener(
+    //     'mozpointerlockchange',
+    //     lockChangeAlert,
+    //     false
+    //   );
+    // }
+
+    // function lockChangeAlert() {
+    //   if (
+    //     document.pointerLockElement === canvas ||
+    //     (document as any).mozPointerLockElement === canvas
+    //   ) {
+    //     console.log('The pointer lock status is now locked');
+    //     // Do something useful in response
+    //   } else {
+    //     console.log('The pointer lock status is now unlocked');
+    //     // Do something useful in response
+    //   }
+    // }
+
     await this.main3D.initAsync(this.mainCanvas);
 
     this.start();
   },
 
-  
   unmounted() {
     window.onkeydown = null;
     window.onkeyup = null;
@@ -51,7 +91,7 @@ export default defineComponent({
     let fps = 0;
     const fpsDisplay = ref(0);
     let lastTime = new Date().getTime();
-    
+
     // function renderMap() {
     //   if (!mapCanvas.value) return;
     //   var ctx = mapCanvas.value.getContext("2d", { alpha: false });
@@ -63,40 +103,54 @@ export default defineComponent({
     //   map.drawMap(ctx, playerState);
     //   player2d.drawOnMap(playerState, ctx);
     //   ctx.restore();
-    // }    
-    
+    // }
+
     // function determinateLittleEndian() {
     //   //Determine whether Uint32 is little- or big-endian.
     //   data[1] = 0x0a0b0c0d;
-      
+
     //   var isLittleEndian = true;
     //   if (buf[4] === 0x0a && buf[5] === 0x0b && buf[6] === 0x0c &&
     //       buf[7] === 0x0d) {
     //       isLittleEndian = false;
     //   }
-    // }    
-
-    // const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
-    // tempCanvas.width = consts.lookWidth;
-    // tempCanvas.height = consts.lookHeight;
-    // const tempCtx = tempCanvas.getContext("2d", { willReadFrequently: true });
-    // if (!tempCtx) {
-    //   throw "Cannot get context";
     // }
 
-    // const imageData: ImageData = tempCtx.createImageData(consts.lookWidth, consts.lookHeight);      
-    //const rayCasting = new RayCasting(imageData, playerState, playerState, sptCtx);
-    // const context = ref(null as null | CanvasRenderingContext2D);
-
     function keyHandler(now: number): boolean {
-      const up = currentKey.value.get('ArrowUp');
-      const down = currentKey.value.get('ArrowDown');
+      const up =
+        currentKey.value.get('ArrowUp') || currentKey.value.get('KeyW');
+      const down =
+        currentKey.value.get('ArrowDown') || currentKey.value.get('KeyS');
+      const moveLeft = currentKey.value.get('KeyA');
+      const moveRight = currentKey.value.get('KeyD');
+
       let updates = false;
-      updates = player.moveForward((up || down) ?? false, now, up ? 1 : down ? -1 : 0) || updates;
+      // updates =
+      //   player.moveForward(
+      //     (up || down) ?? false,
+      //     now,
+      //     up ? 1 : down ? -1 : 0
+      //   ) || updates;
+
+      // updates =
+      //   player.moveRight(
+      //     (moveRight || moveLeft) ?? false,
+      //     now,
+      //     moveRight ? 1 : moveLeft ? -1 : 0
+      //   ) || updates;
+
+      updates =
+        player.move(
+          now,
+          up ? 1 : down ? -1 : 0,
+          moveRight ? 1 : moveLeft ? -1 : 0
+        ) || updates;
 
       const left = currentKey.value.get('ArrowLeft');
       const right = currentKey.value.get('ArrowRight');
-      updates = player.turn((left || right) ?? false, now, right ? 1 : left ? -1 : 0) || updates; 
+      updates =
+        player.turn((left || right) ?? false, now, right ? 1 : left ? -1 : 0) ||
+        updates;
 
       if (currentKey.value.get('Space')) {
         player.jump(now);
@@ -104,7 +158,7 @@ export default defineComponent({
       }
 
       return updates;
-    } 
+    }
 
     const stopped = ref(false);
     const main3D = new Main3D(playerState);
@@ -138,9 +192,9 @@ export default defineComponent({
         stopped.value = true;
       },
       fpsDisplay,
-      main3D
-    }
-  }
+      main3D,
+    };
+  },
 });
 </script>
 <style lang="scss">
