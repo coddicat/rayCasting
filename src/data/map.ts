@@ -5,9 +5,9 @@ import { Level, MapItem } from "./types";
 const map = [
   "#####@@@@#####@@@@########MMMMM#############MMMMMM#",
   "#                           1                     M",
-  "#                               11223344556677    M",
-  "#                               11223344556677    M",
-  "#                               11223344556677   1M",
+  "#                               1234567           M",
+  "#                               1234567           M",
+  "#                               1234567          1M",
   "#                                                 M",
   "#                                                 #",
   "##################      ^^^^                      #",
@@ -323,7 +323,7 @@ const mapItems = new Map<MapItemType, MapItem>([
       ],
       levels: [
         {
-          color: 0x0a9632,
+          color: 0x0000FF,
           bottom: 2.1,
         },
         {

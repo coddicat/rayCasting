@@ -19,28 +19,31 @@ class RayHandler {
   private playerState: PlayerState;
   private params: { fixDistance: number; displayX: number };
   private spriteData: SpriteData;
+  private wallSpriteData: SpriteData;
 
   constructor(
     data: Uint32Array,
     playerState: PlayerState,
     params: { fixDistance: number; displayX: number },
-    spriteData: SpriteData
+    spriteData: SpriteData,
+    wallSpriteData: SpriteData,
   ) {
     this.data = data;
 
     this.item = null;
-    this.distance = 0.5;
+    this.distance = 0.2;
     this.mirrorFact = 1;
     this.emptyPixels = true;
     this.pixelsCounter = { count: 0 };
     this.params = params;
     this.playerState = playerState;
     this.spriteData = spriteData;
+    this.wallSpriteData = wallSpriteData;
   }
 
   public reset(): void {
     this.item = null;
-    this.distance = 0.5;
+    this.distance = 0.2;
     this.mirrorFact = 1;
     this.emptyPixels = true;
     this.pixelsCounter = {
@@ -49,7 +52,7 @@ class RayHandler {
   }
 
   public handle(
-    params: { bx: number; by: number; distance: number },
+    params: { bx: number; by: number; distance: number, sideX: number },
     spriteState: SpriteAngleState,
     sprite: Sprite
   ): RayAction {
@@ -65,6 +68,7 @@ class RayHandler {
         distance: newDistance,
         distance1: this.distance,
         mirrorFact: this.mirrorFact,
+        sideX: params.sideX
       };
 
       this.emptyPixels =
@@ -84,11 +88,12 @@ class RayHandler {
           newItem,
           _params,
           this.playerState,
-          this.pixelsCounter
+          this.pixelsCounter,
+          this.wallSpriteData
         );
 
       this.item = newItem;
-      this.distance = newDistance < 0.5 ? 0.5 : newDistance;
+      this.distance = newDistance < 0.2 ? 0.2 : newDistance;
     }
 
     if (newItem && newItem.mirror) {

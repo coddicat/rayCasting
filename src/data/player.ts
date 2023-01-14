@@ -23,14 +23,19 @@ class Player {
     if (!item || item.walls.length === 0) return RayAction.continue;
     const top = this.state.z + this.state.height;
     const bottom = this.state.z;
-    const collision = item.walls.find((x) => top > x.bottom && bottom < x.top);
+    const collisions = item.walls.filter((x) =>
+      top > x.bottom && bottom < x.top
+    );
 
-    if (collision && collision.top <= bottom + 0.301) {
-      this.state.z = collision.top;
-      return RayAction.continue;
+    if (collisions.length > 0) {
+      const max = Math.max.apply(null, collisions.map(x => x.top));
+      if (max <= bottom + 0.301) {
+        this.state.z = max;
+        return RayAction.continue;
+      }
     }
 
-    return collision ? RayAction.stop : RayAction.continue;
+    return collisions.length > 0 ? RayAction.stop : RayAction.continue;
   }
   private fixDistance(d: number): number {
     d -= collisionDistance;
@@ -135,7 +140,6 @@ class Player {
     const item = map.getItem(found);
     const fl = item.levels.find((w) => this.state.z === w.bottom);
     if (fl) {
-      //item.levels.find((w) => this.state.z < w.bottom);
       return;
     }
     this.fall();

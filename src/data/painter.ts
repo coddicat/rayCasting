@@ -121,6 +121,7 @@ class Painter {
       y1: number;
       color: number;
       alpha: number;
+      scale: number;
     },
     pixelsCounter: { count: number },
     spriteData: SpriteData
@@ -129,12 +130,13 @@ class Painter {
     const topBottom = this.getTopBottom(params);
     let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
 
-    let y = 0;
-    const hRate = spriteData.height / (Math.abs(params.y1 - params.y0) + 1);
+    let y = topBottom.top - params.y0;
+    const hRate = spriteData.height / (Math.abs(params.y1 - params.y0) + 1) / params.scale;
 
     while (topBottom.top <= topBottom.bottom) {
       const spriteIndex =
-        ((y * hRate) << 0) * spriteData.width + params.spriteX;
+        (((y * hRate) << 0) % spriteData.height) * spriteData.width + params.spriteX;
+
       if (data[index] !== 0 || spriteData.data[spriteIndex] === 0) {
         topBottom.top++;
         index += consts.lookWidth;

@@ -1,6 +1,7 @@
 import { SpriteData } from "./types";
 
 const getDukeFrontUrl = () => require("../assets/duke_front.png");
+const getWallBriksUrl = () => require("../assets/wall_briks.png");
 
 function loadSprite(url: string): Promise<SpriteData> {
   const canvas = document.createElement("canvas") as HTMLCanvasElement;
@@ -28,3 +29,4 @@ function loadSprite(url: string): Promise<SpriteData> {
 }
 
 export const getDukeFrontSpriteData = () => loadSprite(getDukeFrontUrl());
+export const getWallBriksSpriteData = () => loadSprite(getWallBriksUrl());

@@ -19,26 +19,26 @@ class RayCasting {
   private sprite: Sprite;
   private spriteAngle: SpriteAngle;
   private params: { angle: number; fixDistance: number; displayX: number };
-  //private sptCtx: CanvasRenderingContext2D;
 
   constructor(
     imageData: ImageData,
     playerState: PlayerState,
     sprite: Sprite,
-    spriteData: SpriteData
+    spriteData: SpriteData,
+    wallSpriteData: SpriteData,
   ) {
     this.imageData = imageData;
     this.playerState = playerState;
     this.params = { angle: 0, fixDistance: 1, displayX: 0 };
     this.spriteAngle = new SpriteAngle(sprite, this.playerState, this.params);
     this.sprite = sprite;
-    //this.sptCtx = sptCtx;
     data.fill(0);
     this.rayHandler = new RayHandler(
       data,
       playerState,
       this.params,
-      spriteData
+      spriteData,
+      wallSpriteData
     );
   }
 

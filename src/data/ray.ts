@@ -6,6 +6,7 @@ export type BlockHandler = (params: {
   bx: number;
   by: number;
   distance: number;
+  sideX: number;
 }) => RayAction;
 export type MirrorHandler = (side: Side, x: RayAxis, y: RayAxis) => void;
 class Ray {
@@ -14,8 +15,13 @@ class Ray {
   private axisY: RayAxis;
   private distance: number;
   private side: Side;
+  private sideX: number;
   private mirrors: number;
   private mirrorHandle?: MirrorHandler;
+
+  private cos: number;
+  private sin: number;
+  private vector: Vector;
 
   constructor(
     vector: Vector,
@@ -25,13 +31,18 @@ class Ray {
     this.blockHandler = blockHandler;
     this.mirrorHandle = mirrorHandle;
 
-    const stepX = consts.blockSize / Math.cos(vector.angle);
-    const stepY = consts.blockSize / Math.sin(vector.angle);
+    this.vector = vector;
+    this.cos = Math.cos(vector.angle);
+    this.sin = Math.sin(vector.angle);
+
+    const stepX = consts.blockSize / this.cos;
+    const stepY = consts.blockSize / this.sin;
     this.axisX = new RayAxis(0, vector.x, stepX);
     this.axisY = new RayAxis(0, vector.y, stepY);
     this.distance = 0;
     this.side = this.getSide();
     this.mirrors = 0;
+    this.sideX = this.getSideX();
   }
 
   private getSide(): Side {
@@ -40,11 +51,20 @@ class Ray {
     return dx === dy ? Side.corner : dx > dy ? Side.x : Side.y;
   }
 
+  private getSideX(): number {
+    if (this.side === Side.x) {
+      return (this.cos * this.distance + this.vector.x) % consts.blockSize;
+    } else {
+      return (this.sin * this.distance + this.vector.y) % consts.blockSize;
+    }
+  }
+
   private handleStep(): boolean {
     const action = this.blockHandler({
       bx: this.axisX.getBlock(),
       by: this.axisY.getBlock(),
       distance: this.distance,
+      sideX: this.sideX
     });
     if (action === RayAction.stop) {
       return true;
@@ -69,6 +89,7 @@ class Ray {
     if (this.side === Side.corner || this.side === Side.y) {
       this.distance = this.axisX.step();
     }
+    this.sideX = this.getSideX();
 
     return false;
   }
