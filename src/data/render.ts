@@ -33,8 +33,8 @@ class Render {
       checkAlpha: false,
     };
 
-    //Painter.drawLineStatic(data, _params, pixelCounter);
-    Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
+    Painter.drawLineStatic(data, _params, pixelCounter);
+    //Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
   }
 
   private static drawSprite(
@@ -73,10 +73,14 @@ class Render {
       distance: number;
       distance1: number;
       mirrorFact: number;
+      sideX: number;
+      angle: number;
+      fixDistance: number
     },
     level: Level,
     playerState: PlayerState,
-    pixelCounter: { count: number }
+    pixelCounter: { count: number },
+    spriteData: SpriteData
   ): void {
     const d =
       consts.lookWidth *
@@ -88,10 +92,17 @@ class Render {
       shift: playerState.lookVertical,
       x: params.displayX,
       color: level.color,
+      //spriteX: (params.sideX * spriteData.width) << 0,
+      angle: params.angle,
+      distance: params.distance1,
+      sideX: params.sideX,
+      //scale: 1,// / (wall.top - wall.bottom)
+      fixDistance: params.fixDistance
     };
 
     Painter.InitDynamicAlpha(playerState, level, params);
-    Painter.drawLineDynamic(data, _params, pixelCounter);
+    //Painter.drawLineDynamic(data, _params, pixelCounter);
+    Painter.drawSpriteLineDynamic(data, _params, pixelCounter, spriteData);
   }
 
   public static handleSprite(
@@ -176,9 +187,13 @@ class Render {
       distance: number;
       distance1: number;
       mirrorFact: number;
+      sideX: number;
+      angle: number;
+      fixDistance: number
     },
     playerState: PlayerState,
-    pixelCounter: { count: number }
+    pixelCounter: { count: number },
+    levelSpriteData: SpriteData,
   ): boolean {
     if (!item || params.distance1 < 0.2) return true;
 
@@ -189,14 +204,14 @@ class Render {
 
     let i = 0;
     while (i < bottomLevels.length) {
-      this.drawLevel(data, params, bottomLevels[i], playerState, pixelCounter);
+      this.drawLevel(data, params, bottomLevels[i], playerState, pixelCounter, levelSpriteData);
       if (pixelCounter.count >= consts.lookHeight) return false;
       i++;
     }
 
     i = topLevels.length - 1;
     while (i >= 0) {
-      this.drawLevel(data, params, topLevels[i], playerState, pixelCounter);
+      this.drawLevel(data, params, topLevels[i], playerState, pixelCounter, levelSpriteData);
       if (pixelCounter.count >= consts.lookHeight) return false;
       i--;
     }

@@ -2,7 +2,7 @@ import consts from "./consts";
 import { Sprite } from "./types";
 
 export class PlayerState implements Sprite {
-  public x: number = consts.blockSize * 40;
+  public x: number = consts.blockSize * 30;
   public y: number = consts.blockSize * 1.5;
   public z = 0;
 
@@ -10,7 +10,7 @@ export class PlayerState implements Sprite {
   public height: number = consts.playerHeight;
   public lookHeight: number = consts.playerHeight * 0.9;
 
-  public angle = Math.PI;
+  public angle = Math.PI / 2;
   public lookVertical = 0;
   public jumping: number | null = null;
   public jumpingFloor: number | null = null;
