@@ -168,7 +168,7 @@ export default defineComponent({
       const now = new Date().getTime();
       if (now % 10 === 0) {
         const diff = now - lastTime;
-        fps = (1000 / diff) << 0;
+        fps = 1000 / diff << 0;
         fpsDisplay.value = fps;
       }
       //renderMap();

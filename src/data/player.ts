@@ -129,8 +129,8 @@ class Player {
   }
 
   private checkFloor() {
-    const mx = (this.state.x / consts.blockSize) << 0;
-    const my = (this.state.y / consts.blockSize) << 0;
+    const mx = this.state.x / consts.blockSize << 0;
+    const my = this.state.y / consts.blockSize << 0;
 
     const found = map.check({ bx: mx, by: my });
     if (!found) {
@@ -175,12 +175,12 @@ class Player {
       return false;
     }
 
-    const mx = (this.state.x / consts.blockSize) << 0;
-    const my = (this.state.y / consts.blockSize) << 0;
+    const mx = this.state.x / consts.blockSize << 0;
+    const my = this.state.y / consts.blockSize << 0;
 
     const t = now - this.state.jumping;
-    const v0 = this.state.jumpingSpeed ?? 0;
-    const newZ = (this.state.jumpingFloor ?? 0) + v0 * t - acc * t * (t >> 1);
+    const v0 = this.state.jumpingSpeed ?? 0;    
+    const newZ = (this.state.jumpingFloor ?? 0) + t * (v0 - acc * (t >> 1));
 
     const m = map.check({ bx: mx, by: my });
     const levels = m ? map.getItem(m).levels : [];

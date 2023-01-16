@@ -121,7 +121,7 @@ class RayHandler {
       const wRate =
         this.spriteData.width / (spriteState.x1 - spriteState.x0 + 1);
       const _params = {
-        spriteX: ((this.params.displayX - spriteState.x0) * wRate) << 0,
+        spriteX: (this.params.displayX - spriteState.x0) * wRate << 0,
         displayX: this.params.displayX,
         distance: spriteState.distance,
         mirrorFact: this.mirrorFact,

@@ -67,7 +67,6 @@ class Painter {
     let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
     while (topBottom.top <= topBottom.bottom) {
       const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
-      //if (alpha < 1) break;
 
       if (data[index] !== 0 || alpha < 1) {
         topBottom.top++;
@@ -75,10 +74,7 @@ class Painter {
         continue;
       }
 
-      data[index] = (alpha << 24) | params.color;
-      // (color.b << 16) |
-      // (color.g << 8) |
-      // (color.r);
+      data[index] = params.color | alpha << 24;
 
       pixelsCounter.count++;
       topBottom.top++;
@@ -94,6 +90,7 @@ class Painter {
     if (params.alpha < 1) return;
     const topBottom = this.getTopBottom(params);
     let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+    const alphaMask = params.alpha << 24;
     while (topBottom.top <= topBottom.bottom) {
       if (data[index] !== 0) {
         topBottom.top++;
@@ -101,7 +98,7 @@ class Painter {
         continue;
       }
 
-      data[index] = (params.alpha << 24) | params.color;
+      data[index] = params.color | alphaMask;
       // (color.b << 16) |
       // (color.g << 8) |
       // (color.r);
@@ -122,30 +119,33 @@ class Painter {
       color: number;
       alpha: number;
       scale: number;
+      checkAlpha: boolean
     },
     pixelsCounter: { count: number },
     spriteData: SpriteData
   ): void {
     if (params.alpha < 1) return;
+    const alphaMask = 0x00ffffff | params.alpha << 24;
     const topBottom = this.getTopBottom(params);
     let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
 
     let y = topBottom.top - params.y0;
-    const hRate = spriteData.height / (Math.abs(params.y1 - params.y0) + 1) / params.scale;
+    const hRate = spriteData.height / (Math.abs(params.y1 - params.y0) + 1) * params.scale;
 
     while (topBottom.top <= topBottom.bottom) {
-      const spriteIndex =
-        (((y * hRate) << 0) % spriteData.height) * spriteData.width + params.spriteX;
+      const spriteIndex = 
+       ((y * hRate) << 0) % spriteData.height * spriteData.width + params.spriteX;
 
-      if (data[index] !== 0 || spriteData.data[spriteIndex] === 0) {
+      const pixel = spriteData.data[spriteIndex];
+
+      if (data[index] !== 0 || (params.checkAlpha && pixel === 0)) {
         topBottom.top++;
         index += consts.lookWidth;
         y++;
         continue;
       }
 
-      data[index] =
-        (params.alpha << 24) | (spriteData.data[spriteIndex] & 0x00ffffff);
+      data[index] = pixel & alphaMask;
 
       pixelsCounter.count++;
       topBottom.top++;

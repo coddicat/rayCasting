@@ -28,8 +28,9 @@ class Render {
       x: params.displayX,
       color: wall.color,
       alpha: light,
-      spriteX: (params.sideX * spriteData.width) << 0,
-      scale: 1 / (wall.top - wall.bottom)
+      spriteX: params.sideX * spriteData.width << 0,
+      scale: wall.top - wall.bottom,
+      checkAlpha: false,
     };
 
     //Painter.drawLineStatic(data, _params, pixelCounter);
@@ -59,6 +60,7 @@ class Render {
       color: wall.color,
       alpha: light,
       scale: 1,
+      checkAlpha: true
     };
 
     Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);

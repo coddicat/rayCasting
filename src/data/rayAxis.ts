@@ -9,7 +9,7 @@ export default class RayAxis {
     this._sign = Math.sign(step);
     this._step = Math.abs(step);
     const rest = this.getRest(from);
-    this._block = (from / consts.blockSize) << 0;
+    this._block = from / consts.blockSize << 0;
     this._distance = initDistance + (this._step * rest) / consts.blockSize;
   }
 

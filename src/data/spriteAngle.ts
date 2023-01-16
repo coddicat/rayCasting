@@ -55,7 +55,7 @@ export class SpriteAngle {
     const angle0 =
       sign < 0 ? Math.PI - this.playerState.angle : this.playerState.angle;
     const diff = (angle - this.fixAngle(angle0)) * sign;
-    const x = (angleRatio * (diff + halfLookAngle)) << 0;
+    const x = angleRatio * (diff + halfLookAngle) << 0;
     const xf = ((this.sprite.width / 2) * consts.lookWidth) / distance;
 
     this.state.distance = distance * this.params.fixDistance;
