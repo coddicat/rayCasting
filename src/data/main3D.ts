@@ -42,14 +42,14 @@ export class Main3D {
     this.rayCasting = new RayCasting(
       this.imageData,
       this.playerState,
-      //this.playerState,
-      {
-        x: 45,
-        y: 44,
-        z: 0,
-        height: 2,
-        width: 1
-      },
+      this.playerState,
+      // {
+      //   x: 50.5,
+      //   y: 43.5,
+      //   z: 0.3,
+      //   height: 2,
+      //   width: 1
+      // },
       dukeFrontSpriteData,
       wallBriksSpriteData,
       floor1SpriteData

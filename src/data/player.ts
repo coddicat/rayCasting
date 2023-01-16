@@ -5,7 +5,7 @@ import Ray from "./ray";
 import { BlockHandler } from "./ray";
 import { RayAction, Vector } from "./types";
 
-const collisionDistance = 0.6;
+const collisionDistance = 2;
 const quartPi = Math.PI / 4;
 const Pi_34 = (Math.PI / 4) * 3;
 const halfPi = Math.PI / 2;
@@ -112,9 +112,9 @@ class Player {
       const rayX = new Ray(vx, handleX);
       const rayY = new Ray(vy, handleY);
 
-      const xres = rayX.send(Math.abs(xDistance) + collisionDistance);
-      const yres = rayY.send(Math.abs(yDistance) + collisionDistance);
-      const res = !xres && !yres && ray.send(distance + collisionDistance);
+      const xres = rayX.send(Math.abs(xDistance) + collisionDistance, false);
+      const yres = rayY.send(Math.abs(yDistance) + collisionDistance, false);
+      const res = !xres && !yres && ray.send(distance + collisionDistance, false);
       if (res) {
         nx = this.state.x;
         ny = this.state.y;
@@ -179,7 +179,7 @@ class Player {
     const my = this.state.y / consts.blockSize << 0;
 
     const t = now - this.state.jumping;
-    const v0 = this.state.jumpingSpeed ?? 0;    
+    const v0 = this.state.jumpingSpeed ?? 0;
     const newZ = (this.state.jumpingFloor ?? 0) + t * (v0 - acc * (t >> 1));
 
     const m = map.check({ bx: mx, by: my });

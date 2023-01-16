@@ -103,12 +103,14 @@ class Ray {
     return false;
   }
 
-  public send(max: number): boolean {
+  public send(max: number, last = true): boolean {
     while (this.distance + this.mirrors * consts.blockSize < max) {
       const stop = this.handleStep(false);
       if (stop) return true;
     }
-    this.handleStep(true);
+    if (last) {
+      this.handleStep(last);
+    }
     return false;
   }
 }

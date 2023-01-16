@@ -33,8 +33,8 @@ class Render {
       checkAlpha: false,
     };
 
-    //Painter.drawLineStatic(data, _params, pixelCounter);
-    Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
+    Painter.drawLineStatic(data, _params, pixelCounter);
+    //Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
   }
 
   private static drawSprite(
@@ -92,7 +92,7 @@ class Render {
       y1: halfHeight + playerState.lookVertical + d / params.distance1,
       shift: playerState.lookVertical,
       x: params.displayX,
-      color: level.color,      
+      color: level.color,
       angle: params.angle,
       distance: params.distance1,
       sideX: params.sideX,
@@ -101,8 +101,8 @@ class Render {
     };
 
     Painter.InitDynamicAlpha(playerState, level, params);
-    //Painter.drawLineDynamic(data, _params, pixelCounter);
-    Painter.drawSpriteLineDynamic(data, _params, pixelCounter, spriteData);
+    Painter.drawLineDynamic(data, _params, pixelCounter);
+    //Painter.drawSpriteLineDynamic(data, _params, pixelCounter, spriteData);
   }
 
   public static handleSprite(

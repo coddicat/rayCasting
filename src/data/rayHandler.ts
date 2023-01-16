@@ -105,7 +105,7 @@ class RayHandler {
     }
 
     if (newItem && newItem.mirror) {
-      this.mirrorFact *= 0.75;
+      //this.mirrorFact *= 0.75;
       return RayAction.mirror;
     }
 

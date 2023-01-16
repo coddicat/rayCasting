@@ -13,7 +13,8 @@ export class SpriteAngle {
   private sprite: Sprite;
   private currentX: number;
   private currentY: number;
-  private mirrored: boolean;
+  private mirroredX: number;
+  private mirroredY: number;
   private params: { fixDistance: number; displayX: number, angle: number, screenAngle: number };
   private initDistance: number;
 
@@ -33,7 +34,8 @@ export class SpriteAngle {
       status: false,
       hidden: false,
     };
-    this.mirrored = false;
+    this.mirroredX = 0;
+    this.mirroredY = 0;
     this.params = params;
     this.initDistance = 0;
     this.initState();
@@ -57,10 +59,10 @@ export class SpriteAngle {
     const angle0 =
       sign < 0 ? Math.PI - this.playerState.angle : this.playerState.angle;
     const diff = (angle - this.fixAngle(angle0)) * sign;
-    const x = angleRatio * (diff + halfLookAngle) << 0;  
+    const x = angleRatio * (diff + halfLookAngle) << 0;
     this.initDistance = Math.sqrt(dx ** 2 + dy ** 2);
     const xf = ((this.sprite.width / 2) * consts.lookWidth) / this.initDistance;
-    
+
     this.state.distance = this.initDistance * this.params.fixDistance;
     this.state.x0 = (x - xf);
     this.state.x1 = (x + xf);
@@ -68,54 +70,78 @@ export class SpriteAngle {
   public getState(): SpriteAngleState {
     return this.state;
   }
-  public mirrorHandler(bx: number, by: number, side: Side, rayX: RayAxis, rayY: RayAxis): void {    
+  public mirrorHandler(bx: number, by: number, side: Side, rayX: RayAxis, rayY: RayAxis): void {
     const blockX = rayX.getBlock() + (rayX.getSign() > 0 ? 1 : 0);
     const blockY = rayY.getBlock() + (rayY.getSign() > 0 ? 1 : 0);
     const x = blockX * consts.blockSize;
     const y = blockY * consts.blockSize;
-   
-    if (this.state.hidden)
-    {
+
+    if (this.state.hidden) {
       return;
     }
 
-    if (side === Side.x && this.playerState.y < y && this.currentY > y) {
-      this.state.status = true;
-      this.state.hidden = true;
-      return;
+    if (this.mirroredY == 0) {
+      if (side === Side.x && this.playerState.y < y && this.sprite.y > y) {
+        this.state.status = true;
+        this.state.hidden = true;
+        return;
+      }
+      if (side === Side.x && this.playerState.y > y && this.sprite.y < y) {
+        this.state.status = true;
+        this.state.hidden = true;
+        return;
+      }
     }
-    if (side === Side.x && this.playerState.y > y && this.currentY < y) {
-      this.state.status = true;
-      this.state.hidden = true;
-      return;
+
+    if (this.mirroredX === 0) {
+      if (side === Side.y && this.playerState.x < x && this.sprite.x > x) {
+        this.state.status = true;
+        this.state.hidden = true;
+        return;
+      }
+      if (side === Side.y && this.playerState.x > x && this.sprite.x < x) {
+        this.state.status = true;
+        this.state.hidden = true;
+        return;
+      }
     }
-    if (side === Side.y && this.playerState.x < x && this.currentX > x) {
-      this.state.status = true;
-      this.state.hidden = true;
-      return;
-    }
-    if (side === Side.y && this.playerState.x > x && this.currentX < x) {
-      this.state.status = true;
-      this.state.hidden = true;
-      return;
-    }
+
+
     if (side == Side.corner) {
       return;
     }
-   
+
     this.state.status = false;
 
-    this.currentX = side === Side.x ? this.currentX : 2 * x - this.currentX;
-    this.currentY = side === Side.y ? this.currentY : 2 * y - this.currentY;
+    if (side === Side.y) {
+      if (this.mirroredX % 2 === 0) {
+        this.currentX += 2 * (x - this.sprite.x);
+      } else {
+        this.currentX += 2 * (this.sprite.x - x);
+      }
+      this.mirroredX++;
+
+    }
+
+    if (side === Side.x) {
+      if (this.mirroredY % 2 === 0) {
+        this.currentY += 2 * (y - this.sprite.y);
+      }
+      else {
+        this.currentY += 2 * (this.sprite.y - y);
+      }
+      this.mirroredY++;
+    }
     this.initState();
-    this.mirrored = true;
   }
   public reset() {
     this.state.status = false;
     this.state.hidden = false;
     this.state.distance = this.initDistance * this.params.fixDistance;
+    this.mirroredX = 0;
+    this.mirroredY = 0;
+
     if (
-      !this.mirrored &&
       this.currentX === this.sprite.x &&
       this.currentY === this.sprite.y
     )
@@ -123,6 +149,5 @@ export class SpriteAngle {
     this.currentX = this.sprite.x;
     this.currentY = this.sprite.y;
     this.initState();
-    this.mirrored = false;
   }
 }
