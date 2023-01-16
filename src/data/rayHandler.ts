@@ -5,6 +5,7 @@ import Render from "./render";
 import {
   MapItem,
   RayAction,
+  Side,
   Sprite,
   SpriteAngleState,
   SpriteData,
@@ -55,7 +56,7 @@ class RayHandler {
   }
 
   public handle(
-    params: { bx: number; by: number; distance: number, sideX: number, angle: number },
+    params: { bx: number; by: number; distance: number, sideX: number, side: Side, angle: number },
     spriteState: SpriteAngleState,
     sprite: Sprite
   ): RayAction {
@@ -73,7 +74,8 @@ class RayHandler {
         mirrorFact: this.mirrorFact,
         sideX: params.sideX,
         angle: params.angle,
-        fixDistance: this.params.fixDistance
+        fixDistance: this.params.fixDistance,
+        side: params.side
       };
 
       this.emptyPixels =
@@ -165,7 +167,8 @@ class RayHandler {
         mirrorFact: this.mirrorFact,
         sideX: this.params.displayX,
         angle: angle,
-        fixDistance: this.params.fixDistance
+        fixDistance: this.params.fixDistance,
+        side: Side.x,
       },
       this.playerState,
       this.pixelsCounter,

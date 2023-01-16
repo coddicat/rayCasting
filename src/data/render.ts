@@ -1,7 +1,7 @@
 import consts from "./consts";
 import Painter from "./painter";
 import { PlayerState } from "./playerState";
-import { Level, MapItem, SpriteData, Wall } from "./types";
+import { Level, MapItem, Side, SpriteData, Wall } from "./types";
 
 const maxLight = 255;
 const halfHeight = consts.lookHeight / 2;
@@ -33,8 +33,8 @@ class Render {
       checkAlpha: false,
     };
 
-    Painter.drawLineStatic(data, _params, pixelCounter);
-    //Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
+    //Painter.drawLineStatic(data, _params, pixelCounter);
+    Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
   }
 
   private static drawSprite(
@@ -74,6 +74,7 @@ class Render {
       distance1: number;
       mirrorFact: number;
       sideX: number;
+      side: number;
       angle: number;
       fixDistance: number
     },
@@ -91,12 +92,11 @@ class Render {
       y1: halfHeight + playerState.lookVertical + d / params.distance1,
       shift: playerState.lookVertical,
       x: params.displayX,
-      color: level.color,
-      //spriteX: (params.sideX * spriteData.width) << 0,
+      color: level.color,      
       angle: params.angle,
       distance: params.distance1,
       sideX: params.sideX,
-      //scale: 1,// / (wall.top - wall.bottom)
+      side: params.side,
       fixDistance: params.fixDistance
     };
 
@@ -188,6 +188,7 @@ class Render {
       distance1: number;
       mirrorFact: number;
       sideX: number;
+      side: Side;
       angle: number;
       fixDistance: number
     },

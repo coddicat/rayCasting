@@ -1,6 +1,6 @@
 import consts from "./consts";
 import { PlayerState } from "./playerState";
-import { Level, SpriteData } from "./types";
+import { Level, SpriteData, Side } from "./types";
 
 const maxLight = 255;
 const halfHeight = consts.lookHeight / 2;
@@ -32,6 +32,10 @@ export class DynamicAlpha {
     const a = y - halfHeight - shift;
     if (a === 0) return Infinity;
     return this.b / a;
+  }
+
+  public getPlayerState() {
+    return this.playerState;
   }
 }
 
@@ -224,12 +228,11 @@ class Painter {
     data: Uint32Array,
     params: {
       x: number;
+      side: Side,
       sideX: number;
-      //spriteX: number;
       y0: number;
       y1: number;
       color: number;
-      //scale: number;
       shift: number,
       angle: number,
       distance: number,
@@ -241,10 +244,10 @@ class Painter {
     const topBottom = this.getTopBottom(params);
     let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
 
-    //let y = topBottom.top - params.y0;
-    //const max = spriteData.data.length;
-    let y = 0;
+    const scale = 1;
     const dist0 = this.dynamicAlpha.getDistance(params.y0, params.shift);
+
+    const side0 = params.sideX;
 
     while (topBottom.top <= topBottom.bottom) {
       const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
@@ -253,17 +256,39 @@ class Painter {
 
       const diff = Math.abs(dist0 - dist);
       const angle = params.angle;
-      const fact = consts.lookWidth / dist;
-      const hRate = spriteData.height / fact;
-      const sideX = params.sideX - Math.cos(angle) * diff / params.fixDistance;
-      const spriteX = (sideX * spriteData.width) << 0;
 
-      const spriteIndex = (((diff * 20) % spriteData.height << 0) * spriteData.width + (spriteX % spriteData.width)) << 0;
+      let spriteIndex = 0;
+      if (params.side === Side.x) {
+        const sign = Math.sign(Math.sin(angle));
+        const sin = Math.sin(angle) * sign;
+        const cos = Math.cos(angle);
+        const sideX = side0 - cos * diff / params.fixDistance;
+        let spriteX = ((sideX * spriteData.width) << 0) % spriteData.width;
+        if(spriteX < 0) {
+          spriteX = spriteX + spriteData.width - 1;
+        }
+        const spriteY = (scale * diff * spriteData.height * sin / params.fixDistance) << 0
+        const fixed = sign > 0 ? spriteData.height - spriteY % spriteData.height - 1 : spriteY % spriteData.height;
+        spriteIndex = fixed * spriteData.width + spriteX;
+      } else {
+        const signX = Math.sign(Math.cos(angle));
+        const cos = signX * Math.cos(angle);
+        const sin = Math.sin(angle);
+        const sideX = side0 - sin * diff / params.fixDistance;
+        let spriteY = ((sideX * spriteData.height) << 0) % spriteData.height;
+        if(spriteY < 0) {
+          spriteY = spriteY + spriteData.height - 1;
+        }
+        const spriteX = (scale * diff * spriteData.width * cos / params.fixDistance) << 0
+        const fixedY = spriteY % spriteData.height;
+        const fixedX = signX > 0 ? spriteData.width - spriteX % spriteData.width - 1 : spriteX % spriteData.width;
+        spriteIndex = fixedY * spriteData.width + fixedX;      
+      }
+     
 
       if (data[index] !== 0 || spriteData.data[spriteIndex] === 0) {
         topBottom.top++;
         index += consts.lookWidth;
-        y++;
         continue;
       }
 
@@ -273,7 +298,6 @@ class Painter {
       pixelsCounter.count++;
       topBottom.top++;
       index += consts.lookWidth;
-      y++;
     }
   }
 }
