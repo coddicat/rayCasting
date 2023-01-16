@@ -9,8 +9,9 @@ export type BlockHandler = (params: {
   sideX: number;
   side: Side,
   angle: number;
+  last: boolean
 }) => RayAction;
-export type MirrorHandler = (side: Side, x: RayAxis, y: RayAxis) => void;
+export type MirrorHandler = (bx: number, by: number, side: Side, x: RayAxis, y: RayAxis) => void;
 class Ray {
   private blockHandler: BlockHandler;
   private axisX: RayAxis;
@@ -61,14 +62,18 @@ class Ray {
     }
   }
 
-  private handleStep(): boolean {
+  private handleStep(last: boolean): boolean {
+    const bx = this.axisX.getBlock();
+    const by = this.axisY.getBlock();
+
     const action = this.blockHandler({
-      bx: this.axisX.getBlock(),
-      by: this.axisY.getBlock(),
+      bx,
+      by,
       distance: this.distance,
       sideX: this.sideX,
       angle: this.vector.angle,
-      side: this.side
+      side: this.side,
+      last: last
     });
     if (action === RayAction.stop) {
       return true;
@@ -83,7 +88,7 @@ class Ray {
         this.axisX.mirror();
       }
       if (this.mirrorHandle) {
-        this.mirrorHandle(this.side, this.axisX, this.axisY);
+        this.mirrorHandle(bx, by, this.side, this.axisX, this.axisY);
       }
     }
     this.side = this.getSide();
@@ -100,9 +105,10 @@ class Ray {
 
   public send(max: number): boolean {
     while (this.distance + this.mirrors * consts.blockSize < max) {
-      const stop = this.handleStep();
+      const stop = this.handleStep(false);
       if (stop) return true;
     }
+    this.handleStep(true);
     return false;
   }
 }

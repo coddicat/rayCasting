@@ -18,7 +18,7 @@ class RayCasting {
   private rayHandler: RayHandler;
   private sprite: Sprite;
   private spriteAngle: SpriteAngle;
-  private params: { angle: number; fixDistance: number; displayX: number };
+  private params: { angle: number; fixDistance: number; displayX: number, screenAngle: number };
 
   constructor(
     imageData: ImageData,
@@ -30,7 +30,7 @@ class RayCasting {
   ) {
     this.imageData = imageData;
     this.playerState = playerState;
-    this.params = { angle: 0, fixDistance: 1, displayX: 0 };
+    this.params = { angle: 0, fixDistance: 1, displayX: 0, screenAngle: -halfLookAngle };
     this.spriteAngle = new SpriteAngle(sprite, this.playerState, this.params);
     this.sprite = sprite;
     data.fill(0);
@@ -91,32 +91,35 @@ class RayCasting {
     const spriteAngleState = this.spriteAngle.getState();
     const handler: BlockHandler = (p) =>
       this.rayHandler.handle(p, spriteAngleState, this.sprite);
-    const mirrorHandle = (side: Side, rayX: RayAxis, rayY: RayAxis) => {
-      this.spriteAngle.mirrorHandler(side, rayX, rayY);
+    const mirrorHandle = (bx: number, by: number, side: Side, rayX: RayAxis, rayY: RayAxis) => {
+      this.spriteAngle.mirrorHandler(bx, by, side, rayX, rayY);
     };
     const maxDistance = consts.deep / this.params.fixDistance;
     const ray = new Ray(rayVector, handler, mirrorHandle);
     const completed = ray.send(maxDistance);
 
     if (completed) return;
-    this.rayHandler.complete(spriteAngleState, this.sprite, this.params.angle);
+    //this.rayHandler.complete(spriteAngleState, this.sprite, this.params.angle, completed);
   }
 
   public draw3D(): void {
+    this.params.screenAngle = -halfLookAngle;
     this.params.angle = this.playerState.angle - halfLookAngle;
     this.params.displayX = 0;
     const to = this.playerState.angle + halfLookAngle;
     this.spriteAngle.initState();
 
     while (this.params.angle < to) {
-      this.params.fixDistance = Math.cos(
-        (this.playerState.angle - this.params.angle)
-      );
+      this.params.fixDistance = 
+        Math.cos(
+          (this.playerState.angle - this.params.angle)
+        );
 
       this.handleAngle();
 
       this.params.displayX++;
       this.params.angle += angleStep;
+      this.params.screenAngle += angleStep;
 
       this.spriteAngle.reset();
       this.rayHandler.reset();

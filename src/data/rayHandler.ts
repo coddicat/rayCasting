@@ -56,7 +56,7 @@ class RayHandler {
   }
 
   public handle(
-    params: { bx: number; by: number; distance: number, sideX: number, side: Side, angle: number },
+    params: { bx: number; by: number; distance: number, sideX: number, side: Side, angle: number, last: boolean },
     spriteState: SpriteAngleState,
     sprite: Sprite
   ): RayAction {
@@ -66,7 +66,7 @@ class RayHandler {
 
     this.handleSprite(spriteState, sprite, newDistance);
 
-    if (newItem !== this.item) {
+    if (newItem !== this.item || params.last) {
       const _params = {
         displayX: this.params.displayX,
         distance: newDistance,
@@ -152,29 +152,29 @@ class RayHandler {
     }
   }
 
-  public complete(spriteState: SpriteAngleState, sprite: Sprite, angle: number): void {
-    if (!this.emptyPixels) return;
+  // public complete(spriteState: SpriteAngleState, sprite: Sprite, angle: number): void {
+  //   if (!this.emptyPixels) return;
 
-    this.handleSprite(spriteState, sprite, consts.deep);
+  //   this.handleSprite(spriteState, sprite, consts.deep);
 
-    Render.handleLevels(
-      this.data,
-      this.item,
-      {
-        displayX: this.params.displayX,
-        distance: this.distance,
-        distance1: consts.deep,
-        mirrorFact: this.mirrorFact,
-        sideX: this.params.displayX,
-        angle: angle,
-        fixDistance: this.params.fixDistance,
-        side: Side.x,
-      },
-      this.playerState,
-      this.pixelsCounter,
-      this.floor1SpriteDate
-    );
-  }
+  //   Render.handleLevels(
+  //     this.data,
+  //     this.item,
+  //     {
+  //       displayX: this.params.displayX,
+  //       distance: this.distance,
+  //       distance1: Infinity,
+  //       mirrorFact: this.mirrorFact,
+  //       sideX: this.params.displayX,
+  //       angle: angle,
+  //       fixDistance: this.params.fixDistance,
+  //       side: Side.y,
+  //     },
+  //     this.playerState,
+  //     this.pixelsCounter,
+  //     this.floor1SpriteDate
+  //   );
+  // }
 }
 
 export default RayHandler;

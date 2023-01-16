@@ -30,7 +30,7 @@ export class DynamicAlpha {
 
   public getDistance(y: number, shift: number): number {
     const a = y - halfHeight - shift;
-    if (a === 0) return Infinity;
+    if (a === 0) return consts.deep;
     return this.b / a;
   }
 
@@ -165,64 +165,7 @@ class Painter {
       index += consts.lookWidth;
       y++;
     }
-  }
-
-  /*public static drawSpriteLineDynamic(
-    data: Uint32Array,
-    params: {
-      x: number;
-      sideX: number;
-      //spriteX: number;
-      y0: number;
-      y1: number;
-      color: number;
-      //scale: number;
-      shift: number,
-      angle: number,
-      distance: number,
-      fixDistance: number
-    },
-    pixelsCounter: { count: number },
-    spriteData: SpriteData
-  ): void {
-    const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
-
-    //let y = topBottom.top - params.y0;
-    //const max = spriteData.data.length;
-    let y = 0;
-    const dist0 = this.dynamicAlpha.getDistance(params.y0, params.shift);
-
-    while (topBottom.top <= topBottom.bottom) {
-      const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
-      const dist = this.dynamicAlpha.getDistance(topBottom.top, params.shift);
-      if (alpha < 1) break;
-
-      const diff = Math.abs(dist0 - dist);
-      const angle = params.angle;
-      const fact = consts.lookWidth / dist;
-      const hRate = spriteData.height / fact;
-      const sideX = params.sideX - Math.cos(angle) * diff / params.fixDistance;
-      const spriteX = (sideX * spriteData.width) << 0;
-
-      const spriteIndex = (((diff * 20) % spriteData.height << 0) * spriteData.width + (spriteX % spriteData.width)) << 0;
-
-      if (data[index] !== 0 || (params.checkAlpha && pixel === 0)) {
-        topBottom.top++;
-        index += consts.lookWidth;
-        y++;
-        continue;
-      }
-
-      data[index] =
-        (alpha << 24) | (spriteData.data[spriteIndex] & 0x00ffffff);
-
-      pixelsCounter.count++;
-      topBottom.top++;
-      index += consts.lookWidth;
-      y++;
-    }
-  }*/
+  } 
 
   public static drawSpriteLineDynamic(
     data: Uint32Array,
@@ -252,7 +195,11 @@ class Painter {
     while (topBottom.top <= topBottom.bottom) {
       const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
       const dist = this.dynamicAlpha.getDistance(topBottom.top, params.shift);
-      if (alpha < 1) break;
+      if (alpha < 1) {
+        topBottom.top++;
+        index += consts.lookWidth;
+        continue;
+      };
 
       const diff = Math.abs(dist0 - dist);
       const angle = params.angle;

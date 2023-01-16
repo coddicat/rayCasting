@@ -202,7 +202,6 @@ class Render {
     const topLevels = item.levels.filter(x => x.bottom > h);
     const bottomLevels = item.levels.filter(x => x.bottom < h);
 
-
     let i = 0;
     while (i < bottomLevels.length) {
       this.drawLevel(data, params, bottomLevels[i], playerState, pixelCounter, levelSpriteData);

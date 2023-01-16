@@ -53,4 +53,5 @@ export type SpriteAngleState = {
   x0: number;
   x1: number;
   status: boolean;
+  hidden: boolean;
 };
