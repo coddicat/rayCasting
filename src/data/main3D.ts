@@ -1,7 +1,7 @@
 import consts from "./consts";
 import { PlayerState } from "./playerState";
 import RayCasting from "./rayCasting";
-import { getDukeFrontSpriteData, getWallBriksSpriteData } from "./spriteLoader";
+import { getDukeFrontSpriteData, getFloor1SpriteData, getWallBriksSpriteData } from "./spriteLoader";
 
 export class Main3D {
   private tempCtx: CanvasRenderingContext2D;
@@ -37,13 +37,15 @@ export class Main3D {
 
     const dukeFrontSpriteData = await getDukeFrontSpriteData();
     const wallBriksSpriteData = await getWallBriksSpriteData();
+    const floor1SpriteData = await getFloor1SpriteData();
 
     this.rayCasting = new RayCasting(
       this.imageData,
       this.playerState,
       this.playerState,
       dukeFrontSpriteData,
-      wallBriksSpriteData
+      wallBriksSpriteData,
+      floor1SpriteData
     );
   }
 

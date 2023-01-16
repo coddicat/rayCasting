@@ -20,6 +20,7 @@ class RayHandler {
   private params: { fixDistance: number; displayX: number };
   private spriteData: SpriteData;
   private wallSpriteData: SpriteData;
+  private floor1SpriteDate: SpriteData;
 
   constructor(
     data: Uint32Array,
@@ -27,6 +28,7 @@ class RayHandler {
     params: { fixDistance: number; displayX: number },
     spriteData: SpriteData,
     wallSpriteData: SpriteData,
+    floor1SpriteDate: SpriteData
   ) {
     this.data = data;
 
@@ -39,6 +41,7 @@ class RayHandler {
     this.playerState = playerState;
     this.spriteData = spriteData;
     this.wallSpriteData = wallSpriteData;
+    this.floor1SpriteDate = floor1SpriteDate;
   }
 
   public reset(): void {
@@ -52,7 +55,7 @@ class RayHandler {
   }
 
   public handle(
-    params: { bx: number; by: number; distance: number, sideX: number },
+    params: { bx: number; by: number; distance: number, sideX: number, angle: number },
     spriteState: SpriteAngleState,
     sprite: Sprite
   ): RayAction {
@@ -68,7 +71,9 @@ class RayHandler {
         distance: newDistance,
         distance1: this.distance,
         mirrorFact: this.mirrorFact,
-        sideX: params.sideX
+        sideX: params.sideX,
+        angle: params.angle,
+        fixDistance: this.params.fixDistance
       };
 
       this.emptyPixels =
@@ -78,7 +83,8 @@ class RayHandler {
           this.item,
           _params,
           this.playerState,
-          this.pixelsCounter
+          this.pixelsCounter,
+          this.floor1SpriteDate,
         );
 
       this.emptyPixels =
@@ -144,7 +150,7 @@ class RayHandler {
     }
   }
 
-  public complete(spriteState: SpriteAngleState, sprite: Sprite): void {
+  public complete(spriteState: SpriteAngleState, sprite: Sprite, angle: number): void {
     if (!this.emptyPixels) return;
 
     this.handleSprite(spriteState, sprite, consts.deep);
@@ -157,9 +163,13 @@ class RayHandler {
         distance: this.distance,
         distance1: consts.deep,
         mirrorFact: this.mirrorFact,
+        sideX: this.params.displayX,
+        angle: angle,
+        fixDistance: this.params.fixDistance
       },
       this.playerState,
-      this.pixelsCounter
+      this.pixelsCounter,
+      this.floor1SpriteDate
     );
   }
 }

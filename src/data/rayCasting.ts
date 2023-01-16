@@ -26,6 +26,7 @@ class RayCasting {
     sprite: Sprite,
     spriteData: SpriteData,
     wallSpriteData: SpriteData,
+    floor1SpriteData: SpriteData
   ) {
     this.imageData = imageData;
     this.playerState = playerState;
@@ -38,7 +39,8 @@ class RayCasting {
       playerState,
       this.params,
       spriteData,
-      wallSpriteData
+      wallSpriteData,
+      floor1SpriteData
     );
   }
 
@@ -97,7 +99,7 @@ class RayCasting {
     const completed = ray.send(maxDistance);
 
     if (completed) return;
-    this.rayHandler.complete(spriteAngleState, this.sprite);
+    this.rayHandler.complete(spriteAngleState, this.sprite, this.params.angle);
   }
 
   public draw3D(): void {
@@ -108,7 +110,7 @@ class RayCasting {
 
     while (this.params.angle < to) {
       this.params.fixDistance = Math.cos(
-        this.playerState.angle - this.params.angle
+        (this.playerState.angle - this.params.angle)
       );
 
       this.handleAngle();

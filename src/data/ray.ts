@@ -7,6 +7,7 @@ export type BlockHandler = (params: {
   by: number;
   distance: number;
   sideX: number;
+  angle: number;
 }) => RayAction;
 export type MirrorHandler = (side: Side, x: RayAxis, y: RayAxis) => void;
 class Ray {
@@ -64,7 +65,8 @@ class Ray {
       bx: this.axisX.getBlock(),
       by: this.axisY.getBlock(),
       distance: this.distance,
-      sideX: this.sideX
+      sideX: this.sideX,
+      angle: this.vector.angle
     });
     if (action === RayAction.stop) {
       return true;
