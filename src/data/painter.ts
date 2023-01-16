@@ -163,7 +163,7 @@ class Painter {
     }
   }
 
-  public static drawSpriteLineDynamic(
+  /*public static drawSpriteLineDynamic(
     data: Uint32Array,
     params: {
       x: number;
@@ -218,7 +218,7 @@ class Painter {
       index += consts.lookWidth;
       y++;
     }
-  }
+  }*/
 
   public static drawSpriteLineDynamic(
     data: Uint32Array,
