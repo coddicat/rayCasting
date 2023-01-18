@@ -168,9 +168,9 @@ function drawMap(ctx: CanvasRenderingContext2D, playerState: PlayerState) {
       const key = fixedMap[row][col];
       if (!key || key === MapItemType.RoomSpace) continue;
       const item = getItem(key);
-      const x = col * consts.blockSize - sx;
-      const y = row * consts.blockSize - sy;
-      const wh = consts.blockSize;
+      const x = col * consts.cellSize - sx;
+      const y = row * consts.cellSize - sy;
+      const wh = consts.cellSize;
       ctx.fillStyle = item.stopRay
         ? "rgba(255, 255, 255, 1)"
         : "rgba(255, 255, 255, 0.3)";

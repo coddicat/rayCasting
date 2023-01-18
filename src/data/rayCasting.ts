@@ -1,14 +1,14 @@
 import consts from "./consts";
 import { PlayerState } from "./playerState";
-import Ray, { BlockHandler } from "./ray";
+import Ray from "./ray";
 import RayAxis from "./rayAxis";
 import RayHandler from "./rayHandler";
 import { SpriteAngle } from "./spriteAngle";
-import { Side, Sprite, SpriteData, Vector } from "./types";
+import { RayCastingState, Axis, Sprite, SpriteData, RayAngle } from "./types";
 
-const angleStep = consts.lookAngle / consts.lookWidth;
+const angleStep = consts.lookAngle / consts.resolution.width;
 const halfLookAngle = consts.lookAngle / 2;
-const buf = new ArrayBuffer(consts.lookHeight * consts.lookWidth * 4);
+const buf = new ArrayBuffer(consts.resolution.height * consts.resolution.width * 4);
 const buf8 = new Uint8ClampedArray(buf);
 const data = new Uint32Array(buf);
 
@@ -18,7 +18,7 @@ class RayCasting {
   private rayHandler: RayHandler;
   private sprite: Sprite;
   private spriteAngle: SpriteAngle;
-  private params: { angle: number; fixDistance: number; displayX: number, screenAngle: number };
+  private state: RayCastingState;
 
   constructor(
     imageData: ImageData,
@@ -30,17 +30,26 @@ class RayCasting {
   ) {
     this.imageData = imageData;
     this.playerState = playerState;
-    this.params = { angle: 0, fixDistance: 1, displayX: 0, screenAngle: -halfLookAngle };
-    this.spriteAngle = new SpriteAngle(sprite, this.playerState, this.params);
+    this.state = {
+      rayAngle: new RayAngle(0),
+      fixDistance: 1,
+      displayX: 0,
+      fixCos: 1,
+      fixSin: 1,
+      fixCosAbs: 1,
+      fixSinAbs: 1,
+    };
+    this.spriteAngle = new SpriteAngle(sprite, this.playerState, this.state);
     this.sprite = sprite;
     data.fill(0);
     this.rayHandler = new RayHandler(
       data,
       playerState,
-      this.params,
+      this.state,
       spriteData,
       wallSpriteData,
-      floor1SpriteData
+      floor1SpriteData,
+      this.state
     );
   }
 
@@ -48,79 +57,39 @@ class RayCasting {
     data.fill(0);
   }
 
-  // private findIntersection(point: {x: number, y: number}, angle: number, cycleCenter: {x: number, y: number}, cycleRadius: number): number | null {
-  //     // Find the intersection of the line defined by the point and angle with the circle defined by the cycle
-  //     const dx = Math.cos(angle);
-  //     const dy = Math.sin(angle);
-  //     const a = dx * dx + dy * dy;
-  //     const b = 2 * (dx * (point.x - cycleCenter.x) + dy * (point.y - cycleCenter.y));
-  //     const c = (point.x - cycleCenter.x) * (point.x - cycleCenter.x) +
-  //               (point.y - cycleCenter.y) * (point.y - cycleCenter.y) -
-  //               cycleRadius * cycleRadius;
-  //     const discriminant = b * b - 4 * a * c;
-  //     if (discriminant < 0) {
-  //       // No intersection
-  //       return null;
-  //     } else {
-  //       const t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
-  //       const t2 = (-b - Math.sqrt(discriminant)) / (2 * a);
-  //       if (t1 >= 0 && t2 >= 0) {
-  //         // Both intersections are in the positive t direction, return the distance to the closer one
-  //         const d1 = t1 * t1;
-  //         const d2 = t2 * t2;
-  //         return Math.sqrt(d1 < d2 ? d1 : d2);
-  //       } else if (t1 >= 0) {
-  //         // Only intersection at t1 is in the positive t direction
-  //         return Math.sqrt(t1 * t1);
-  //       } else if (t2 >= 0) {
-  //         // Only intersection at t2 is in the positive t direction
-  //         return Math.sqrt(t2 * t2);
-  //       } else {
-  //         // No intersection in the positive t direction
-  //         return null;
-  //       }
-  //     }
-  //   }
 
   private handleAngle(): void {
-    const rayVector: Vector = {
-      x: this.playerState.x,
-      y: this.playerState.y,
-      angle: this.params.angle,
-    };
     const spriteAngleState = this.spriteAngle.getState();
-    const handler: BlockHandler = (p) =>
-      this.rayHandler.handle(p, spriteAngleState, this.sprite);
-    const mirrorHandle = (bx: number, by: number, side: Side, rayX: RayAxis, rayY: RayAxis) => {
+    // const handler: cellHandler = (p) =>
+    //   this.rayHandler.handle(p, spriteAngleState, this.sprite);
+    const mirrorHandle = (bx: number, by: number, side: Axis, rayX: RayAxis, rayY: RayAxis) => {
       this.spriteAngle.mirrorHandler(bx, by, side, rayX, rayY);
     };
-    const maxDistance = consts.deep / this.params.fixDistance;
-    const ray = new Ray(rayVector, handler, mirrorHandle);
-    const completed = ray.send(maxDistance);
+
+    const ray = new Ray(this.playerState, this.state.rayAngle, this.rayHandler, mirrorHandle);
+    const completed = ray.send(consts.lookLength / this.state.fixDistance);
 
     if (completed) return;
     //this.rayHandler.complete(spriteAngleState, this.sprite, this.params.angle, completed);
   }
 
   public draw3D(): void {
-    this.params.screenAngle = -halfLookAngle;
-    this.params.angle = this.playerState.angle - halfLookAngle;
-    this.params.displayX = 0;
-    const to = this.playerState.angle + halfLookAngle;
+    this.state.rayAngle.setAngle(this.playerState.angle - halfLookAngle);
+    this.state.displayX = 0;
     this.spriteAngle.initState();
 
-    while (this.params.angle < to) {
-      this.params.fixDistance = 
-        Math.cos(
-          (this.playerState.angle - this.params.angle)
-        );
+    while (this.state.rayAngle.angle < this.playerState.angle + halfLookAngle) {
+      this.state.fixDistance =
+        Math.cos(this.playerState.angle - this.state.rayAngle.angle);
+      this.state.fixCosAbs = this.state.rayAngle.cosAbs / this.state.fixDistance;
+      this.state.fixSinAbs = this.state.rayAngle.sinAbs / this.state.fixDistance;
+      this.state.fixCos = this.state.rayAngle.cos / this.state.fixDistance;
+      this.state.fixSin = this.state.rayAngle.sin / this.state.fixDistance;
 
       this.handleAngle();
 
-      this.params.displayX++;
-      this.params.angle += angleStep;
-      this.params.screenAngle += angleStep;
-
+      this.state.displayX++;
+      this.state.rayAngle.setAngle(this.state.rayAngle.angle + angleStep);
       this.spriteAngle.reset();
       this.rayHandler.reset();
     }

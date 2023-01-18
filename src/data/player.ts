@@ -1,21 +1,25 @@
 import consts from "./consts";
-import map, { MapItemType } from "./map";
+import map from "./map";
 import { PlayerState } from "./playerState";
 import Ray from "./ray";
-import { BlockHandler } from "./ray";
-import { RayAction, Vector } from "./types";
+import { CellHandler } from './rayHandler';
+import { RayAction, RayAngle } from "./types";
 
-const collisionDistance = 2;
+const collisionDistance = 0.6;
 const quartPi = Math.PI / 4;
 const Pi_34 = (Math.PI / 4) * 3;
 const halfPi = Math.PI / 2;
 const Pi1_5 = Math.PI * 1.5;
 const acc = 0.0001;
-class Player {
+
+class CollisionHandler implements CellHandler {
   private state: PlayerState;
+
   constructor(state: PlayerState) {
     this.state = state;
   }
+
+
   private checkMoveCollision(params: { bx: number; by: number }): RayAction {
     const found = map.check(params);
     if (!found) return RayAction.continue;
@@ -36,6 +40,18 @@ class Player {
     }
 
     return collisions.length > 0 ? RayAction.stop : RayAction.continue;
+  }
+
+
+  public handle(params: { bx: number; by: number; }): RayAction {
+    return this.checkMoveCollision(params);
+  }
+}
+
+class Player {
+  private state: PlayerState;
+  constructor(state: PlayerState) {
+    this.state = state;
   }
   private fixDistance(d: number): number {
     d -= collisionDistance;
@@ -72,49 +88,25 @@ class Player {
       const ySign = Math.sign(sin);
       const xAngle = xSign < 0 ? Math.PI : 0;
       const yAngle = ySign < 0 ? Pi1_5 : halfPi;
-      const vx: Vector = {
-        x: this.state.x,
-        y: this.state.y,
-        angle: xAngle,
-      };
-      const vy: Vector = {
-        x: this.state.x,
-        y: this.state.y,
-        angle: yAngle,
-      };
-      const v: Vector = {
-        x: this.state.x,
-        y: this.state.y,
-        angle: userAngle,
-      };
 
-      const handleX: BlockHandler = (params) => {
-        const rayAction = this.checkMoveCollision(params);
-        if (rayAction === RayAction.stop) {
-          const d = this.fixDistance(params.distance);
-          nx = this.state.x + d * xSign;
-        }
-        return rayAction;
-      };
-      const handleY: BlockHandler = (params) => {
-        const rayAction = this.checkMoveCollision(params);
-        if (rayAction === RayAction.stop) {
-          const d = this.fixDistance(params.distance);
-          ny = this.state.y + d * ySign;
-        }
-        return rayAction;
-      };
-      const handle: BlockHandler = (param) => {
-        const rayAction = this.checkMoveCollision(param);
-        return rayAction;
-      };
-      const ray = new Ray(v, handle);
-      const rayX = new Ray(vx, handleX);
-      const rayY = new Ray(vy, handleY);
+      const handle = new CollisionHandler(this.state);
+
+      const ray = new Ray(this.state, new RayAngle(userAngle), handle);
+      const rayX = new Ray(this.state, new RayAngle(xAngle), handle);
+      const rayY = new Ray(this.state, new RayAngle(yAngle), handle);
 
       const xres = rayX.send(Math.abs(xDistance) + collisionDistance, false);
       const yres = rayY.send(Math.abs(yDistance) + collisionDistance, false);
-      const res = !xres && !yres && ray.send(distance + collisionDistance, false);
+      if (xres.stopped) {
+        const d = this.fixDistance(xres.distance);
+        nx = this.state.x + d * xSign;
+      }
+      if (yres.stopped) {
+        const d = this.fixDistance(yres.distance);
+        ny = this.state.y + d * ySign;
+      }
+
+      const res = !xres.stopped && !yres.stopped && ray.send(distance + collisionDistance, false).stopped;
       if (res) {
         nx = this.state.x;
         ny = this.state.y;
@@ -129,8 +121,8 @@ class Player {
   }
 
   private checkFloor() {
-    const mx = this.state.x / consts.blockSize << 0;
-    const my = this.state.y / consts.blockSize << 0;
+    const mx = this.state.x / consts.cellSize << 0;
+    const my = this.state.y / consts.cellSize << 0;
 
     const found = map.check({ bx: mx, by: my });
     if (!found) {
@@ -175,8 +167,8 @@ class Player {
       return false;
     }
 
-    const mx = this.state.x / consts.blockSize << 0;
-    const my = this.state.y / consts.blockSize << 0;
+    const mx = this.state.x / consts.cellSize << 0;
+    const my = this.state.y / consts.cellSize << 0;
 
     const t = now - this.state.jumping;
     const v0 = this.state.jumpingSpeed ?? 0;

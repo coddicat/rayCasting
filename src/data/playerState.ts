@@ -1,9 +1,9 @@
 import consts from "./consts";
-import { Sprite } from "./types";
+import { Coordinates, Sprite } from "./types";
 
-export class PlayerState implements Sprite {
-  public x: number = consts.blockSize * 48;
-  public y: number = consts.blockSize * 50;
+export class PlayerState implements Sprite, Coordinates {
+  public x: number = consts.cellSize * 48;
+  public y: number = consts.cellSize * 50;
   public z = 0;
 
   public width: number = consts.playerWidth;

@@ -1,31 +1,31 @@
 import consts from "./consts";
 import map from "./map";
 import { PlayerState } from "./playerState";
-import Ray, { BlockHandler } from "./ray";
-import { RayAction, Vector } from "./types";
+import Ray from "./ray";
+import { RayAction } from "./types";
 
 function drawLook(playerState: PlayerState, ctx: CanvasRenderingContext2D) {
   const from = playerState.angle - consts.lookAngle / 2;
   const to = playerState.angle + consts.lookAngle / 2;
   for (let angle = from; angle < to; angle += consts.lookMapStep) {
     const fixDistance = Math.cos(playerState.angle - angle);
-    const rayVector: Vector = {
-      x: playerState.x,
-      y: playerState.y,
-      angle: angle,
-    };
-    const handler: BlockHandler = (p) => blockHandler(angle, p);
-    const maxDistance = consts.deep / fixDistance;
-    const ray = new Ray(rayVector, handler, () => {
-      //
-    });
-    const completed = ray.send(maxDistance);
+    // const rayVector: Vector = {
+    //   x: playerState.x,
+    //   y: playerState.y,
+    //   angle: angle,
+    // };
+    // const handler: cellHandler = (p) => cellHandler(angle, p);
+    // const maxDistance = consts.lookLength / fixDistance;
+    // const ray = new Ray(rayVector, handler, () => {
+    //   //
+    // });
+    // const completed = ray.send(maxDistance);
 
-    if (!completed) drawLookRay(ctx, angle, consts.deep / fixDistance);
+    // if (!completed) drawLookRay(ctx, angle, consts.lookLength / fixDistance);
   }
   return;
 
-  function blockHandler(
+  function cellHandler(
     angle: number,
     params: { bx: number; by: number; distance: number }
   ): RayAction {

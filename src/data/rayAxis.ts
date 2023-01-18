@@ -1,39 +1,36 @@
 import consts from "./consts";
 export default class RayAxis {
-  private _sign: number;
   private _step: number;
-  private _block: number;
-  private _distance: number;
+
+  public cell: number;
+  public distance: number;
+  public sign: number;
 
   constructor(initDistance: number, from: number, step: number) {
-    this._sign = Math.sign(step);
+    this.sign = Math.sign(step);
     this._step = Math.abs(step);
-    const rest = this.getRest(from);
-    this._block = from / consts.blockSize << 0;
-    this._distance = initDistance + (this._step * rest) / consts.blockSize;
+    const rest = this.getShift(from);
+    this.cell = from / consts.cellSize << 0;
+    this.distance = initDistance + (this._step * rest) / consts.cellSize;
   }
 
-  private getRest(position: number): number {
-    const rest = Math.abs(position % consts.blockSize);
+  private getShift(position: number): number {
+    const rest = Math.abs(position % consts.cellSize);
     if (position < 0) {
-      return this._sign < 0 ? consts.blockSize - rest : rest;
+      return this.sign < 0 ? consts.cellSize - rest : rest;
     }
-    return this._sign < 0 ? rest : consts.blockSize - rest;
+    return this.sign < 0 ? rest : consts.cellSize - rest;
   }
 
   public step(): number {
-    const distance = this._distance;
-    this._block += this._sign;
-    this._distance += this._step;
+    const distance = this.distance;
+    this.cell += this.sign;
+    this.distance += this._step;
     return distance;
   }
 
-  public getSign = () => this._sign;
-  public getBlock = () => this._block;
-  public getDistance = () => this._distance;
-
   public mirror(): void {
-    this._sign = this._sign * -1;
-    this._distance -= this._step;
+    this.sign = -this.sign;
+    this.distance -= this._step;
   }
 }

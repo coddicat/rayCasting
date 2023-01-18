@@ -1,8 +1,13 @@
-export type Vector = {
+export type Coordinates = {
   x: number;
   y: number;
-  angle: number;
-};
+}
+
+// export type Vector = {
+//   x: number;
+//   y: number;
+//   angle: number;
+// };
 
 export type Level = {
   color: number;
@@ -28,10 +33,9 @@ export enum RayAction {
   continue,
 }
 
-export enum Side {
-  x,
-  y,
-  corner,
+export enum Axis {
+  x = 0,
+  y = 1,
 }
 
 export interface Sprite {
@@ -55,3 +59,39 @@ export type SpriteAngleState = {
   status: boolean;
   hidden: boolean;
 };
+
+//-----------------------------
+
+export class RayAngle {
+  public angle!: number;
+  public cos!: number;
+  public sin!: number;
+  public cosSign!: number;
+  public sinSign!: number;
+  public cosAbs!: number;
+  public sinAbs!: number;
+
+  public setAngle(angle: number): void {
+    this.angle = angle;
+    this.cos = Math.cos(angle);
+    this.sin = Math.sin(angle);
+    this.cosSign = Math.sign(this.cos);
+    this.sinSign = Math.sign(this.sin);
+    this.cosAbs = this.cos * this.cosSign;
+    this.sinAbs = Math.abs(this.sin);
+  }
+
+  constructor(angle: number) {
+    this.setAngle(angle);
+  }
+}
+
+export type RayCastingState = {
+  rayAngle: RayAngle,
+  fixDistance: number,
+  displayX: number,
+  fixCos: number,
+  fixSin: number,
+  fixCosAbs: number,
+  fixSinAbs: number,
+}

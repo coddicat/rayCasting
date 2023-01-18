@@ -1,10 +1,10 @@
 import consts from "./consts";
 import Painter from "./painter";
 import { PlayerState } from "./playerState";
-import { Level, MapItem, Side, SpriteData, Wall } from "./types";
+import { Level, MapItem, Axis, SpriteData, Wall, RayCastingState } from "./types";
 
 const maxLight = 255;
-const halfHeight = consts.lookHeight / 2;
+const halfHeight = consts.resolution.height / 2;
 
 class Render {
   private static drawWall(
@@ -16,7 +16,7 @@ class Render {
     pixelCounter: { count: number },
     spriteData: SpriteData
   ): void {
-    const fact = consts.lookWidth / params.distance;
+    const fact = consts.resolution.width / params.distance;
     const a =
       halfHeight +
       playerState.lookVertical +
@@ -46,7 +46,7 @@ class Render {
     pixelCounter: { count: number },
     spriteData: SpriteData
   ): void {
-    const fact = consts.lookWidth / params.distance;
+    const fact = consts.resolution.width / params.distance;
     const a =
       halfHeight +
       playerState.lookVertical +
@@ -81,10 +81,11 @@ class Render {
     level: Level,
     playerState: PlayerState,
     pixelCounter: { count: number },
-    spriteData: SpriteData
+    spriteData: SpriteData,
+    rayCastingState: RayCastingState
   ): void {
     const d =
-      consts.lookWidth *
+      consts.resolution.width *
       (playerState.z + playerState.lookHeight - level.bottom);
 
     const _params = {
@@ -102,7 +103,7 @@ class Render {
 
     Painter.InitDynamicAlpha(playerState, level, params);
     Painter.drawLineDynamic(data, _params, pixelCounter);
-    //Painter.drawSpriteLineDynamic(data, _params, pixelCounter, spriteData);
+    //Painter.drawSpriteLineDynamic(data, _params, pixelCounter, spriteData, rayCastingState);
   }
 
   public static handleSprite(
@@ -122,7 +123,7 @@ class Render {
   ): boolean {
     if (params.distance <= 0) return true;
     const light =
-      ((maxLight * (consts.deep - params.distance)) / consts.deep) *
+      ((maxLight * (consts.lookLength - params.distance)) / consts.lookLength) *
       params.mirrorFact;
     if (light < 1) return true;
 
@@ -141,7 +142,7 @@ class Render {
       spriteData
     );
 
-    return pixelCounter.count < consts.lookHeight;
+    return pixelCounter.count < consts.resolution.height;
   }
 
   public static handleWalls(
@@ -154,7 +155,7 @@ class Render {
   ): boolean {
     if (!item || params.distance <= 0) return true;
     const light =
-      ((maxLight * (consts.deep - params.distance)) / consts.deep) *
+      ((maxLight * (consts.lookLength - params.distance)) / consts.lookLength) *
       params.mirrorFact;
     if (light < 1) return true;
 
@@ -172,7 +173,7 @@ class Render {
           wallSpriteData
         );
       }
-      if (pixelCounter.count >= consts.lookHeight) return false;
+      if (pixelCounter.count >= consts.resolution.height) return false;
       i++;
     }
 
@@ -188,13 +189,14 @@ class Render {
       distance1: number;
       mirrorFact: number;
       sideX: number;
-      side: Side;
+      side: Axis;
       angle: number;
       fixDistance: number
     },
     playerState: PlayerState,
     pixelCounter: { count: number },
     levelSpriteData: SpriteData,
+    rayCastingState: RayCastingState
   ): boolean {
     if (!item || params.distance1 < 0.2) return true;
 
@@ -204,15 +206,15 @@ class Render {
 
     let i = 0;
     while (i < bottomLevels.length) {
-      this.drawLevel(data, params, bottomLevels[i], playerState, pixelCounter, levelSpriteData);
-      if (pixelCounter.count >= consts.lookHeight) return false;
+      this.drawLevel(data, params, bottomLevels[i], playerState, pixelCounter, levelSpriteData, rayCastingState);
+      if (pixelCounter.count >= consts.resolution.height) return false;
       i++;
     }
 
     i = topLevels.length - 1;
     while (i >= 0) {
-      this.drawLevel(data, params, topLevels[i], playerState, pixelCounter, levelSpriteData);
-      if (pixelCounter.count >= consts.lookHeight) return false;
+      this.drawLevel(data, params, topLevels[i], playerState, pixelCounter, levelSpriteData, rayCastingState);
+      if (pixelCounter.count >= consts.resolution.height) return false;
       i--;
     }
 

@@ -1,10 +1,10 @@
 import consts from "./consts";
 import { PlayerState } from "./playerState";
-import { Level, SpriteData, Side } from "./types";
+import { Level, SpriteData, Axis, RayCastingState } from "./types";
 
 const maxLight = 255;
-const halfHeight = consts.lookHeight / 2;
-const halfWidth = consts.lookWidth / 2;
+const halfHeight = consts.resolution.height / 2;
+const halfWidth = consts.resolution.width / 2;
 
 export class DynamicAlpha {
   private b = 0;
@@ -17,20 +17,20 @@ export class DynamicAlpha {
     params: { mirrorFact: number }
   ): void {
     this.b =
-      consts.lookWidth *
+      consts.resolution.width *
       (playerState.z + playerState.lookHeight - level.bottom);
-    this.f = (maxLight / consts.deep) * params.mirrorFact;
+    this.f = (maxLight / consts.lookLength) * params.mirrorFact;
     this.playerState = playerState;
   }
   public getAlpha(y: number, shift: number): number {
     const a = y - halfHeight - shift;
     if (a === 0) return 0;
-    return (consts.deep - this.b / a) * this.f;
+    return (consts.lookLength - this.b / a) * this.f;
   }
 
   public getDistance(y: number, shift: number): number {
     const a = y - halfHeight - shift;
-    if (a === 0) return consts.deep;
+    if (a === 0) return consts.lookLength;
     return this.b / a;
   }
 
@@ -52,13 +52,13 @@ class Painter {
 
   private static limitX(x: number): number {
     if (x < 0) return 0;
-    if (x >= consts.lookWidth) return consts.lookWidth - 1;
+    if (x >= consts.resolution.width) return consts.resolution.width - 1;
     return x << 0;
   }
 
   private static limitY(y: number): number {
     if (y < 0) return 0;
-    if (y >= consts.lookHeight) return consts.lookHeight - 1;
+    if (y >= consts.resolution.height) return consts.resolution.height - 1;
     return y << 0;
   }
 
@@ -77,13 +77,13 @@ class Painter {
     pixelsCounter: { count: number }
   ): void {
     const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
     while (topBottom.top <= topBottom.bottom) {
       const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
 
       if (data[index] !== 0 || alpha < 1) {
         topBottom.top++;
-        index += consts.lookWidth;
+        index += consts.resolution.width;
         continue;
       }
 
@@ -91,7 +91,7 @@ class Painter {
 
       pixelsCounter.count++;
       topBottom.top++;
-      index += consts.lookWidth;
+      index += consts.resolution.width;
     }
   }
 
@@ -102,12 +102,12 @@ class Painter {
   ): void {
     if (params.alpha < 1) return;
     const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
     const alphaMask = params.alpha << 24;
     while (topBottom.top <= topBottom.bottom) {
       if (data[index] !== 0) {
         topBottom.top++;
-        index += consts.lookWidth;
+        index += consts.resolution.width;
         continue;
       }
 
@@ -118,7 +118,7 @@ class Painter {
 
       pixelsCounter.count++;
       topBottom.top++;
-      index += consts.lookWidth;
+      index += consts.resolution.width;
     }
   }
 
@@ -140,20 +140,20 @@ class Painter {
     if (params.alpha < 1) return;
     const alphaMask = 0x00ffffff | params.alpha << 24;
     const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
 
     let y = topBottom.top - params.y0;
     const hRate = spriteData.height / (Math.abs(params.y1 - params.y0) + 1) * params.scale;
 
     while (topBottom.top <= topBottom.bottom) {
-      const spriteIndex = 
-       ((y * hRate) << 0) % spriteData.height * spriteData.width + params.spriteX;
+      const spriteIndex =
+        (((y * hRate) << 0) % spriteData.height) * spriteData.width + params.spriteX;
 
       const pixel = spriteData.data[spriteIndex];
 
       if (data[index] !== 0 || (params.checkAlpha && pixel === 0)) {
         topBottom.top++;
-        index += consts.lookWidth;
+        index += consts.resolution.width;
         y++;
         continue;
       }
@@ -162,16 +162,16 @@ class Painter {
 
       pixelsCounter.count++;
       topBottom.top++;
-      index += consts.lookWidth;
+      index += consts.resolution.width;
       y++;
     }
-  } 
+  }
 
   public static drawSpriteLineDynamic(
     data: Uint32Array,
     params: {
       x: number;
-      side: Side,
+      side: Axis,
       sideX: number;
       y0: number;
       y1: number;
@@ -182,60 +182,61 @@ class Painter {
       fixDistance: number
     },
     pixelsCounter: { count: number },
-    spriteData: SpriteData
+    spriteData: SpriteData,
+    rayCastingState: RayCastingState
   ): void {
     const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.lookWidth + this.limitX(params.x);
+    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
 
     const scale = 1;
     const dist0 = this.dynamicAlpha.getDistance(params.y0, params.shift);
 
     const side0 = params.sideX;
+    const factY = scale * spriteData.height * rayCastingState.fixSinAbs;
+    const factX = scale * spriteData.width * rayCastingState.fixCosAbs;
 
     while (topBottom.top <= topBottom.bottom) {
       const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
       const dist = this.dynamicAlpha.getDistance(topBottom.top, params.shift);
+
       if (alpha < 1) {
         topBottom.top++;
-        index += consts.lookWidth;
+        index += consts.resolution.width;
         continue;
       };
 
       const diff = Math.abs(dist0 - dist);
-      const angle = params.angle;
 
       let spriteIndex = 0;
-      if (params.side === Side.x) {
-        const sign = Math.sign(Math.sin(angle));
-        const sin = Math.sin(angle) * sign;
-        const cos = Math.cos(angle);
-        const sideX = side0 - cos * diff / params.fixDistance;
+
+      if (params.side === Axis.x) {
+        const sideX = side0 - rayCastingState.fixCos * diff;
+
         let spriteX = ((sideX * spriteData.width) << 0) % spriteData.width;
-        if(spriteX < 0) {
-          spriteX = spriteX + spriteData.width - 1;
-        }
-        const spriteY = (scale * diff * spriteData.height * sin / params.fixDistance) << 0
-        const fixed = sign > 0 ? spriteData.height - spriteY % spriteData.height - 1 : spriteY % spriteData.height;
+        if (spriteX < 0) spriteX = spriteX + spriteData.width - 1;
+
+        const spriteY = (diff * factY) << 0
+        const fixed = rayCastingState.rayAngle.sinSign > 0
+          ? spriteData.height - spriteY % spriteData.height - 1
+          : spriteY % spriteData.height;
         spriteIndex = fixed * spriteData.width + spriteX;
       } else {
-        const signX = Math.sign(Math.cos(angle));
-        const cos = signX * Math.cos(angle);
-        const sin = Math.sin(angle);
-        const sideX = side0 - sin * diff / params.fixDistance;
+        const sideX = side0 - rayCastingState.fixSin * diff;
+
         let spriteY = ((sideX * spriteData.height) << 0) % spriteData.height;
-        if(spriteY < 0) {
-          spriteY = spriteY + spriteData.height - 1;
-        }
-        const spriteX = (scale * diff * spriteData.width * cos / params.fixDistance) << 0
+        if (spriteY < 0) spriteY = spriteY + spriteData.height - 1;
+
+        const spriteX = (diff * factX) << 0
         const fixedY = spriteY % spriteData.height;
-        const fixedX = signX > 0 ? spriteData.width - spriteX % spriteData.width - 1 : spriteX % spriteData.width;
-        spriteIndex = fixedY * spriteData.width + fixedX;      
+        const fixedX = rayCastingState.rayAngle.cosSign > 0
+          ? spriteData.width - spriteX % spriteData.width - 1
+          : spriteX % spriteData.width;
+        spriteIndex = fixedY * spriteData.width + fixedX;
       }
-     
 
       if (data[index] !== 0 || spriteData.data[spriteIndex] === 0) {
         topBottom.top++;
-        index += consts.lookWidth;
+        index += consts.resolution.width;
         continue;
       }
 
@@ -244,7 +245,7 @@ class Painter {
 
       pixelsCounter.count++;
       topBottom.top++;
-      index += consts.lookWidth;
+      index += consts.resolution.width;
     }
   }
 }

@@ -1,101 +1,96 @@
 import consts from "./consts";
 import RayAxis from "./rayAxis";
-import { RayAction, Side, Vector } from "./types";
+import { CellHandler } from './rayHandler';
+import { Coordinates, RayAction, RayAngle, Axis } from "./types";
 
-export type BlockHandler = (params: {
-  bx: number;
-  by: number;
-  distance: number;
-  sideX: number;
-  side: Side,
-  angle: number;
-  last: boolean
-}) => RayAction;
-export type MirrorHandler = (bx: number, by: number, side: Side, x: RayAxis, y: RayAxis) => void;
+export type MirrorHandler = (bx: number, by: number, side: Axis, x: RayAxis, y: RayAxis) => void;
+
+export type RayState = {
+  bx: number; by: number; distance: number, sideX: number, side: Axis, angle: number, last: boolean
+}
+
 class Ray {
-  private blockHandler: BlockHandler;
+  private cellHandler: CellHandler;
   private axisX: RayAxis;
   private axisY: RayAxis;
   private distance: number;
-  private side: Side;
+  private side: Axis;
   private sideX: number;
-  private mirrors: number;
   private mirrorHandle?: MirrorHandler;
 
-  private cos: number;
-  private sin: number;
-  private vector: Vector;
+  private coordinates: Coordinates;
+  private rayAngle: RayAngle;
 
   constructor(
-    vector: Vector,
-    blockHandler: BlockHandler,
+    coordinates: Coordinates,
+    rayAngle: RayAngle,
+    cellHandler: CellHandler,
     mirrorHandle?: MirrorHandler
   ) {
-    this.blockHandler = blockHandler;
+    this.cellHandler = cellHandler;
     this.mirrorHandle = mirrorHandle;
 
-    this.vector = vector;
-    this.cos = Math.cos(vector.angle);
-    this.sin = Math.sin(vector.angle);
+    this.rayAngle = rayAngle;
+    this.coordinates = coordinates;
 
-    const stepX = consts.blockSize / this.cos;
-    const stepY = consts.blockSize / this.sin;
-    this.axisX = new RayAxis(0, vector.x, stepX);
-    this.axisY = new RayAxis(0, vector.y, stepY);
+    const stepX = consts.cellSize / this.rayAngle.cos;
+    const stepY = consts.cellSize / this.rayAngle.sin;
+    this.axisX = new RayAxis(0, coordinates.x, stepX);
+    this.axisY = new RayAxis(0, coordinates.y, stepY);
     this.distance = 0;
     this.side = this.getSide();
-    this.mirrors = 0;
     this.sideX = this.getSideX();
   }
 
-  private getSide(): Side {
-    const dx = this.axisX.getDistance();
-    const dy = this.axisY.getDistance();
-    return dx === dy ? Side.corner : dx > dy ? Side.x : Side.y;
+  private getSide(): Axis {
+    const dx = this.axisX.distance;
+    const dy = this.axisY.distance;
+    return dx > dy ? Axis.x : Axis.y;
   }
 
   private getSideX(): number {
-    if (this.side === Side.x) {
-      return (this.cos * this.distance + this.vector.x) % consts.blockSize;
+    if (this.side === Axis.x) {
+      return (this.rayAngle.cos * this.distance + this.coordinates.x) % consts.cellSize;
     } else {
-      return (this.sin * this.distance + this.vector.y) % consts.blockSize;
+      return (this.rayAngle.sin * this.distance + this.coordinates.y) % consts.cellSize;
     }
   }
 
   private handleStep(last: boolean): boolean {
-    const bx = this.axisX.getBlock();
-    const by = this.axisY.getBlock();
+    const bx = this.axisX.cell;
+    const by = this.axisY.cell;
 
-    const action = this.blockHandler({
+    const rayState: RayState = {
       bx,
       by,
       distance: this.distance,
       sideX: this.sideX,
-      angle: this.vector.angle,
+      angle: this.rayAngle.angle,
       side: this.side,
       last: last
-    });
+    }
+
+    const action = this.cellHandler.handle(rayState);
+
     if (action === RayAction.stop) {
       return true;
     }
 
     if (action === RayAction.mirror) {
-      this.mirrors++;
-      if (this.side === Side.corner || this.side === Side.x) {
+      if (this.side === Axis.x) {
         this.axisY.mirror();
-      }
-      if (this.side === Side.corner || this.side === Side.y) {
+      } else {
         this.axisX.mirror();
       }
+
       if (this.mirrorHandle) {
         this.mirrorHandle(bx, by, this.side, this.axisX, this.axisY);
       }
     }
     this.side = this.getSide();
-    if (this.side === Side.corner || this.side === Side.x) {
+    if (this.side === Axis.x) {
       this.distance = this.axisY.step();
-    }
-    if (this.side === Side.corner || this.side === Side.y) {
+    } else {
       this.distance = this.axisX.step();
     }
     this.sideX = this.getSideX();
@@ -103,15 +98,21 @@ class Ray {
     return false;
   }
 
-  public send(max: number, last = true): boolean {
-    while (this.distance + this.mirrors * consts.blockSize < max) {
+  public send(max: number, last = true): { stopped: boolean, distance: number } {
+    while (this.distance < max) {
       const stop = this.handleStep(false);
-      if (stop) return true;
+      if (stop) return {
+        stopped: true,
+        distance: this.distance
+      };
     }
     if (last) {
       this.handleStep(last);
     }
-    return false;
+    return {
+      stopped: false,
+      distance: this.distance
+    };
   }
 }
 

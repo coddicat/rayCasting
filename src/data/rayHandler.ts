@@ -5,12 +5,20 @@ import Render from "./render";
 import {
   MapItem,
   RayAction,
-  Side,
+  Axis,
   Sprite,
   SpriteAngleState,
   SpriteData,
+  RayCastingState,
 } from "./types";
-class RayHandler {
+
+export interface CellHandler {
+  handle(params: { bx: number; by: number; distance: number, sideX: number, side: Axis, angle: number, last: boolean },
+    /*spriteState: SpriteAngleState,
+    sprite: Sprite*/): RayAction
+}
+
+class RayHandler implements CellHandler {
   private item: MapItem | null;
   private distance: number;
   private mirrorFact: number;
@@ -22,6 +30,7 @@ class RayHandler {
   private spriteData: SpriteData;
   private wallSpriteData: SpriteData;
   private floor1SpriteDate: SpriteData;
+  private rayCastingState: RayCastingState;
 
   constructor(
     data: Uint32Array,
@@ -29,10 +38,11 @@ class RayHandler {
     params: { fixDistance: number; displayX: number },
     spriteData: SpriteData,
     wallSpriteData: SpriteData,
-    floor1SpriteDate: SpriteData
+    floor1SpriteDate: SpriteData,
+    rayCastingState: RayCastingState
   ) {
     this.data = data;
-
+    this.rayCastingState = rayCastingState;
     this.item = null;
     this.distance = 0.2;
     this.mirrorFact = 1;
@@ -56,15 +66,15 @@ class RayHandler {
   }
 
   public handle(
-    params: { bx: number; by: number; distance: number, sideX: number, side: Side, angle: number, last: boolean },
-    spriteState: SpriteAngleState,
-    sprite: Sprite
+    params: { bx: number; by: number; distance: number, sideX: number, side: Axis, angle: number, last: boolean },
+    /*spriteState: SpriteAngleState,
+    sprite: Sprite*/
   ): RayAction {
     const found = map.check(params);
     const newItem = found ? map.getItem(found) : null;
     const newDistance = params.distance * this.params.fixDistance;
 
-    this.handleSprite(spriteState, sprite, newDistance);
+    //this.handleSprite(this.spriteState, this.sprite, newDistance);
 
     if (newItem !== this.item || params.last) {
       const _params = {
@@ -87,6 +97,7 @@ class RayHandler {
           this.playerState,
           this.pixelsCounter,
           this.floor1SpriteDate,
+          this.rayCastingState
         );
 
       this.emptyPixels =
@@ -155,7 +166,7 @@ class RayHandler {
   // public complete(spriteState: SpriteAngleState, sprite: Sprite, angle: number): void {
   //   if (!this.emptyPixels) return;
 
-  //   this.handleSprite(spriteState, sprite, consts.deep);
+  //   this.handleSprite(spriteState, sprite, consts.lookLength);
 
   //   Render.handleLevels(
   //     this.data,
