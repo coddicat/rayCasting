@@ -1,224 +1,185 @@
-import consts from "./consts";
-import { PlayerState } from "./playerState";
-import { Level, SpriteData, Axis, RayCastingState } from "./types";
+import consts from './consts';
+import DynamicAlpha from './dynamicAlpha';
+import { PlayerState } from './playerState';
+import RayCasting from './rayCasting';
+import RayHandler from './rayHandler';
+import {
+  Level,
+  SpriteData,
+  Axis,
+  PixelCounter,
+  StaticLineProps,
+  SpriteLineProps,
+  DynamicLineProps,
+  DynamicSpriteLineProps,
+} from './types';
 
-const maxLight = 255;
-const halfHeight = consts.resolution.height / 2;
-const halfWidth = consts.resolution.width / 2;
-
-export class DynamicAlpha {
-  private b = 0;
-  private f = 0;
-  private playerState?: PlayerState;
-
-  public init(
-    playerState: PlayerState,
-    level: Level,
-    params: { mirrorFact: number }
-  ): void {
-    this.b =
-      consts.resolution.width *
-      (playerState.z + playerState.lookHeight - level.bottom);
-    this.f = (maxLight / consts.lookLength) * params.mirrorFact;
-    this.playerState = playerState;
-  }
-  public getAlpha(y: number, shift: number): number {
-    const a = y - halfHeight - shift;
-    if (a === 0) return 0;
-    return (consts.lookLength - this.b / a) * this.f;
-  }
-
-  public getDistance(y: number, shift: number): number {
-    const a = y - halfHeight - shift;
-    if (a === 0) return consts.lookLength;
-    return this.b / a;
-  }
-
-  public getPlayerState() {
-    return this.playerState;
-  }
-}
-
+const maxBottom = consts.resolution.height - 1;
 class Painter {
-  private static dynamicAlpha = new DynamicAlpha();
+  private dynamicAlpha;
+  private pixelsCounter: PixelCounter;
 
-  public static InitDynamicAlpha(
-    playerState: PlayerState,
-    level: Level,
-    params: { mirrorFact: number }
-  ): void {
-    this.dynamicAlpha.init(playerState, level, params);
+  constructor(pixelsCounter: PixelCounter, dynamicAlpha: DynamicAlpha) {
+    this.pixelsCounter = pixelsCounter;
+    this.dynamicAlpha = dynamicAlpha;
   }
 
-  private static limitX(x: number): number {
-    if (x < 0) return 0;
-    if (x >= consts.resolution.width) return consts.resolution.width - 1;
-    return x << 0;
-  }
+  private refs = {
+    top: 0,
+    bottom: 0,
+    dataIndex: 0,
+  };
 
-  private static limitY(y: number): number {
-    if (y < 0) return 0;
-    if (y >= consts.resolution.height) return consts.resolution.height - 1;
-    return y << 0;
-  }
+  private initRefs(props: { y0: number; y1: number; x: number }) {
+    if (props.y0 > props.y1) {
+      this.refs.top = props.y1 << 0;
+      this.refs.bottom = props.y0 << 0;
+    } else {
+      this.refs.top = props.y0 << 0;
+      this.refs.bottom = props.y1 << 0;
+    }
 
-  private static getTopBottom(params: { y0: number; y1: number }): {
-    top: number;
-    bottom: number;
-  } {
-    return params.y1 > params.y0
-      ? { top: this.limitY(params.y0), bottom: this.limitY(params.y1) }
-      : { top: this.limitY(params.y1), bottom: this.limitY(params.y0) };
-  }
+    if (this.refs.top < 0) this.refs.top = 0;
+    if (this.refs.bottom >= consts.resolution.height)
+      this.refs.bottom = maxBottom;
 
-  public static drawLineDynamic(
-    data: Uint32Array,
-    params: { x: number; y0: number; y1: number; shift: number; color: number },
-    pixelsCounter: { count: number }
-  ): void {
-    const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
-    while (topBottom.top <= topBottom.bottom) {
-      const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
-
-      if (data[index] !== 0 || alpha < 1) {
-        topBottom.top++;
-        index += consts.resolution.width;
-        continue;
-      }
-
-      data[index] = params.color | alpha << 24;
-
-      pixelsCounter.count++;
-      topBottom.top++;
-      index += consts.resolution.width;
+    if (props.x < 0) {
+      this.refs.dataIndex = this.refs.top * consts.resolution.width;
+    } else if (props.x >= consts.resolution.width) {
+      this.refs.dataIndex =
+        this.refs.top * consts.resolution.width + consts.resolution.width - 1;
+    } else {
+      this.refs.dataIndex =
+        this.refs.top * consts.resolution.width + (props.x << 0);
     }
   }
 
-  public static drawLineStatic(
-    data: Uint32Array,
-    params: { x: number; y0: number; y1: number; color: number; alpha: number },
-    pixelsCounter: { count: number }
-  ): void {
-    if (params.alpha < 1) return;
-    const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
-    const alphaMask = params.alpha << 24;
-    while (topBottom.top <= topBottom.bottom) {
-      if (data[index] !== 0) {
-        topBottom.top++;
-        index += consts.resolution.width;
+  public drawLineStatic(data: Uint32Array, props: StaticLineProps): void {
+    if (props.light < 1) return;
+    this.initRefs(props);
+    const alphaMask = props.light << 24;
+    while (this.refs.top <= this.refs.bottom) {
+      if (data[this.refs.dataIndex] !== 0) {
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
         continue;
       }
 
-      data[index] = params.color | alphaMask;
+      data[this.refs.dataIndex] = props.color | alphaMask;
       // (color.b << 16) |
       // (color.g << 8) |
       // (color.r);
 
-      pixelsCounter.count++;
-      topBottom.top++;
-      index += consts.resolution.width;
+      this.pixelsCounter.count++;
+      this.refs.top++;
+      this.refs.dataIndex += consts.resolution.width;
     }
   }
 
-  public static drawSpriteLine(
+  public drawLineDynamic(
     data: Uint32Array,
-    params: {
-      x: number;
-      spriteX: number;
-      y0: number;
-      y1: number;
-      color: number;
-      alpha: number;
-      scale: number;
-      checkAlpha: boolean
-    },
+    props: DynamicLineProps,
+    pixelsCounter: { count: number }
+  ): void {
+    this.initRefs(props);
+
+    while (this.refs.top <= this.refs.bottom) {
+      const alpha = this.dynamicAlpha.getAlpha(this.refs.top, props.yShift);
+
+      if (data[this.refs.dataIndex] !== 0 || alpha < 1) {
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
+        continue;
+      }
+
+      data[this.refs.dataIndex] = props.color | (alpha << 24);
+
+      pixelsCounter.count++;
+      this.refs.top++;
+      this.refs.dataIndex += consts.resolution.width;
+    }
+  }
+
+  public drawSpriteLine(
+    data: Uint32Array,
+    props: SpriteLineProps,
     pixelsCounter: { count: number },
     spriteData: SpriteData
   ): void {
-    if (params.alpha < 1) return;
-    const alphaMask = 0x00ffffff | params.alpha << 24;
-    const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
+    if (props.light < 1) return;
+    const alphaMask = 0x00ffffff | (props.light << 24);
+    this.initRefs(props);
 
-    let y = topBottom.top - params.y0;
-    const hRate = spriteData.height / (Math.abs(params.y1 - params.y0) + 1) * params.scale;
+    let y = this.refs.top - props.y0;
+    const hRate =
+      (spriteData.height / (Math.abs(props.y1 - props.y0) + 1)) * props.scale;
 
-    while (topBottom.top <= topBottom.bottom) {
+    while (this.refs.top <= this.refs.bottom) {
       const spriteIndex =
-        (((y * hRate) << 0) % spriteData.height) * spriteData.width + params.spriteX;
+        (((y * hRate) << 0) % spriteData.height) * spriteData.width +
+        props.spriteX;
 
       const pixel = spriteData.data[spriteIndex];
 
-      if (data[index] !== 0 || (params.checkAlpha && pixel === 0)) {
-        topBottom.top++;
-        index += consts.resolution.width;
+      if (
+        data[this.refs.dataIndex] !== 0 ||
+        (props.checkAlpha && pixel === 0)
+      ) {
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
         y++;
         continue;
       }
 
-      data[index] = pixel & alphaMask;
+      data[this.refs.dataIndex] = pixel & alphaMask;
 
       pixelsCounter.count++;
-      topBottom.top++;
-      index += consts.resolution.width;
+      this.refs.top++;
+      this.refs.dataIndex += consts.resolution.width;
       y++;
     }
   }
 
-  public static drawSpriteLineDynamic(
+  public drawSpriteLineDynamic(
     data: Uint32Array,
-    params: {
-      x: number;
-      side: Axis,
-      sideX: number;
-      y0: number;
-      y1: number;
-      color: number;
-      shift: number,
-      angle: number,
-      distance: number,
-      fixDistance: number
-    },
+    props: DynamicSpriteLineProps,
     pixelsCounter: { count: number },
     spriteData: SpriteData,
-    rayCastingState: RayCastingState
+    rayCastingState: RayCasting
   ): void {
-    const topBottom = this.getTopBottom(params);
-    let index = topBottom.top * consts.resolution.width + this.limitX(params.x);
+    this.initRefs(props);
 
-    const scale = 1;
-    const dist0 = this.dynamicAlpha.getDistance(params.y0, params.shift);
+    const dist0 = this.dynamicAlpha.getDistance(props.y0, props.yShift);
 
-    const side0 = params.sideX;
-    const factY = scale * spriteData.height * rayCastingState.fixSinAbs;
-    const factX = scale * spriteData.width * rayCastingState.fixCosAbs;
+    const side0 = props.sideX;
+    const factY = props.scale * spriteData.height * rayCastingState.fixSinAbs;
+    const factX = props.scale * spriteData.width * rayCastingState.fixCosAbs;
 
-    while (topBottom.top <= topBottom.bottom) {
-      const alpha = this.dynamicAlpha.getAlpha(topBottom.top, params.shift);
-      const dist = this.dynamicAlpha.getDistance(topBottom.top, params.shift);
+    while (this.refs.top <= this.refs.bottom) {
+      const alpha = this.dynamicAlpha.getAlpha(this.refs.top, props.yShift);
+      const dist = this.dynamicAlpha.getDistance(this.refs.top, props.yShift);
 
       if (alpha < 1) {
-        topBottom.top++;
-        index += consts.resolution.width;
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
         continue;
-      };
+      }
 
       const diff = Math.abs(dist0 - dist);
 
       let spriteIndex = 0;
 
-      if (params.side === Axis.x) {
+      if (props.side === Axis.x) {
         const sideX = side0 - rayCastingState.fixCos * diff;
 
         let spriteX = ((sideX * spriteData.width) << 0) % spriteData.width;
         if (spriteX < 0) spriteX = spriteX + spriteData.width - 1;
 
-        const spriteY = (diff * factY) << 0
-        const fixed = rayCastingState.rayAngle.sinSign > 0
-          ? spriteData.height - spriteY % spriteData.height - 1
-          : spriteY % spriteData.height;
+        const spriteY = (diff * factY) << 0;
+        const fixed =
+          rayCastingState.rayAngle.sinSign > 0
+            ? spriteData.height - (spriteY % spriteData.height) - 1
+            : spriteY % spriteData.height;
         spriteIndex = fixed * spriteData.width + spriteX;
       } else {
         const sideX = side0 - rayCastingState.fixSin * diff;
@@ -226,26 +187,30 @@ class Painter {
         let spriteY = ((sideX * spriteData.height) << 0) % spriteData.height;
         if (spriteY < 0) spriteY = spriteY + spriteData.height - 1;
 
-        const spriteX = (diff * factX) << 0
+        const spriteX = (diff * factX) << 0;
         const fixedY = spriteY % spriteData.height;
-        const fixedX = rayCastingState.rayAngle.cosSign > 0
-          ? spriteData.width - spriteX % spriteData.width - 1
-          : spriteX % spriteData.width;
+        const fixedX =
+          rayCastingState.rayAngle.cosSign > 0
+            ? spriteData.width - (spriteX % spriteData.width) - 1
+            : spriteX % spriteData.width;
         spriteIndex = fixedY * spriteData.width + fixedX;
       }
 
-      if (data[index] !== 0 || spriteData.data[spriteIndex] === 0) {
-        topBottom.top++;
-        index += consts.resolution.width;
+      if (
+        data[this.refs.dataIndex] !== 0 ||
+        spriteData.data[spriteIndex] === 0
+      ) {
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
         continue;
       }
 
-      data[index] =
+      data[this.refs.dataIndex] =
         (alpha << 24) | (spriteData.data[spriteIndex] & 0x00ffffff);
 
       pixelsCounter.count++;
-      topBottom.top++;
-      index += consts.resolution.width;
+      this.refs.top++;
+      this.refs.dataIndex += consts.resolution.width;
     }
   }
 }

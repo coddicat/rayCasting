@@ -1,7 +1,8 @@
-import consts from "./consts";
-import { PlayerState } from "./playerState";
-import RayAxis from "./rayAxis";
-import { RayCastingState, Axis, Sprite, SpriteAngleState } from "./types";
+import consts from './consts';
+import { PlayerState } from './playerState';
+import RayAxis from './rayAxis';
+import RayCasting from './rayCasting';
+import { Axis, Sprite, SpriteAngleState } from './types';
 
 const halfLookAngle = consts.lookAngle / 2;
 const angleRatio = consts.resolution.width / consts.lookAngle;
@@ -15,13 +16,13 @@ export class SpriteAngle {
   private currentY: number;
   private mirroredX: number;
   private mirroredY: number;
-  private rayCastingState: RayCastingState;
+  private rayCastingState: RayCasting;
   private initDistance: number;
 
   constructor(
     sprite: Sprite,
     playerState: PlayerState,
-    rayCastingState: RayCastingState
+    rayCastingState: RayCasting
   ) {
     this.playerState = playerState;
     this.sprite = sprite;
@@ -39,7 +40,6 @@ export class SpriteAngle {
     this.rayCastingState = rayCastingState;
     this.initDistance = 0;
     this.initState();
-
   }
   private fixAngle(a: number) {
     a = a % pi2;
@@ -59,20 +59,27 @@ export class SpriteAngle {
     const angle0 =
       sign < 0 ? Math.PI - this.playerState.angle : this.playerState.angle;
     const diff = (angle - this.fixAngle(angle0)) * sign;
-    const x = angleRatio * (diff + halfLookAngle) << 0;
+    const x = (angleRatio * (diff + halfLookAngle)) << 0;
     this.initDistance = Math.sqrt(dx ** 2 + dy ** 2);
-    const xf = ((this.sprite.width / 2) * consts.resolution.width) / this.initDistance;
+    const xf =
+      ((this.sprite.width / 2) * consts.resolution.width) / this.initDistance;
 
     this.state.distance = this.initDistance * this.rayCastingState.fixDistance;
-    this.state.x0 = (x - xf);
-    this.state.x1 = (x + xf);
+    this.state.x0 = x - xf;
+    this.state.x1 = x + xf;
   }
   public getState(): SpriteAngleState {
     return this.state;
   }
-  public mirrorHandler(bx: number, by: number, axis: Axis, rayX: RayAxis, rayY: RayAxis): void {
-    const cellX = rayX.cell + (rayX.sign > 0 ? 1 : 0);
-    const cellY = rayY.cell + (rayY.sign > 0 ? 1 : 0);
+  public mirrorHandler(
+    bx: number,
+    by: number,
+    axis: Axis,
+    rayX: RayAxis,
+    rayY: RayAxis
+  ): void {
+    const cellX = rayX.cellIndex + (rayX.sign > 0 ? 1 : 0);
+    const cellY = rayY.cellIndex + (rayY.sign > 0 ? 1 : 0);
     const x = cellX * consts.cellSize;
     const y = cellY * consts.cellSize;
 
@@ -120,8 +127,7 @@ export class SpriteAngle {
     if (axis === Axis.x) {
       if (this.mirroredY % 2 === 0) {
         this.currentY += 2 * (y - this.sprite.y);
-      }
-      else {
+      } else {
         this.currentY += 2 * (this.sprite.y - y);
       }
       this.mirroredY++;
@@ -135,10 +141,7 @@ export class SpriteAngle {
     this.mirroredX = 0;
     this.mirroredY = 0;
 
-    if (
-      this.currentX === this.sprite.x &&
-      this.currentY === this.sprite.y
-    )
+    if (this.currentX === this.sprite.x && this.currentY === this.sprite.y)
       return;
     this.currentX = this.sprite.x;
     this.currentY = this.sprite.y;

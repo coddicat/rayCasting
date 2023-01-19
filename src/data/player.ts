@@ -1,9 +1,9 @@
-import consts from "./consts";
-import map from "./map";
-import { PlayerState } from "./playerState";
-import Ray from "./ray";
+import consts from './consts';
+import { GameMap } from './gameMap';
+import { PlayerState } from './playerState';
+import Ray from './ray';
 import { CellHandler } from './rayHandler';
-import { RayAction, RayAngle } from "./types";
+import { RayAction, RayAngle } from './types';
 
 const collisionDistance = 0.6;
 const quartPi = Math.PI / 4;
@@ -14,25 +14,29 @@ const acc = 0.0001;
 
 class CollisionHandler implements CellHandler {
   private state: PlayerState;
+  private gameMap: GameMap;
 
-  constructor(state: PlayerState) {
+  constructor(state: PlayerState, gameMap: GameMap) {
     this.state = state;
+    this.gameMap = gameMap;
   }
 
-
   private checkMoveCollision(params: { bx: number; by: number }): RayAction {
-    const found = map.check(params);
+    const found = this.gameMap.check(params);
     if (!found) return RayAction.continue;
-    const item = map.getItem(found);
+    const item = this.gameMap.getItem(found);
     if (!item || item.walls.length === 0) return RayAction.continue;
     const top = this.state.z + this.state.height;
     const bottom = this.state.z;
-    const collisions = item.walls.filter((x) =>
-      top > x.bottom && bottom < x.top
+    const collisions = item.walls.filter(
+      (x) => top > x.bottom && bottom < x.top
     );
 
     if (collisions.length > 0) {
-      const max = Math.max.apply(null, collisions.map(x => x.top));
+      const max = Math.max.apply(
+        null,
+        collisions.map((x) => x.top)
+      );
       if (max <= bottom + 0.301) {
         this.state.z = max;
         return RayAction.continue;
@@ -42,16 +46,21 @@ class CollisionHandler implements CellHandler {
     return collisions.length > 0 ? RayAction.stop : RayAction.continue;
   }
 
-
-  public handle(params: { bx: number; by: number; }): RayAction {
-    return this.checkMoveCollision(params);
+  public handle(rayState: Ray): RayAction {
+    return this.checkMoveCollision({
+      bx: rayState.axisX.cellIndex,
+      by: rayState.axisY.cellIndex,
+    });
   }
 }
 
 class Player {
   private state: PlayerState;
-  constructor(state: PlayerState) {
+  private gameMap: GameMap;
+
+  constructor(state: PlayerState, gameMap: GameMap) {
     this.state = state;
+    this.gameMap = gameMap;
   }
   private fixDistance(d: number): number {
     d -= collisionDistance;
@@ -89,7 +98,7 @@ class Player {
       const xAngle = xSign < 0 ? Math.PI : 0;
       const yAngle = ySign < 0 ? Pi1_5 : halfPi;
 
-      const handle = new CollisionHandler(this.state);
+      const handle = new CollisionHandler(this.state, this.gameMap);
 
       const ray = new Ray(this.state, new RayAngle(userAngle), handle);
       const rayX = new Ray(this.state, new RayAngle(xAngle), handle);
@@ -106,7 +115,10 @@ class Player {
         ny = this.state.y + d * ySign;
       }
 
-      const res = !xres.stopped && !yres.stopped && ray.send(distance + collisionDistance, false).stopped;
+      const res =
+        !xres.stopped &&
+        !yres.stopped &&
+        ray.send(distance + collisionDistance, false).stopped;
       if (res) {
         nx = this.state.x;
         ny = this.state.y;
@@ -121,15 +133,15 @@ class Player {
   }
 
   private checkFloor() {
-    const mx = this.state.x / consts.cellSize << 0;
-    const my = this.state.y / consts.cellSize << 0;
+    const mx = (this.state.x / consts.cellSize) << 0;
+    const my = (this.state.y / consts.cellSize) << 0;
 
-    const found = map.check({ bx: mx, by: my });
+    const found = this.gameMap.check({ bx: mx, by: my });
     if (!found) {
       this.fall();
       return;
     }
-    const item = map.getItem(found);
+    const item = this.gameMap.getItem(found);
     const fl = item.levels.find((w) => this.state.z === w.bottom);
     if (fl) {
       return;
@@ -167,15 +179,15 @@ class Player {
       return false;
     }
 
-    const mx = this.state.x / consts.cellSize << 0;
-    const my = this.state.y / consts.cellSize << 0;
+    const mx = (this.state.x / consts.cellSize) << 0;
+    const my = (this.state.y / consts.cellSize) << 0;
 
     const t = now - this.state.jumping;
     const v0 = this.state.jumpingSpeed ?? 0;
     const newZ = (this.state.jumpingFloor ?? 0) + t * (v0 - acc * (t >> 1));
 
-    const m = map.check({ bx: mx, by: my });
-    const levels = m ? map.getItem(m).levels : [];
+    const m = this.gameMap.check({ bx: mx, by: my });
+    const levels = m ? this.gameMap.getItem(m).levels : [];
 
     const topLevels = levels
       .filter(

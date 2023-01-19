@@ -1,7 +1,10 @@
+import consts from './consts';
+import { PlayerState } from './playerState';
+
 export type Coordinates = {
   x: number;
   y: number;
-}
+};
 
 // export type Vector = {
 //   x: number;
@@ -12,12 +15,22 @@ export type Coordinates = {
 export type Level = {
   color: number;
   bottom: number;
+  texture: null | {
+    scale: number;
+    getUrl: () => string;
+    spriteData?: SpriteData;
+  };
 };
 export type Wall = {
   color: number;
   top: number;
   bottom: number;
   render: boolean;
+  texture: null | {
+    scale: number;
+    getUrl: () => string;
+    spriteData?: SpriteData;
+  };
 };
 
 export type MapItem = {
@@ -60,7 +73,47 @@ export type SpriteAngleState = {
   hidden: boolean;
 };
 
+export type StaticLineProps = {
+  x: number;
+  y0: number;
+  y1: number;
+  color: number;
+  light: number;
+};
+
+export type SpriteLineProps = {
+  x: number;
+  spriteX: number;
+  y0: number;
+  y1: number;
+  light: number;
+  scale: number;
+  checkAlpha: boolean;
+};
+
+export type DynamicLineProps = {
+  x: number;
+  y0: number;
+  y1: number;
+  yShift: number;
+  color: number;
+};
+
+export type DynamicSpriteLineProps = {
+  x: number;
+  side: Axis;
+  sideX: number;
+  y0: number;
+  y1: number;
+  yShift: number;
+  angle: number;
+  distance: number;
+  fixDistance: number;
+  scale: number;
+};
+
 //-----------------------------
+const angleStep = consts.lookAngle / consts.resolution.width;
 
 export class RayAngle {
   public angle!: number;
@@ -81,17 +134,14 @@ export class RayAngle {
     this.sinAbs = Math.abs(this.sin);
   }
 
+  public nextDisplayAngle() {
+    this.setAngle(this.angle + angleStep);
+  }
+
   constructor(angle: number) {
     this.setAngle(angle);
   }
 }
-
-export type RayCastingState = {
-  rayAngle: RayAngle,
-  fixDistance: number,
-  displayX: number,
-  fixCos: number,
-  fixSin: number,
-  fixCosAbs: number,
-  fixSinAbs: number,
-}
+export type PixelCounter = {
+  count: number;
+};

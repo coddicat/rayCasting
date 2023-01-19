@@ -1,4 +1,5 @@
 import consts from './consts';
+import { GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import RayCasting from './rayCasting';
 import {
@@ -14,8 +15,9 @@ export class Main3D {
   private context!: CanvasRenderingContext2D;
   private rayCasting!: RayCasting;
   private playerState: PlayerState;
+  private gameMap: GameMap;
 
-  constructor(playerState: PlayerState) {
+  constructor(playerState: PlayerState, gameMap: GameMap) {
     this.tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
     this.tempCanvas.width = consts.resolution.width;
     this.tempCanvas.height = consts.resolution.height;
@@ -29,6 +31,7 @@ export class Main3D {
       consts.resolution.height
     );
     this.playerState = playerState;
+    this.gameMap = gameMap;
   }
 
   public async initAsync(mainCanvas: HTMLCanvasElement): Promise<void> {
@@ -40,8 +43,6 @@ export class Main3D {
     this.context = ctx;
 
     const dukeFrontSpriteData = await getDukeFrontSpriteData();
-    const wallBriksSpriteData = await getWallBriksSpriteData();
-    const floor1SpriteData = await getFloor1SpriteData();
 
     this.rayCasting = new RayCasting(
       this.imageData,
@@ -55,8 +56,7 @@ export class Main3D {
       //   width: 1
       // },
       dukeFrontSpriteData,
-      wallBriksSpriteData,
-      floor1SpriteData
+      this.gameMap
     );
   }
 

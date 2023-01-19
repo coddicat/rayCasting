@@ -1,17 +1,31 @@
-import consts from "./consts";
+import consts from './consts';
+import { Axis, Coordinates, RayAngle } from './types';
 export default class RayAxis {
-  private _step: number;
+  private _step!: number;
 
-  public cell: number;
-  public distance: number;
-  public sign: number;
+  public cellIndex!: number;
+  public distance!: number;
+  public sign!: number;
 
-  constructor(initDistance: number, from: number, step: number) {
+  private coordinates: Coordinates;
+  private rayAngle: RayAngle;
+  private axis: Axis;
+
+  constructor(coordinates: Coordinates, rayAngle: RayAngle, axis: Axis) {
+    this.coordinates = coordinates;
+    this.rayAngle = rayAngle;
+    this.axis = axis;
+  }
+
+  public init(): void {
+    const step =
+      consts.cellSize /
+      (this.axis === Axis.x ? this.rayAngle.cos : this.rayAngle.sin);
     this.sign = Math.sign(step);
     this._step = Math.abs(step);
-    const rest = this.getShift(from);
-    this.cell = from / consts.cellSize << 0;
-    this.distance = initDistance + (this._step * rest) / consts.cellSize;
+    const from = this.axis === Axis.x ? this.coordinates.x : this.coordinates.y;
+    this.cellIndex = (from / consts.cellSize) << 0;
+    this.distance = (this._step * this.getShift(from)) / consts.cellSize;
   }
 
   private getShift(position: number): number {
@@ -24,7 +38,7 @@ export default class RayAxis {
 
   public step(): number {
     const distance = this.distance;
-    this.cell += this.sign;
+    this.cellIndex += this.sign;
     this.distance += this._step;
     return distance;
   }

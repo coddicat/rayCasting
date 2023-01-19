@@ -19,9 +19,9 @@ import Player from '@/data/player';
 import { PlayerState } from '@/data/playerState';
 import { Main3D } from '@/data/main3D';
 import consts from '@/data/consts';
+import { GameMap } from '@/data/gameMap';
 
 const playerState = new PlayerState();
-const player = new Player(playerState);
 
 export default defineComponent({
   name: 'HomeView',
@@ -56,24 +56,12 @@ export default defineComponent({
     // } else if ('onmozpointerlockchange' in document) {
     //   (document as Document).addEventListener(
     //     'mozpointerlockchange',
-    //     lockChangeAlert,
+    //     () => { document.pointerLockElement === canvas },
     //     false
     //   );
     // }
 
-    // function lockChangeAlert() {
-    //   if (
-    //     document.pointerLockElement === canvas ||
-    //     (document as any).mozPointerLockElement === canvas
-    //   ) {
-    //     console.log('The pointer lock status is now locked');
-    //     // Do something useful in response
-    //   } else {
-    //     console.log('The pointer lock status is now unlocked');
-    //     // Do something useful in response
-    //   }
-    // }
-
+    await this.gameMap.init();
     await this.main3D.initAsync(this.mainCanvas);
 
     this.start();
@@ -91,6 +79,10 @@ export default defineComponent({
     let fps = 0;
     const fpsDisplay = ref(0);
     let lastTime = new Date().getTime();
+    const stopped = ref(false);
+    const gameMap = new GameMap();
+    const main3D = new Main3D(playerState, gameMap);
+    const player = new Player(playerState, gameMap);
 
     // function renderMap() {
     //   if (!mapCanvas.value) return;
@@ -125,19 +117,6 @@ export default defineComponent({
       const moveRight = currentKey.value.get('KeyD');
 
       let updates = false;
-      // updates =
-      //   player.moveForward(
-      //     (up || down) ?? false,
-      //     now,
-      //     up ? 1 : down ? -1 : 0
-      //   ) || updates;
-
-      // updates =
-      //   player.moveRight(
-      //     (moveRight || moveLeft) ?? false,
-      //     now,
-      //     moveRight ? 1 : moveLeft ? -1 : 0
-      //   ) || updates;
 
       updates =
         player.move(
@@ -160,15 +139,12 @@ export default defineComponent({
       return updates;
     }
 
-    const stopped = ref(false);
-    const main3D = new Main3D(playerState);
-
     async function tick() {
       if (stopped.value) return;
       const now = new Date().getTime();
       if (now % 10 === 0) {
         const diff = now - lastTime;
-        fps = 1000 / diff << 0;
+        fps = (1000 / diff) << 0;
         fpsDisplay.value = fps;
       }
       //renderMap();
@@ -180,6 +156,7 @@ export default defineComponent({
     }
 
     return {
+      gameMap,
       currentKey,
       mainCanvas,
       //mapCanvas,
