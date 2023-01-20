@@ -2,10 +2,9 @@ import consts from './consts';
 import { GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import Ray from './ray';
-import RayAxis from './rayAxis';
+import { RayAngle } from './rayAngle';
 import RayHandler from './rayHandler';
-import { SpriteAngle } from './spriteAngle';
-import { SpriteObject, SpriteData, RayAngle, Axis } from './types';
+import { SpriteObject, SpriteData } from './types';
 
 const halfLookAngle = consts.lookAngle / 2;
 const buf = new ArrayBuffer(
@@ -19,11 +18,9 @@ class RayCasting {
   private imageData: ImageData;
   private playerState: PlayerState;
   private rayHandler: RayHandler;
-  private spriteAngle: SpriteAngle;
   private ray: Ray;
 
   public rayAngle: RayAngle;
-  //public fixDistance!: number;
   public displayX!: number;
 
   constructor(
@@ -37,14 +34,12 @@ class RayCasting {
     this.playerState = playerState;
 
     this.rayAngle = new RayAngle();
-    this.spriteAngle = new SpriteAngle(spriteObject, this.playerState, this);
     data.fill(0);
     this.rayHandler = new RayHandler(
       data,
       playerState,
 
       spriteData,
-      this.spriteAngle,
       spriteObject,
 
       this,
@@ -63,16 +58,10 @@ class RayCasting {
     this.ray.send(consts.lookLength / this.rayAngle.fixDistance);
   }
 
-  private setStateVars(): void {
-    //this.fixDistance = Math.cos(this.playerState.angle - this.rayAngle.angle);
-  }
-
   public draw3D(): void {
     this.displayX = 0;
-    //this.spriteAngle.initState();
     let angle = this.playerState.angle - halfLookAngle;
     while (this.displayX < consts.resolution.width) {
-      //      this.setStateVars();
       const fixDistance = Math.cos(this.playerState.angle - angle);
       this.rayAngle.setAngle({
         angle,
@@ -83,8 +72,6 @@ class RayCasting {
 
       this.displayX++;
       angle += angleStep;
-      //this.rayAngle.setAngle(this.angle0 + angleStep);
-      this.spriteAngle.reset();
       this.rayHandler.reset();
     }
 

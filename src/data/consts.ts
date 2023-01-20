@@ -6,9 +6,7 @@ const resolution = {
 const rad = Math.PI / 180;
 
 export default {
-  rad,
   resolution,
-  cellSize: 1,
   moveSpeed: 0.015,
   turnSpeed: 0.002,
   lookLength: 80,

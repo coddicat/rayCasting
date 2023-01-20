@@ -1,14 +1,11 @@
-import consts from './consts';
 import { GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import Ray from './ray';
 import RayCasting from './rayCasting';
 import Render from './render';
-import { SpriteAngle } from './spriteAngle';
 import {
   MapItem,
   RayAction,
-  Axis,
   SpriteObject,
   SpriteAngleState,
   SpriteData,
@@ -34,7 +31,6 @@ class RayHandler implements CellHandler {
   private rayCastingState: RayCasting;
   private render: Render;
 
-  private spriteAngle: SpriteAngle;
   private spriteData: SpriteData;
   private spriteState: SpriteAngleState;
   private spriteObject: SpriteObject;
@@ -44,7 +40,6 @@ class RayHandler implements CellHandler {
     playerState: PlayerState,
 
     spriteData: SpriteData,
-    spriteAngle: SpriteAngle,
     spriteObject: SpriteObject,
 
     rayCastingState: RayCasting,
@@ -64,8 +59,9 @@ class RayHandler implements CellHandler {
 
     this.spriteData = spriteData;
     this.spriteObject = spriteObject;
-    this.spriteAngle = spriteAngle;
-    this.spriteState = spriteAngle.getState();
+    this.spriteState = {
+      lastDistance: 0.6,
+    };
 
     this.render = new Render(
       data,
@@ -84,6 +80,7 @@ class RayHandler implements CellHandler {
     this.mirrorFact = 1;
     this.emptyPixels = true;
     this.pixelsCounter.count = 0;
+    this.spriteState.lastDistance = 0.6;
   }
 
   public handle(rayState: Ray, last: boolean): RayAction {
@@ -95,16 +92,10 @@ class RayHandler implements CellHandler {
     this.newDistance =
       rayState.distance * this.rayCastingState.rayAngle.fixDistance;
 
-    this.handleSprite(
-      rayState,
-      this.spriteState,
-      this.spriteObject,
-      this.newDistance
-    );
+    this.handleSprite(rayState, this.spriteState, this.spriteObject);
 
     if (this.newItem !== this.prevItem || last) {
       this.emptyPixels = this.emptyPixels && this.render.handleLevels(rayState);
-
       this.emptyPixels = this.emptyPixels && this.render.handleWalls(rayState);
 
       this.prevItem = this.newItem;
@@ -121,79 +112,58 @@ class RayHandler implements CellHandler {
       : RayAction.continue;
   }
 
-  private getSpriteDistance(dx: number, dy: number, a: number): number {
-    const tan = Math.tan(a + consts.rad * 90);
-    return (dy - dx * tan) / (Math.sin(a) - Math.cos(a) * tan);
-  }
-
-  private getSpriteSideDistance(
-    dx: number,
-    rayDistance: number,
-    a: number
-  ): number {
-    const res =
-      (dx - Math.cos(a) * rayDistance) / Math.cos(a + consts.rad * 90);
-    return ((res * 1000) << 0) / 1000;
-  }
-
   private handleSprite(
     rayState: Ray,
     spriteState: SpriteAngleState,
-    sprite: SpriteObject,
-    newDistance: number
+    sprite: SpriteObject
   ): void {
     const dx = sprite.x - rayState.axisX.from;
     const dy = sprite.y - rayState.axisY.from;
-    const a = rayState.rayAngle.angle;
-    const rayDistance = this.getSpriteDistance(dx, dy, a);
+
+    const rayDistance =
+      (dy - dx * rayState.rayAngle.tan90) /
+      (rayState.rayAngle.sin - rayState.rayAngle.cos * rayState.rayAngle.tan90);
+
     if (rayDistance < 0.5) {
       return;
     }
-
-    const sideDistance = this.getSpriteSideDistance(
-      dx,
-      rayDistance,
-      rayState.rayAngle.angle
-    );
-
     const distance =
       (rayState.mirrorDistance + rayDistance) *
       this.rayCastingState.rayAngle.fixDistance;
 
-    const half = sprite.width / 2;
-    if (
-      distance > spriteState.lastDistance &&
-      distance > 0 &&
-      newDistance >= distance &&
-      sideDistance <= half &&
-      sideDistance >= -half
-    ) {
-      const wRate = this.spriteData.width / sprite.width;
-      const spriteX = ((sideDistance + half) * wRate) << 0;
-
-      const _params = {
-        spriteX,
-        displayX: this.rayCastingState.displayX,
-        distance: distance,
-        mirrorFact: this.mirrorFact,
-        color: 0x0000ff,
-        top: sprite.z + sprite.height,
-        bottom: sprite.z,
-      };
-
-      this.emptyPixels =
-        this.emptyPixels &&
-        this.render.handleSprite(
-          this.data,
-          rayState,
-          _params,
-          this.playerState,
-          this.pixelsCounter,
-          this.spriteData
-        );
-
-      spriteState.lastDistance = distance;
+    if (distance <= spriteState.lastDistance || this.newDistance < distance) {
+      return;
     }
+
+    const sideDistance =
+      rayState.rayAngle.sinAbs < 0.001
+        ? 0
+        : (dx - rayState.rayAngle.cos * rayDistance) / -rayState.rayAngle.sin;
+
+    const half = sprite.width / 2;
+    if (sideDistance > half || sideDistance < -half) return;
+
+    const wRate = this.spriteData.width / sprite.width;
+    const spriteX = ((sideDistance + half) * wRate) << 0;
+
+    const _params = {
+      spriteX,
+      distance,
+      top: sprite.z + sprite.height,
+      bottom: sprite.z,
+    };
+
+    this.emptyPixels =
+      this.emptyPixels &&
+      this.render.handleSprite(
+        this.data,
+        _params,
+        this.playerState,
+        this.pixelsCounter,
+        this.spriteData
+      );
+
+    spriteState.lastDistance = distance;
   }
 }
 

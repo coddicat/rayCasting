@@ -2,8 +2,8 @@ import consts from './consts';
 import { Coordinates, SpriteObject } from './types';
 
 export class PlayerState implements SpriteObject, Coordinates {
-  public x: number = consts.cellSize * 48;
-  public y: number = consts.cellSize * 45;
+  public x = 48;
+  public y = 45;
   public z = 0;
 
   public width: number = consts.playerWidth;

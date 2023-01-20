@@ -1,7 +1,7 @@
-import consts from './consts';
+import { RayAngle } from './rayAngle';
 import RayAxis from './rayAxis';
 import { CellHandler } from './rayHandler';
-import { Coordinates, RayAction, RayAngle, Axis } from './types';
+import { Coordinates, RayAction, Axis } from './types';
 
 export type MirrorHandler = (
   bx: number,
@@ -13,8 +13,6 @@ export type MirrorHandler = (
 
 class Ray {
   private cellHandler: CellHandler;
-  // private mirrorHandle?: MirrorHandler;
-  private coordinates: Coordinates;
 
   public axisX: RayAxis;
   public axisY: RayAxis;
@@ -29,11 +27,8 @@ class Ray {
     coordinates: Coordinates,
     rayAngle: RayAngle,
     cellHandler: CellHandler
-    // mirrorHandle?: MirrorHandler
   ) {
     this.cellHandler = cellHandler;
-    // this.mirrorHandle = mirrorHandle;
-    this.coordinates = coordinates;
 
     this.rayAngle = rayAngle;
     this.axisX = new RayAxis(coordinates, rayAngle, Axis.x);
@@ -57,29 +52,17 @@ class Ray {
   }
 
   private getSideX(): number {
-    // if (this.side === Axis.x) {
-    //   return (
-    //     (this.rayAngle.cos * this.distance + this.coordinates.x) %
-    //     consts.cellSize
-    //   );
-    // } else {
-    //   return (
-    //     (this.rayAngle.sin * this.distance + this.coordinates.y) %
-    //     consts.cellSize
-    //   );
-    // }
-
     if (this.side === Axis.x) {
       return (
         (this.rayAngle.cos * (this.distance - this.mirrorDistance) +
           this.axisX.from) %
-        consts.cellSize
+        1
       );
     } else {
       return (
         (this.rayAngle.sin * (this.distance - this.mirrorDistance) +
           this.axisY.from) %
-        consts.cellSize
+        1
       );
     }
   }
@@ -94,8 +77,6 @@ class Ray {
     if (action === RayAction.mirror) {
       if (this.side === Axis.x) {
         this.axisX.from = this.axisX.cellIndex + this.getSideX();
-        // (this.mirrorAxis === Axis.y ? -this.getSideX() : this.getSideX());
-
         this.axisY.from = this.axisY.cellIndex + (this.axisY.sign < 0 ? 1 : 0);
 
         this.axisY.mirror();
@@ -103,13 +84,7 @@ class Ray {
         this.mirrorAxis = Axis.x;
       } else {
         this.axisY.from = this.axisY.cellIndex + this.getSideX();
-        //(this.mirrorAxis === Axis.x ? -this.getSideX() : this.getSideX());
-
-        // if (this.mirrorAxis === Axis.x) {
-        //   this.axisX.from = this.axisX.cellIndex + 1;
-        // } else {
         this.axisX.from = this.axisX.cellIndex + (this.axisX.sign < 0 ? 1 : 0);
-        // }
 
         this.axisX.mirror();
         this.rayAngle.mirrorY();

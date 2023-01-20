@@ -1,5 +1,5 @@
-import consts from './consts';
-import { Axis, Coordinates, RayAngle } from './types';
+import { RayAngle } from './rayAngle';
+import { Axis, Coordinates } from './types';
 export default class RayAxis {
   private _step!: number;
 
@@ -20,21 +20,20 @@ export default class RayAxis {
 
   public init(): void {
     const step =
-      consts.cellSize /
-      (this.axis === Axis.x ? this.rayAngle.cos : this.rayAngle.sin);
+      1 / (this.axis === Axis.x ? this.rayAngle.cos : this.rayAngle.sin);
     this.sign = Math.sign(step);
     this._step = Math.abs(step);
     this.from = this.axis === Axis.x ? this.coordinates.x : this.coordinates.y;
-    this.cellIndex = (this.from / consts.cellSize) << 0;
-    this.distance = (this._step * this.getShift(this.from)) / consts.cellSize;
+    this.cellIndex = this.from << 0;
+    this.distance = this._step * this.getShift(this.from);
   }
 
   private getShift(position: number): number {
-    const rest = Math.abs(position % consts.cellSize);
+    const rest = Math.abs(position % 1);
     if (position < 0) {
-      return this.sign < 0 ? consts.cellSize - rest : rest;
+      return this.sign < 0 ? 1 - rest : rest;
     }
-    return this.sign < 0 ? rest : consts.cellSize - rest;
+    return this.sign < 0 ? rest : 1 - rest;
   }
 
   public step(): number {

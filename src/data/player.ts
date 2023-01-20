@@ -2,8 +2,9 @@ import consts from './consts';
 import { GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import Ray from './ray';
+import { RayAngle } from './rayAngle';
 import { CellHandler } from './rayHandler';
-import { RayAction, RayAngle } from './types';
+import { RayAction } from './types';
 
 const collisionDistance = 0.6;
 const quartPi = Math.PI / 4;
@@ -133,8 +134,8 @@ class Player {
   }
 
   private checkFloor() {
-    const mx = (this.state.x / consts.cellSize) << 0;
-    const my = (this.state.y / consts.cellSize) << 0;
+    const mx = this.state.x << 0;
+    const my = this.state.y << 0;
 
     const found = this.gameMap.check({ bx: mx, by: my });
     if (!found) {
@@ -179,8 +180,8 @@ class Player {
       return false;
     }
 
-    const mx = (this.state.x / consts.cellSize) << 0;
-    const my = (this.state.y / consts.cellSize) << 0;
+    const mx = this.state.x << 0;
+    const my = this.state.y << 0;
 
     const t = now - this.state.jumping;
     const v0 = this.state.jumpingSpeed ?? 0;

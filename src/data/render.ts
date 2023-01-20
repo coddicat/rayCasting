@@ -7,8 +7,6 @@ import RayCasting from './rayCasting';
 import RayHandler from './rayHandler';
 import {
   Level,
-  MapItem,
-  Axis,
   SpriteData,
   Wall,
   PixelCounter,
@@ -16,6 +14,7 @@ import {
   SpriteLineProps,
   DynamicLineProps,
   DynamicSpriteLineProps,
+  SpriteProps,
 } from './types';
 
 const maxLight = 255;
@@ -85,9 +84,9 @@ class Render {
 
   private drawSprite(
     data: Uint32Array,
-    params: { displayX: number; spriteX: number; distance: number },
+    params: { spriteX: number; distance: number },
     light: number,
-    wall: Wall,
+    spriteProps: SpriteProps,
     playerState: PlayerState,
     pixelCounter: { count: number },
     spriteData: SpriteData
@@ -99,24 +98,19 @@ class Render {
       fact * (playerState.z + playerState.lookHeight);
 
     const _params = {
-      y0: a - wall.top * fact,
-      y1: a - wall.bottom * fact,
-      x: params.displayX,
+      y0: a - spriteProps.top * fact,
+      y1: a - spriteProps.bottom * fact,
+      x: this.rayCastingState.displayX,
       spriteX: params.spriteX,
-      color: wall.color,
       light,
-      scale: wall.texture!.scale,
+      scale: spriteProps.texture!.scale,
       checkAlpha: true,
     };
 
     this.painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
   }
 
-  private drawLevel(
-    rayState: Ray,
-    level: Level
-    // spriteData: SpriteData,
-  ): void {
+  private drawLevel(rayState: Ray, level: Level): void {
     const d =
       consts.resolution.width *
       (this.playerState.z + this.playerState.lookHeight - level.bottom);
@@ -135,11 +129,9 @@ class Render {
           d / this.rayHandlerState.prevDistance,
         yShift: this.playerState.lookVertical,
         x: this.rayCastingState.displayX,
-        //angle: rayState.rayAngle.angle,
         distance: this.rayHandlerState.prevDistance,
         sideX: rayState.sideX,
         side: rayState.side,
-        //fixDistance: this.rayCastingState.fixDistance,
         scale: level.texture?.scale,
       };
 
@@ -171,13 +163,9 @@ class Render {
 
   public handleSprite(
     data: Uint32Array,
-    rayState: Ray,
     params: {
-      displayX: number;
       spriteX: number;
       distance: number;
-      mirrorFact: number;
-      color: number;
       top: number;
       bottom: number;
     },
@@ -188,7 +176,7 @@ class Render {
     if (params.distance <= 0) return true;
     const light =
       ((maxLight * (consts.lookLength - params.distance)) / consts.lookLength) *
-      params.mirrorFact;
+      this.rayHandlerState.mirrorFact;
     if (light < 1) return true;
 
     this.drawSprite(
@@ -196,10 +184,8 @@ class Render {
       params,
       light,
       {
-        color: params.color,
         top: params.top,
         bottom: params.bottom,
-        render: true,
         texture: {
           scale: 1,
           getUrl: () => '',

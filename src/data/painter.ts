@@ -1,10 +1,7 @@
 import consts from './consts';
 import DynamicAlpha from './dynamicAlpha';
-import { PlayerState } from './playerState';
 import RayCasting from './rayCasting';
-import RayHandler from './rayHandler';
 import {
-  Level,
   SpriteData,
   Axis,
   PixelCounter,
