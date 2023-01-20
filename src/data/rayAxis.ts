@@ -6,6 +6,7 @@ export default class RayAxis {
   public cellIndex!: number;
   public distance!: number;
   public sign!: number;
+  public from!: number;
 
   private coordinates: Coordinates;
   private rayAngle: RayAngle;
@@ -23,9 +24,9 @@ export default class RayAxis {
       (this.axis === Axis.x ? this.rayAngle.cos : this.rayAngle.sin);
     this.sign = Math.sign(step);
     this._step = Math.abs(step);
-    const from = this.axis === Axis.x ? this.coordinates.x : this.coordinates.y;
-    this.cellIndex = (from / consts.cellSize) << 0;
-    this.distance = (this._step * this.getShift(from)) / consts.cellSize;
+    this.from = this.axis === Axis.x ? this.coordinates.x : this.coordinates.y;
+    this.cellIndex = (this.from / consts.cellSize) << 0;
+    this.distance = (this._step * this.getShift(this.from)) / consts.cellSize;
   }
 
   private getShift(position: number): number {

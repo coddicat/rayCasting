@@ -50,10 +50,10 @@ export class Main3D {
       this.playerState,
       // {
       //   x: 50.5,
-      //   y: 43.5,
+      //   y: 70.5,
       //   z: 0.3,
-      //   height: 2,
-      //   width: 1
+      //   height: 1.8,
+      //   width: 1,
       // },
       dukeFrontSpriteData,
       this.gameMap

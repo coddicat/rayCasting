@@ -51,7 +51,7 @@ export enum Axis {
   y = 1,
 }
 
-export interface Sprite {
+export interface SpriteObject {
   x: number;
   y: number;
   z: number;
@@ -69,7 +69,7 @@ export type SpriteAngleState = {
   distance: number;
   x0: number;
   x1: number;
-  status: boolean;
+  lastDistance: number;
   hidden: boolean;
 };
 
@@ -106,16 +106,17 @@ export type DynamicSpriteLineProps = {
   y0: number;
   y1: number;
   yShift: number;
-  angle: number;
+  //angle: number;
   distance: number;
-  fixDistance: number;
+  //fixDistance: number;
   scale: number;
 };
 
 //-----------------------------
-const angleStep = consts.lookAngle / consts.resolution.width;
+const rad180 = consts.rad * 180;
 
 export class RayAngle {
+  //public angle0!: number;
   public angle!: number;
   public cos!: number;
   public sin!: number;
@@ -124,22 +125,53 @@ export class RayAngle {
   public cosAbs!: number;
   public sinAbs!: number;
 
-  public setAngle(angle: number): void {
-    this.angle = angle;
-    this.cos = Math.cos(angle);
-    this.sin = Math.sin(angle);
+  public fixCos!: number;
+  public fixSin!: number;
+  public fixCosAbs!: number;
+  public fixSinAbs!: number;
+
+  public fixDistance!: number;
+
+  constructor(angle?: number) {
+    this.setAngle({ angle: angle ?? 0, fixDistance: 1 });
+  }
+
+  public setAngle(props: {
+    angle: number;
+    fixDistance: number | undefined;
+  }): void {
+    //this.angle0 = props.angle;
+    this.angle = props.angle;
+    this.fixDistance = props.fixDistance ?? 1;
+    this.setAngleProps();
+  }
+
+  private setAngleProps(): void {
+    this.cos = Math.cos(this.angle);
+    this.sin = Math.sin(this.angle);
     this.cosSign = Math.sign(this.cos);
     this.sinSign = Math.sign(this.sin);
     this.cosAbs = this.cos * this.cosSign;
     this.sinAbs = Math.abs(this.sin);
+
+    this.fixCosAbs = this.cosAbs / this.fixDistance;
+    this.fixSinAbs = this.sinAbs / this.fixDistance;
+    this.fixCos = this.cos / this.fixDistance;
+    this.fixSin = this.sin / this.fixDistance;
   }
 
-  public nextDisplayAngle() {
-    this.setAngle(this.angle + angleStep);
+  // public nextDisplayAngle(fixDistance: number) {
+  //   this.setAngle(this.angle0 + angleStep);
+  // }
+
+  public mirrorX() {
+    this.angle *= -1;
+    this.setAngleProps();
   }
 
-  constructor(angle: number) {
-    this.setAngle(angle);
+  public mirrorY() {
+    this.angle = rad180 - this.angle;
+    this.setAngleProps();
   }
 }
 export type PixelCounter = {

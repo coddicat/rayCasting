@@ -83,34 +83,34 @@ class Render {
     }
   }
 
-  // private drawSprite(
-  //   data: Uint32Array,
-  //   params: { displayX: number; spriteX: number; distance: number },
-  //   light: number,
-  //   wall: Wall,
-  //   playerState: PlayerState,
-  //   pixelCounter: { count: number },
-  //   spriteData: SpriteData
-  // ): void {
-  //   const fact = consts.resolution.width / params.distance;
-  //   const a =
-  //     halfHeight +
-  //     playerState.lookVertical +
-  //     fact * (playerState.z + playerState.lookHeight);
+  private drawSprite(
+    data: Uint32Array,
+    params: { displayX: number; spriteX: number; distance: number },
+    light: number,
+    wall: Wall,
+    playerState: PlayerState,
+    pixelCounter: { count: number },
+    spriteData: SpriteData
+  ): void {
+    const fact = consts.resolution.width / params.distance;
+    const a =
+      halfHeight +
+      playerState.lookVertical +
+      fact * (playerState.z + playerState.lookHeight);
 
-  //   const _params = {
-  //     y0: a - wall.top * fact,
-  //     y1: a - wall.bottom * fact,
-  //     x: params.displayX,
-  //     spriteX: params.spriteX,
-  //     color: wall.color,
-  //     alpha: light,
-  //     scale: 1,
-  //     checkAlpha: true,
-  //   };
+    const _params = {
+      y0: a - wall.top * fact,
+      y1: a - wall.bottom * fact,
+      x: params.displayX,
+      spriteX: params.spriteX,
+      color: wall.color,
+      light,
+      scale: wall.texture!.scale,
+      checkAlpha: true,
+    };
 
-  //   Painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
-  // }
+    this.painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
+  }
 
   private drawLevel(
     rayState: Ray,
@@ -135,11 +135,11 @@ class Render {
           d / this.rayHandlerState.prevDistance,
         yShift: this.playerState.lookVertical,
         x: this.rayCastingState.displayX,
-        angle: rayState.rayAngle.angle,
+        //angle: rayState.rayAngle.angle,
         distance: this.rayHandlerState.prevDistance,
         sideX: rayState.sideX,
         side: rayState.side,
-        fixDistance: this.rayCastingState.fixDistance,
+        //fixDistance: this.rayCastingState.fixDistance,
         scale: level.texture?.scale,
       };
 
@@ -169,47 +169,50 @@ class Render {
     }
   }
 
-  // public static handleSprite(
-  //   data: Uint32Array,
-  //   rayState: Ray,
-  //   // params: {
-  //   //   displayX: number;
-  //   //   spriteX: number;
-  //   //   distance: number;
-  //   //   mirrorFact: number;
-  //   //   color: number;
-  //   //   top: number;
-  //   //   bottom: number;
-  //   // },
-  //   playerState: PlayerState,
-  //   pixelCounter: { count: number },
-  //   spriteData: SpriteData,
-  //   rayCastingState: RayCasting,
-  //   rayHandlerState: RayHandler
-  // ): boolean {
-  //   if (params.distance <= 0) return true;
-  //   const light =
-  //     ((maxLight * (consts.lookLength - params.distance)) / consts.lookLength) *
-  //     params.mirrorFact;
-  //   if (light < 1) return true;
+  public handleSprite(
+    data: Uint32Array,
+    rayState: Ray,
+    params: {
+      displayX: number;
+      spriteX: number;
+      distance: number;
+      mirrorFact: number;
+      color: number;
+      top: number;
+      bottom: number;
+    },
+    playerState: PlayerState,
+    pixelCounter: { count: number },
+    spriteData: SpriteData
+  ): boolean {
+    if (params.distance <= 0) return true;
+    const light =
+      ((maxLight * (consts.lookLength - params.distance)) / consts.lookLength) *
+      params.mirrorFact;
+    if (light < 1) return true;
 
-  //   this.drawSprite(
-  //     data,
-  //     params,
-  //     light,
-  //     {
-  //       color: params.color,
-  //       top: params.top,
-  //       bottom: params.bottom,
-  //       render: true,
-  //     },
-  //     playerState,
-  //     pixelCounter,
-  //     spriteData
-  //   );
+    this.drawSprite(
+      data,
+      params,
+      light,
+      {
+        color: params.color,
+        top: params.top,
+        bottom: params.bottom,
+        render: true,
+        texture: {
+          scale: 1,
+          getUrl: () => '',
+          spriteData,
+        },
+      },
+      playerState,
+      pixelCounter,
+      spriteData
+    );
 
-  //   return pixelCounter.count < consts.resolution.height;
-  // }
+    return pixelCounter.count < consts.resolution.height;
+  }
 
   public handleWalls(rayState: Ray): boolean {
     if (!this.rayHandlerState.newItem || this.rayHandlerState.newDistance <= 0)

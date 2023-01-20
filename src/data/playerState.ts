@@ -1,16 +1,16 @@
 import consts from './consts';
-import { Coordinates, Sprite } from './types';
+import { Coordinates, SpriteObject } from './types';
 
-export class PlayerState implements Sprite, Coordinates {
+export class PlayerState implements SpriteObject, Coordinates {
   public x: number = consts.cellSize * 48;
-  public y: number = consts.cellSize * 50;
+  public y: number = consts.cellSize * 45;
   public z = 0;
 
   public width: number = consts.playerWidth;
   public height: number = consts.playerHeight;
   public lookHeight: number = consts.playerHeight * 0.9;
 
-  public angle = -Math.PI / 2;
+  public angle = 0; // / 2;
   public lookVertical = 0;
   public jumping: number | null = null;
   public jumpingFloor: number | null = null;

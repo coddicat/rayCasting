@@ -45,17 +45,27 @@ const map = [
   '#              YYYY_______YYYY                                                                                               ',
   '#                  #YYYYY#                                                                                                   ',
   '#                                                                                                                            ',
-  '###########          ##################MMMMMMMMMMMMMMMMMMMMMMMMM                                                               ',
-  '#                                      M                                                                                      ',
-  '#                                      M          1                                                                            ',
-  '#                                      M                                                                                     ',
-  '#                                      M                                                                                    ',
-  '#                                      M                                                                                     ',
-  '#                                      M                                                                                     ',
-  '#                                      M                                                                                     ',
-  '#                                      M                                                                                     ',
-  '#                                      M                                                                                     ',
-  '#                                      MMMMMMMMMMMMMMMMMMMMMMMMM                                                             ',
+  '###########          ##################MMMMMMMMMMMM    MMMMMMMMMMMMMMM                                                                                               ',
+  '#                                      M                             M                                                          ',
+  '#                                      M          1                  M                                                           ',
+  '#                                      M                             M                                                       ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                      ',
+  '#                                      M                             M                                                       ',
+  '#                                      MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM                                                 ',
+  '#                                                                                                                            ',
+  '#                                                                                                                            ',
+  '#                                                                                                                            ',
+  '#                                                                                                                    ',
   '#                                                                                                                            ',
   '#                                                                                                                            ',
   '#                                                                                                                            ',
@@ -194,9 +204,15 @@ const floor: Level = {
   },
 };
 
-const defaultItem: MapItem = {
+const roomItem: MapItem = {
   walls: [],
-  levels: [floor, ceil],
+  levels: [floor /*, ceil*/],
+  stopRay: false,
+};
+
+const emptyItem: MapItem = {
+  walls: [],
+  levels: [floor /*, ceil*/],
   stopRay: false,
 };
 
@@ -238,7 +254,7 @@ const mapKeys = new Map<string, MapItemType>([
 ]);
 
 const mapItems = new Map<MapItemType, MapItem>([
-  [MapItemType.RoomSpace, defaultItem],
+  [MapItemType.RoomSpace, roomItem],
   [
     MapItemType.OpenCeil,
     {
@@ -616,6 +632,6 @@ export class GameMap {
     return this.mapData[params.by][params.bx];
   }
   public getItem(type: MapItemType): MapItem {
-    return mapItems.get(type) ?? defaultItem;
+    return mapItems.get(type) ?? emptyItem;
   }
 }

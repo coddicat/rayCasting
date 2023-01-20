@@ -150,10 +150,11 @@ class Painter {
     this.initRefs(props);
 
     const dist0 = this.dynamicAlpha.getDistance(props.y0, props.yShift);
-
     const side0 = props.sideX;
-    const factY = props.scale * spriteData.height * rayCastingState.fixSinAbs;
-    const factX = props.scale * spriteData.width * rayCastingState.fixCosAbs;
+    const factY =
+      props.scale * spriteData.height * rayCastingState.rayAngle.fixSinAbs;
+    const factX =
+      props.scale * spriteData.width * rayCastingState.rayAngle.fixCosAbs;
 
     while (this.refs.top <= this.refs.bottom) {
       const alpha = this.dynamicAlpha.getAlpha(this.refs.top, props.yShift);
@@ -170,7 +171,7 @@ class Painter {
       let spriteIndex = 0;
 
       if (props.side === Axis.x) {
-        const sideX = side0 - rayCastingState.fixCos * diff;
+        const sideX = side0 - rayCastingState.rayAngle.fixCos * diff;
 
         let spriteX = ((sideX * spriteData.width) << 0) % spriteData.width;
         if (spriteX < 0) spriteX = spriteX + spriteData.width - 1;
@@ -182,7 +183,7 @@ class Painter {
             : spriteY % spriteData.height;
         spriteIndex = fixed * spriteData.width + spriteX;
       } else {
-        const sideX = side0 - rayCastingState.fixSin * diff;
+        const sideX = side0 - rayCastingState.rayAngle.fixSin * diff;
 
         let spriteY = ((sideX * spriteData.height) << 0) % spriteData.height;
         if (spriteY < 0) spriteY = spriteY + spriteData.height - 1;
