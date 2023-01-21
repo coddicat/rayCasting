@@ -4,9 +4,9 @@ import { Level, MapItem, Wall } from './types';
 const gameMap = [
   '#####@@@@#####@@@@########MMMMM#############MMMMMM#',
   '#...........................1.....................M',
-  '#...............................1234567...........M',
-  '#...............................1234567...........M',
-  '#...............................1234567...........M',
+  '#...............................123456777.........M',
+  '#...............................123456777.........M',
+  '#...............................123456777.........M',
   '#.................................................#',
   '#.................................................#',
   '##################......^^^^......................#',
@@ -63,18 +63,24 @@ const gameMap = [
 ];
 
 const ceil: Level = {
-  color: 0xcd9bcd,
+  color: 0xdcb9ac,
   bottom: 5,
-  texture: {
-    type: TextureType.FloorNumber,
-  },
+  texture: null,
 };
 
 const floor: Level = {
   color: 0xc8c8dc,
   bottom: 0,
   texture: {
-    type: TextureType.FloorNumber,
+    type: TextureType.Parquet,
+  },
+};
+
+const floorEmpty: Level = {
+  color: 0xc8c8dc,
+  bottom: 0,
+  texture: {
+    type: TextureType.Ground,
   },
 };
 
@@ -86,7 +92,7 @@ const roomItem: MapItem = {
 
 const emptyItem: MapItem = {
   walls: [],
-  levels: [floor],
+  levels: [floorEmpty],
   stopRay: false,
 };
 
@@ -94,8 +100,8 @@ export enum MapItemType {
   Empty,
   RoomSpace,
   OpenCeil,
-  Wall,
-  ColoredWall,
+  WallBriks,
+  WallWood,
   Stair1,
   Stair2,
   Stair3,
@@ -112,8 +118,8 @@ export enum MapItemType {
 const mapKeys = new Map<string, MapItemType>([
   ['.', MapItemType.RoomSpace],
   ['_', MapItemType.OpenCeil],
-  ['#', MapItemType.Wall],
-  ['@', MapItemType.ColoredWall],
+  ['#', MapItemType.WallBriks],
+  ['@', MapItemType.WallWood],
   ['1', MapItemType.Stair1],
   ['2', MapItemType.Stair2],
   ['3', MapItemType.Stair3],
@@ -173,7 +179,7 @@ const mapItems = new Map<MapItemType, MapItem>([
     },
   ],
   [
-    MapItemType.Wall,
+    MapItemType.WallBriks,
     {
       walls: [
         {
@@ -191,7 +197,7 @@ const mapItems = new Map<MapItemType, MapItem>([
     },
   ],
   [
-    MapItemType.ColoredWall,
+    MapItemType.WallWood,
     {
       walls: [
         {
@@ -199,7 +205,9 @@ const mapItems = new Map<MapItemType, MapItem>([
           top: 5,
           bottom: 0,
           render: true,
-          texture: null,
+          texture: {
+            type: TextureType.WallWood,
+          },
         },
       ],
       levels: [],

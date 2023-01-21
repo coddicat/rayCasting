@@ -1,9 +1,6 @@
 <template>
   <div class="home">
     <span>{{ fpsDisplay }}</span>
-    <!-- <div>
-      <canvas width="200" height="100" class="canvas" ref="mapCanvas"></canvas>
-    </div> -->
     <div>
       <canvas width="800" height="600" class="canvas" ref="mainCanvas"></canvas>
     </div>
@@ -11,16 +8,14 @@
 </template>
 
 <script lang="ts">
-// import map from '@/data/map';
 import { defineComponent, ref } from 'vue';
-// import consts from '@/data/consts';
 import Player from '@/data/player';
-// import player2d from '@/data/player2d';
 import { PlayerState } from '@/data/playerState';
 import { Main3D } from '@/data/main3D';
 import consts from '@/data/consts';
 import { GameMap } from '@/data/gameMap';
 import textureStore from '@/data/textureStore';
+import SpriteStore from '@/data/spriteStore';
 
 const playerState = new PlayerState();
 
@@ -64,7 +59,8 @@ export default defineComponent({
 
     await textureStore.init();
     await this.gameMap.init();
-    await this.main3D.initAsync(this.mainCanvas);
+    await this.spriteStore.init();
+    this.main3D.init(this.mainCanvas);
 
     this.start();
   },
@@ -83,32 +79,9 @@ export default defineComponent({
     let lastTime = new Date().getTime();
     const stopped = ref(false);
     const gameMap = new GameMap();
-    const main3D = new Main3D(playerState, gameMap);
+    const spriteStore = new SpriteStore(playerState);
+    const main3D = new Main3D(playerState, gameMap, spriteStore);
     const player = new Player(playerState, gameMap);
-
-    // function renderMap() {
-    //   if (!mapCanvas.value) return;
-    //   var ctx = mapCanvas.value.getContext("2d", { alpha: false });
-    //   if (!ctx) return;
-    //   ctx.save();
-    //   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    //   ctx.fillStyle = 'white';
-    //   ctx.strokeStyle = 'white';
-    //   map.drawMap(ctx, playerState);
-    //   player2d.drawOnMap(playerState, ctx);
-    //   ctx.restore();
-    // }
-
-    // function determinateLittleEndian() {
-    //   //Determine whether Uint32 is little- or big-endian.
-    //   data[1] = 0x0a0b0c0d;
-
-    //   var isLittleEndian = true;
-    //   if (buf[4] === 0x0a && buf[5] === 0x0b && buf[6] === 0x0c &&
-    //       buf[7] === 0x0d) {
-    //       isLittleEndian = false;
-    //   }
-    // }
 
     function keyHandler(now: number): boolean {
       const up =
@@ -149,7 +122,6 @@ export default defineComponent({
         fps = (1000 / diff) << 0;
         fpsDisplay.value = fps;
       }
-      //renderMap();
       keyHandler(now);
       player.tick(now);
       main3D.renderMain();
@@ -161,7 +133,7 @@ export default defineComponent({
       gameMap,
       currentKey,
       mainCanvas,
-      //mapCanvas,
+      spriteStore,
       keyHandler,
       start: () => {
         stopped.value = false;

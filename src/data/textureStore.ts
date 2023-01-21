@@ -4,12 +4,20 @@ export enum TextureType {
   FloorNumber,
   WallBriks,
   DukeFront,
+  Banan,
+  WallWood,
+  Parquet,
+  Ground,
 }
 
 const textureFiles = new Map<TextureType, string>([
   [TextureType.DukeFront, require('../assets/duke_front.png')],
   [TextureType.WallBriks, require('../assets/wall_briks.png')],
+  [TextureType.WallWood, require('../assets/wall_wood.png')],
   [TextureType.FloorNumber, require('../assets/floor1.png')],
+  [TextureType.Banan, require('../assets/banan.png')],
+  [TextureType.Parquet, require('../assets/parquet.png')],
+  [TextureType.Ground, require('../assets/ground.png')],
 ]);
 
 const store = {

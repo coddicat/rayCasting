@@ -48,6 +48,7 @@ export interface SpriteObject {
   z: number;
   width: number;
   height: number;
+  texture: Texture;
 }
 
 export type TextureData = {

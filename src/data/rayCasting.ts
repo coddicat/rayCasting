@@ -26,8 +26,7 @@ class RayCasting {
   constructor(
     imageData: ImageData,
     playerState: PlayerState,
-    spriteObject: SpriteObject,
-    textureData: TextureData,
+    spriteObjects: SpriteObject[],
     gameMap: GameMap
   ) {
     this.imageData = imageData;
@@ -38,9 +37,7 @@ class RayCasting {
     this.rayHandler = new RayHandler(
       data,
       playerState,
-
-      textureData,
-      spriteObject,
+      spriteObjects,
       this,
       gameMap
     );

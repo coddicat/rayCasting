@@ -3,6 +3,9 @@ import { GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import RayCasting from './rayCasting';
 import { getDukeFrontSpriteData } from './spriteLoader';
+import SpriteStore from './spriteStore';
+import { TextureType } from './textureStore';
+import { SpriteObject } from './types';
 
 export class Main3D {
   private tempCtx: CanvasRenderingContext2D;
@@ -12,8 +15,13 @@ export class Main3D {
   private rayCasting!: RayCasting;
   private playerState: PlayerState;
   private gameMap: GameMap;
+  private spriteStore: SpriteStore;
 
-  constructor(playerState: PlayerState, gameMap: GameMap) {
+  constructor(
+    playerState: PlayerState,
+    gameMap: GameMap,
+    spriteStore: SpriteStore
+  ) {
     this.tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
     this.tempCanvas.width = consts.resolution.width;
     this.tempCanvas.height = consts.resolution.height;
@@ -28,9 +36,10 @@ export class Main3D {
     );
     this.playerState = playerState;
     this.gameMap = gameMap;
+    this.spriteStore = spriteStore;
   }
 
-  public async initAsync(mainCanvas: HTMLCanvasElement): Promise<void> {
+  public init(mainCanvas: HTMLCanvasElement): void {
     const ctx = mainCanvas.getContext('2d', {
       alpha: false,
       willReadFrequently: true,
@@ -38,20 +47,10 @@ export class Main3D {
     if (!ctx) throw 'cannot get context';
     this.context = ctx;
 
-    const dukeFrontSpriteData = await getDukeFrontSpriteData();
-
     this.rayCasting = new RayCasting(
       this.imageData,
       this.playerState,
-      this.playerState,
-      // {
-      //   x: 50.5,
-      //   y: 70.5,
-      //   z: 0.3,
-      //   height: 1.8,
-      //   width: 1,
-      // },
-      dukeFrontSpriteData,
+      this.spriteStore.spriteObjects,
       this.gameMap
     );
   }
