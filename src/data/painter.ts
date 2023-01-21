@@ -3,7 +3,7 @@ import DynamicAlpha from './dynamicAlpha';
 import Ray from './ray';
 import RayCasting from './rayCasting';
 import {
-  SpriteData,
+  TextureData,
   Axis,
   PixelCounter,
   StaticLineProps,
@@ -13,7 +13,7 @@ import {
 } from './types';
 
 const maxBottom = consts.resolution.height - 1;
-const maxRight = consts.resolution.width - 1;
+
 class Painter {
   private dynamicAlpha;
   private pixelsCounter: PixelCounter;
@@ -106,22 +106,25 @@ class Painter {
     pixel: 0,
   };
 
-  public drawSpriteLine(props: SpriteLineProps, spriteData: SpriteData): void {
+  public drawSpriteLine(
+    props: SpriteLineProps,
+    textureData: TextureData
+  ): void {
     if (props.light < 1 || props.y1 === props.y0) return;
     this.refs.alphaMask = 0x00ffffff | (props.light << 24);
     this.initRefs(props);
 
     let y = this.refs.top - props.y0;
-    this.slRefs.hRate = //height * scale -> const
-      (spriteData.height * props.scale) / (props.y1 - props.y0);
+    this.slRefs.hRate = //height * repeat -> const
+      (textureData.height * props.repeat) / (props.y1 - props.y0);
 
     while (this.refs.top <= this.refs.bottom) {
       this.slRefs.index =
-        (((y * this.slRefs.hRate) << 0) % spriteData.height) *
-          spriteData.width +
+        (((y * this.slRefs.hRate) << 0) % textureData.height) *
+          textureData.width +
         props.spriteX;
 
-      this.slRefs.pixel = spriteData.data[this.slRefs.index];
+      this.slRefs.pixel = textureData.data[this.slRefs.index];
 
       if (
         this.data[this.refs.dataIndex] !== 0 ||
@@ -157,59 +160,59 @@ class Painter {
     fixedY: 0,
   };
 
-  private setSpriteIndexBySideX(spriteData: SpriteData): void {
+  private setSpriteIndexBySideX(textureData: TextureData): void {
     this.sldRefs.sideX =
       this.sldRefs.side0 -
       this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff;
 
     this.sldRefs.spriteX =
-      ((this.sldRefs.sideX * spriteData.width) << 0) % spriteData.width;
+      ((this.sldRefs.sideX * textureData.width) << 0) % textureData.width;
     if (this.sldRefs.spriteX < 0)
-      this.sldRefs.spriteX = this.sldRefs.spriteX + spriteData.width - 1;
+      this.sldRefs.spriteX = this.sldRefs.spriteX + textureData.width - 1;
 
     this.sldRefs.spriteY = (this.sldRefs.diff * this.sldRefs.factY) << 0;
     this.sldRefs.fixedX =
       this.rayCastingState.rayAngle.sinSign > 0
-        ? spriteData.height - (this.sldRefs.spriteY % spriteData.height) - 1
-        : this.sldRefs.spriteY % spriteData.height;
+        ? textureData.height - (this.sldRefs.spriteY % textureData.height) - 1
+        : this.sldRefs.spriteY % textureData.height;
     this.sldRefs.index =
-      this.sldRefs.fixedX * spriteData.width + this.sldRefs.spriteX;
+      this.sldRefs.fixedX * textureData.width + this.sldRefs.spriteX;
   }
 
-  private setSpriteIndexBySideY(spriteData: SpriteData): void {
+  private setSpriteIndexBySideY(textureData: TextureData): void {
     this.sldRefs.sideX =
       this.sldRefs.side0 -
       this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff;
 
     this.sldRefs.spriteY =
-      ((this.sldRefs.sideX * spriteData.height) << 0) % spriteData.height;
+      ((this.sldRefs.sideX * textureData.height) << 0) % textureData.height;
     if (this.sldRefs.spriteY < 0)
-      this.sldRefs.spriteY = this.sldRefs.spriteY + spriteData.height - 1;
+      this.sldRefs.spriteY = this.sldRefs.spriteY + textureData.height - 1;
 
     this.sldRefs.spriteX = (this.sldRefs.diff * this.sldRefs.factX) << 0;
-    this.sldRefs.fixedY = this.sldRefs.spriteY % spriteData.height;
+    this.sldRefs.fixedY = this.sldRefs.spriteY % textureData.height;
     this.sldRefs.fixedX =
       this.rayCastingState.rayAngle.cosSign > 0
-        ? spriteData.width - (this.sldRefs.spriteX % spriteData.width) - 1
-        : this.sldRefs.spriteX % spriteData.width;
+        ? textureData.width - (this.sldRefs.spriteX % textureData.width) - 1
+        : this.sldRefs.spriteX % textureData.width;
     this.sldRefs.index =
-      this.sldRefs.fixedY * spriteData.width + this.sldRefs.fixedX;
+      this.sldRefs.fixedY * textureData.width + this.sldRefs.fixedX;
   }
 
   public drawSpriteLineDynamic(
     props: DynamicSpriteLineProps,
     rayState: Ray,
-    spriteData: SpriteData
+    textureData: TextureData
   ): void {
     this.initRefs(props);
 
     this.dynamicAlpha.setDistance(props.y0);
     this.sldRefs.dist0 = this.dynamicAlpha.distance;
     this.sldRefs.side0 = rayState.sideX;
-    this.sldRefs.factY = //props.scale * spriteData.height -> const, * fix -> once
-      props.scale * spriteData.height * this.rayCastingState.rayAngle.fixSinAbs;
+    this.sldRefs.factY = //textureData.height -> const, * fix -> once
+      textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
     this.sldRefs.factX =
-      props.scale * spriteData.width * this.rayCastingState.rayAngle.fixCosAbs;
+      textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
 
     this.sldRefs.diff = 0;
 
@@ -231,11 +234,11 @@ class Painter {
         this.sldRefs.dist0 - this.dynamicAlpha.distance
       );
 
-      spriteIndexSetter.call(this, spriteData);
+      spriteIndexSetter.call(this, textureData);
 
       if (
         this.data[this.refs.dataIndex] !== 0 ||
-        spriteData.data[this.sldRefs.index] === 0
+        textureData.data[this.sldRefs.index] === 0
       ) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
@@ -244,7 +247,7 @@ class Painter {
 
       this.data[this.refs.dataIndex] =
         (this.dynamicAlpha.alpha << 24) |
-        (spriteData.data[this.sldRefs.index] & 0x00ffffff);
+        (textureData.data[this.sldRefs.index] & 0x00ffffff);
 
       this.pixelsCounter.count++;
       this.refs.top++;

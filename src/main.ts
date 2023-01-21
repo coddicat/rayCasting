@@ -4,6 +4,9 @@ import './registerServiceWorker';
 import router from './router';
 import store from './store';
 
+// import { textureFiles } from './data/textures';
+// console.log(textureFiles);
+
 Math.sign = (n: number): number => {
   return n < 0 ? -1 : 1;
 };

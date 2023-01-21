@@ -4,7 +4,7 @@ import { PlayerState } from './playerState';
 import Ray from './ray';
 import { RayAngle } from './rayAngle';
 import RayHandler from './rayHandler';
-import { SpriteObject, SpriteData } from './types';
+import { SpriteObject, TextureData } from './types';
 
 const halfLookAngle = consts.lookAngle / 2;
 const buf = new ArrayBuffer(
@@ -27,7 +27,7 @@ class RayCasting {
     imageData: ImageData,
     playerState: PlayerState,
     spriteObject: SpriteObject,
-    spriteData: SpriteData,
+    textureData: TextureData,
     gameMap: GameMap
   ) {
     this.imageData = imageData;
@@ -39,7 +39,7 @@ class RayCasting {
       data,
       playerState,
 
-      spriteData,
+      textureData,
       spriteObject,
       this,
       gameMap

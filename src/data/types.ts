@@ -1,37 +1,27 @@
+import { TextureType } from './textureStore';
+
 export type Coordinates = {
   x: number;
   y: number;
 };
 
+export type Texture = {
+  type: TextureType;
+  textureData?: TextureData | null;
+};
+
 export type Level = {
   color: number;
   bottom: number;
-  texture: null | {
-    scale: number;
-    getUrl: () => string;
-    spriteData?: SpriteData;
-  };
+  texture: null | Texture;
 };
+
 export type Wall = {
   color: number;
   top: number;
   bottom: number;
   render: boolean;
-  texture: null | {
-    scale: number;
-    getUrl: () => string;
-    spriteData?: SpriteData;
-  };
-};
-
-export type SpriteProps = {
-  top: number;
-  bottom: number;
-  texture: null | {
-    scale: number;
-    getUrl: () => string;
-    spriteData?: SpriteData;
-  };
+  texture: null | Texture;
 };
 
 export type MapItem = {
@@ -60,17 +50,11 @@ export interface SpriteObject {
   height: number;
 }
 
-export class SpriteData {
+export type TextureData = {
   width: number;
   height: number;
   data: Uint32Array;
-
-  constructor(data: Uint32Array, width: number, height: number) {
-    this.data = data;
-    this.width = width;
-    this.height = height;
-  }
-}
+};
 
 export type SpriteAngleState = {
   lastDistance: number;
@@ -88,8 +72,15 @@ export type SpriteLineProps = {
   y0: number;
   y1: number;
   light: number;
-  scale: number;
+  repeat: number;
   checkAlpha: boolean;
+};
+
+export type SpriteProps = {
+  spriteX: number;
+  distance: number;
+  top: number;
+  bottom: number;
 };
 
 export type DynamicLineProps = {
@@ -101,7 +92,6 @@ export type DynamicLineProps = {
 export type DynamicSpriteLineProps = {
   y0: number;
   y1: number;
-  scale: number;
 };
 
 export type PixelCounter = {

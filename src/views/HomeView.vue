@@ -20,6 +20,7 @@ import { PlayerState } from '@/data/playerState';
 import { Main3D } from '@/data/main3D';
 import consts from '@/data/consts';
 import { GameMap } from '@/data/gameMap';
+import textureStore from '@/data/textureStore';
 
 const playerState = new PlayerState();
 
@@ -61,6 +62,7 @@ export default defineComponent({
     //   );
     // }
 
+    await textureStore.init();
     await this.gameMap.init();
     await this.main3D.initAsync(this.mainCanvas);
 

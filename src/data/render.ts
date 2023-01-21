@@ -7,7 +7,7 @@ import RayCasting from './rayCasting';
 import RayHandler from './rayHandler';
 import {
   Level,
-  SpriteData,
+  TextureData,
   Wall,
   PixelCounter,
   StaticLineProps,
@@ -56,18 +56,18 @@ class Render {
       this.playerState.lookVertical +
       fact * (this.playerState.z + this.playerState.lookHeight);
 
-    if (wall.texture?.spriteData) {
+    if (wall.texture?.textureData) {
       const props: SpriteLineProps = {
         y0: a - wall.top * fact,
         y1: a - wall.bottom * fact,
         light,
-        spriteX: wall.texture?.spriteData
-          ? (rayState.sideX * wall.texture?.spriteData.width) << 0
+        spriteX: wall.texture?.textureData
+          ? (rayState.sideX * wall.texture?.textureData.width) << 0
           : 0,
-        scale: wall.top - wall.bottom,
+        repeat: wall.top - wall.bottom,
         checkAlpha: false,
       };
-      this.painter.drawSpriteLine(props, wall.texture?.spriteData);
+      this.painter.drawSpriteLine(props, wall.texture?.textureData);
     } else {
       const props: StaticLineProps = {
         y0: a - wall.top * fact,
@@ -80,28 +80,27 @@ class Render {
   }
 
   private drawSprite(
-    params: { spriteX: number; distance: number },
+    props: SpriteProps,
     light: number,
-    spriteProps: SpriteProps,
-    spriteData: SpriteData
+    textureData: TextureData
   ): void {
-    const fact = consts.resolution.width / params.distance;
+    const fact = consts.resolution.width / props.distance;
+    //move to payer
     const a =
       halfHeight +
       this.playerState.lookVertical +
       fact * (this.playerState.z + this.playerState.lookHeight);
 
-    const _params = {
-      y0: a - spriteProps.top * fact,
-      y1: a - spriteProps.bottom * fact,
-      x: this.rayCastingState.displayX,
-      spriteX: params.spriteX,
+    const lineProps: SpriteLineProps = {
+      y0: a - props.top * fact,
+      y1: a - props.bottom * fact,
+      spriteX: props.spriteX,
       light,
-      scale: spriteProps.texture!.scale,
+      repeat: 1,
       checkAlpha: true,
     };
 
-    this.painter.drawSpriteLine(_params, spriteData);
+    this.painter.drawSpriteLine(lineProps, textureData);
   }
 
   private drawLevel(rayState: Ray, level: Level): void {
@@ -111,8 +110,9 @@ class Render {
 
     this.dynamicAlpha.init(level);
 
-    if (level.texture?.spriteData) {
+    if (level.texture?.textureData) {
       const props: DynamicSpriteLineProps = {
+        //move to player
         y0:
           halfHeight +
           this.playerState.lookVertical +
@@ -121,16 +121,16 @@ class Render {
           halfHeight +
           this.playerState.lookVertical +
           d / this.rayHandlerState.prevDistance,
-        scale: level.texture?.scale,
       };
 
       this.painter.drawSpriteLineDynamic(
         props,
         rayState,
-        level.texture?.spriteData
+        level.texture?.textureData
       );
     } else {
       const props: DynamicLineProps = {
+        //move to player
         y0:
           halfHeight +
           this.playerState.lookVertical +
@@ -146,36 +146,15 @@ class Render {
     }
   }
 
-  public handleSprite(
-    params: {
-      spriteX: number;
-      distance: number;
-      top: number;
-      bottom: number;
-    },
-    spriteData: SpriteData
-  ): boolean {
-    if (params.distance <= 0) return true;
+  public handleSprite(props: SpriteProps, textureData: TextureData): boolean {
+    if (props.distance <= 0) return true;
     const light =
       maxFact *
-      (consts.lookLength - params.distance) *
+      (consts.lookLength - props.distance) *
       this.rayHandlerState.mirrorFact;
     if (light < 1) return true;
 
-    this.drawSprite(
-      params,
-      light,
-      {
-        top: params.top,
-        bottom: params.bottom,
-        texture: {
-          scale: 1,
-          getUrl: () => '',
-          spriteData,
-        },
-      },
-      spriteData
-    );
+    this.drawSprite(props, light, textureData);
 
     return this.pixelCounter.count < consts.resolution.height;
   }
@@ -218,18 +197,18 @@ class Render {
       (x) => x.bottom < h
     );
 
-    let i = 0;
-    while (i < bottomLevels.length) {
+    let i = bottomLevels.length - 1;
+    while (i >= 0) {
       this.drawLevel(rayState, bottomLevels[i]);
       if (this.pixelCounter.count >= consts.resolution.height) return false;
-      i++;
+      i--;
     }
 
-    i = topLevels.length - 1;
-    while (i >= 0) {
+    i = 0;
+    while (i < topLevels.length) {
       this.drawLevel(rayState, topLevels[i]);
       if (this.pixelCounter.count >= consts.resolution.height) return false;
-      i--;
+      i++;
     }
 
     return true;

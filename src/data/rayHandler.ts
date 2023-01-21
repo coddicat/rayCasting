@@ -8,8 +8,9 @@ import {
   RayAction,
   SpriteObject,
   SpriteAngleState,
-  SpriteData,
+  TextureData,
   PixelCounter,
+  SpriteProps,
 } from './types';
 
 export interface CellHandler {
@@ -31,7 +32,7 @@ class RayHandler implements CellHandler {
   private rayCastingState: RayCasting;
   private render: Render;
 
-  private spriteData: SpriteData;
+  private textureData: TextureData;
   private spriteState: SpriteAngleState;
   private spriteObject: SpriteObject;
 
@@ -39,7 +40,7 @@ class RayHandler implements CellHandler {
     data: Uint32Array,
     playerState: PlayerState,
 
-    spriteData: SpriteData,
+    textureData: TextureData,
     spriteObject: SpriteObject,
 
     rayCastingState: RayCasting,
@@ -57,7 +58,7 @@ class RayHandler implements CellHandler {
     this.playerState = playerState;
     this.gameMap = gameMap;
 
-    this.spriteData = spriteData;
+    this.textureData = textureData;
     this.spriteObject = spriteObject;
     this.spriteState = {
       lastDistance: 0.6,
@@ -84,11 +85,16 @@ class RayHandler implements CellHandler {
   }
 
   public handle(rayState: Ray, last: boolean): RayAction {
-    const found = this.gameMap.check({
-      bx: rayState.axisX.cellIndex,
-      by: rayState.axisY.cellIndex,
-    });
-    this.newItem = found ? this.gameMap.getItem(found) : null;
+    // const found = this.gameMap.check({
+    //   bx: rayState.axisX.cellIndex,
+    //   by: rayState.axisY.cellIndex,
+    // });
+    // this.newItem = found ? this.gameMap.getItem(found) : null;
+
+    this.newItem = this.gameMap.check(
+      rayState.axisX.cellIndex,
+      rayState.axisY.cellIndex
+    );
     this.newDistance =
       rayState.distance * this.rayCastingState.rayAngle.fixDistance;
 
@@ -143,10 +149,10 @@ class RayHandler implements CellHandler {
     const half = sprite.width / 2;
     if (sideDistance > half || sideDistance < -half) return;
 
-    const wRate = this.spriteData.width / sprite.width;
+    const wRate = this.textureData.width / sprite.width;
     const spriteX = ((sideDistance + half) * wRate) << 0;
 
-    const _params = {
+    const props: SpriteProps = {
       spriteX,
       distance,
       top: sprite.z + sprite.height,
@@ -154,7 +160,7 @@ class RayHandler implements CellHandler {
     };
 
     this.emptyPixels =
-      this.emptyPixels && this.render.handleSprite(_params, this.spriteData);
+      this.emptyPixels && this.render.handleSprite(props, this.textureData);
 
     spriteState.lastDistance = distance;
   }

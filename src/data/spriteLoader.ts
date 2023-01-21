@@ -1,4 +1,4 @@
-import { SpriteData } from './types';
+import { TextureData } from './types';
 
 const getDukeFrontUrl = () => require('../assets/duke_front.png');
 const getWallBriksUrl = () => require('../assets/wall_briks.png');
@@ -6,11 +6,11 @@ const getFloor1Url = () => require('../assets/floor1.png');
 // const getWallBriksUrl = () => require("../assets/floor1.png");
 // const getFloor1Url = () => require("../assets/wall_briks.png");
 
-export function loadSprite(url: string): Promise<SpriteData> {
+export function loadSprite(url: string): Promise<TextureData> {
   const canvas = document.createElement('canvas') as HTMLCanvasElement;
   const img = new Image();
   img.src = url;
-  return new Promise<SpriteData>((resolve) => {
+  return new Promise<TextureData>((resolve) => {
     img.onload = function () {
       canvas.width = img.width;
       canvas.height = img.height;
