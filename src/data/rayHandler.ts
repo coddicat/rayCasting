@@ -154,14 +154,7 @@ class RayHandler implements CellHandler {
     };
 
     this.emptyPixels =
-      this.emptyPixels &&
-      this.render.handleSprite(
-        this.data,
-        _params,
-        this.playerState,
-        this.pixelsCounter,
-        this.spriteData
-      );
+      this.emptyPixels && this.render.handleSprite(_params, this.spriteData);
 
     spriteState.lastDistance = distance;
   }

@@ -60,18 +60,23 @@ export interface SpriteObject {
   height: number;
 }
 
-export type SpriteData = {
+export class SpriteData {
   width: number;
   height: number;
   data: Uint32Array;
-};
+
+  constructor(data: Uint32Array, width: number, height: number) {
+    this.data = data;
+    this.width = width;
+    this.height = height;
+  }
+}
 
 export type SpriteAngleState = {
   lastDistance: number;
 };
 
 export type StaticLineProps = {
-  x: number;
   y0: number;
   y1: number;
   color: number;
@@ -79,7 +84,6 @@ export type StaticLineProps = {
 };
 
 export type SpriteLineProps = {
-  x: number;
   spriteX: number;
   y0: number;
   y1: number;
@@ -89,21 +93,14 @@ export type SpriteLineProps = {
 };
 
 export type DynamicLineProps = {
-  x: number;
   y0: number;
   y1: number;
-  yShift: number;
   color: number;
 };
 
 export type DynamicSpriteLineProps = {
-  x: number;
-  side: Axis;
-  sideX: number;
   y0: number;
   y1: number;
-  yShift: number;
-  distance: number;
   scale: number;
 };
 

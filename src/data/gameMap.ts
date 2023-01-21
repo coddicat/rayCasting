@@ -192,7 +192,10 @@ const map = [
 const ceil: Level = {
   color: 0xcd9bcd,
   bottom: 5,
-  texture: null,
+  texture: {
+    scale: 1,
+    getUrl: () => require('../assets/floor1.png'),
+  },
 };
 
 const floor: Level = {
@@ -206,7 +209,7 @@ const floor: Level = {
 
 const roomItem: MapItem = {
   walls: [],
-  levels: [floor /*, ceil*/],
+  levels: [floor, ceil],
   stopRay: false,
 };
 

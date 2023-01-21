@@ -6,8 +6,10 @@ import { Level } from './types';
 const maxLight = 255;
 const halfHeight = consts.resolution.height / 2;
 export class DynamicAlpha {
+  private a = 0;
   private b = 0;
   private f = 0;
+  private s = 0;
   private playerState: PlayerState;
   private rayHandlerState: RayHandler;
 
@@ -21,18 +23,40 @@ export class DynamicAlpha {
       consts.resolution.width *
       (this.playerState.z + this.playerState.lookHeight - level.bottom);
     this.f = (maxLight / consts.lookLength) * this.rayHandlerState.mirrorFact;
+    this.s = halfHeight + this.playerState.lookVertical;
   }
 
-  public getAlpha(y: number, shift: number): number {
-    const a = y - halfHeight - shift;
-    if (a === 0) return 0;
-    return (consts.lookLength - this.b / a) * this.f;
+  public alpha = 0;
+  public distance = 0;
+
+  public setDistanceAlpha(y: number): void {
+    this.a = y - this.s;
+    if (this.a === 0) {
+      this.alpha = 0;
+      this.distance = consts.lookLength;
+      return;
+    }
+
+    this.distance = this.b / this.a;
+    this.alpha = (consts.lookLength - this.b / this.a) * this.f;
   }
 
-  public getDistance(y: number, shift: number): number {
-    const a = y - halfHeight - shift;
-    if (a === 0) return consts.lookLength;
-    return this.b / a;
+  public setAlpha(y: number): void {
+    this.a = y - this.s;
+    if (this.a === 0) {
+      this.alpha = 0;
+      return;
+    }
+    this.alpha = (consts.lookLength - this.b / this.a) * this.f;
+  }
+
+  public setDistance(y: number): void {
+    this.a = y - this.s;
+    if (this.a === 0) {
+      this.distance = consts.lookLength;
+      return;
+    }
+    this.distance = this.b / this.a;
   }
 }
 

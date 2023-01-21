@@ -41,7 +41,6 @@ class RayCasting {
 
       spriteData,
       spriteObject,
-
       this,
       gameMap
     );

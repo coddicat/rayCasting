@@ -19,9 +19,9 @@ import {
 
 const maxLight = 255;
 const halfHeight = consts.resolution.height / 2;
+const maxFact = maxLight / consts.lookLength;
 
 class Render {
-  private data: Uint32Array;
   private rayCastingState: RayCasting;
   private rayHandlerState: RayHandler;
   private playerState: PlayerState;
@@ -36,13 +36,17 @@ class Render {
     playerState: PlayerState,
     pixelCounter: PixelCounter
   ) {
-    this.data = data;
     this.rayCastingState = rayCastingState;
     this.rayHandlerState = rayHandlerState;
     this.playerState = playerState;
     this.pixelCounter = pixelCounter;
     this.dynamicAlpha = new DynamicAlpha(playerState, rayHandlerState);
-    this.painter = new Painter(pixelCounter, this.dynamicAlpha);
+    this.painter = new Painter(
+      pixelCounter,
+      this.dynamicAlpha,
+      data,
+      rayCastingState
+    );
   }
 
   private drawWall(rayState: Ray, light: number, wall: Wall): void {
@@ -56,7 +60,6 @@ class Render {
       const props: SpriteLineProps = {
         y0: a - wall.top * fact,
         y1: a - wall.bottom * fact,
-        x: this.rayCastingState.displayX,
         light,
         spriteX: wall.texture?.spriteData
           ? (rayState.sideX * wall.texture?.spriteData.width) << 0
@@ -64,38 +67,29 @@ class Render {
         scale: wall.top - wall.bottom,
         checkAlpha: false,
       };
-      this.painter.drawSpriteLine(
-        this.data,
-        props,
-        this.pixelCounter,
-        wall.texture?.spriteData
-      );
+      this.painter.drawSpriteLine(props, wall.texture?.spriteData);
     } else {
       const props: StaticLineProps = {
         y0: a - wall.top * fact,
         y1: a - wall.bottom * fact,
-        x: this.rayCastingState.displayX,
         color: wall.color,
         light,
       };
-      this.painter.drawLineStatic(this.data, props);
+      this.painter.drawLineStatic(props);
     }
   }
 
   private drawSprite(
-    data: Uint32Array,
     params: { spriteX: number; distance: number },
     light: number,
     spriteProps: SpriteProps,
-    playerState: PlayerState,
-    pixelCounter: { count: number },
     spriteData: SpriteData
   ): void {
     const fact = consts.resolution.width / params.distance;
     const a =
       halfHeight +
-      playerState.lookVertical +
-      fact * (playerState.z + playerState.lookHeight);
+      this.playerState.lookVertical +
+      fact * (this.playerState.z + this.playerState.lookHeight);
 
     const _params = {
       y0: a - spriteProps.top * fact,
@@ -107,7 +101,7 @@ class Render {
       checkAlpha: true,
     };
 
-    this.painter.drawSpriteLine(data, _params, pixelCounter, spriteData);
+    this.painter.drawSpriteLine(_params, spriteData);
   }
 
   private drawLevel(rayState: Ray, level: Level): void {
@@ -127,20 +121,13 @@ class Render {
           halfHeight +
           this.playerState.lookVertical +
           d / this.rayHandlerState.prevDistance,
-        yShift: this.playerState.lookVertical,
-        x: this.rayCastingState.displayX,
-        distance: this.rayHandlerState.prevDistance,
-        sideX: rayState.sideX,
-        side: rayState.side,
         scale: level.texture?.scale,
       };
 
       this.painter.drawSpriteLineDynamic(
-        this.data,
         props,
-        this.pixelCounter,
-        level.texture?.spriteData,
-        this.rayCastingState
+        rayState,
+        level.texture?.spriteData
       );
     } else {
       const props: DynamicLineProps = {
@@ -152,35 +139,30 @@ class Render {
           halfHeight +
           this.playerState.lookVertical +
           d / this.rayHandlerState.prevDistance,
-        x: this.rayCastingState.displayX,
         color: level.color,
-        yShift: this.playerState.lookVertical,
       };
 
-      this.painter.drawLineDynamic(this.data, props, this.pixelCounter);
+      this.painter.drawLineDynamic(props);
     }
   }
 
   public handleSprite(
-    data: Uint32Array,
     params: {
       spriteX: number;
       distance: number;
       top: number;
       bottom: number;
     },
-    playerState: PlayerState,
-    pixelCounter: { count: number },
     spriteData: SpriteData
   ): boolean {
     if (params.distance <= 0) return true;
     const light =
-      ((maxLight * (consts.lookLength - params.distance)) / consts.lookLength) *
+      maxFact *
+      (consts.lookLength - params.distance) *
       this.rayHandlerState.mirrorFact;
     if (light < 1) return true;
 
     this.drawSprite(
-      data,
       params,
       light,
       {
@@ -192,12 +174,10 @@ class Render {
           spriteData,
         },
       },
-      playerState,
-      pixelCounter,
       spriteData
     );
 
-    return pixelCounter.count < consts.resolution.height;
+    return this.pixelCounter.count < consts.resolution.height;
   }
 
   public handleWalls(rayState: Ray): boolean {
@@ -229,6 +209,7 @@ class Render {
     )
       return true;
 
+    //move h to playerState
     const h = this.playerState.z + this.playerState.lookHeight;
     const topLevels = this.rayHandlerState.prevItem.levels.filter(
       (x) => x.bottom > h
