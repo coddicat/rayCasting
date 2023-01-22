@@ -65,14 +65,16 @@ const gameMap = [
 const ceil: Level = {
   color: 0xdcb9ac,
   bottom: 5,
-  texture: null,
+  texture: {
+    type: TextureType.FloorNumber,
+  },
 };
 
 const floor: Level = {
   color: 0xc8c8dc,
   bottom: 0,
   texture: {
-    type: TextureType.Parquet,
+    type: TextureType.FloorNumber,
   },
 };
 

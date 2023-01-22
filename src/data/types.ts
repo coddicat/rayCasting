@@ -54,6 +54,8 @@ export interface SpriteObject {
 export type TextureData = {
   width: number;
   height: number;
+  maxX: number;
+  maxY: number;
   data: Uint32Array;
 };
 

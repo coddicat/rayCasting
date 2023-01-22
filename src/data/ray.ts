@@ -17,11 +17,11 @@ class Ray {
   public axisX: RayAxis;
   public axisY: RayAxis;
   public distance!: number;
+  public fixedDistance!: number;
   public mirrorDistance!: number;
   public side!: Axis;
   public sideX!: number;
   public rayAngle: RayAngle;
-  private mirrorAxis!: Axis | null;
 
   constructor(
     coordinates: Coordinates,
@@ -41,8 +41,8 @@ class Ray {
     this.axisX.init();
     this.axisY.init();
     this.distance = 0;
+    this.fixedDistance = 0;
     this.mirrorDistance = 0;
-    this.mirrorAxis = null;
     this.side = this.getSide();
     this.sideX = this.getSideX();
   }
@@ -81,14 +81,12 @@ class Ray {
 
         this.axisY.mirror();
         this.rayAngle.mirrorX();
-        this.mirrorAxis = Axis.x;
       } else {
         this.axisY.from = this.axisY.cellIndex + this.getSideX();
         this.axisX.from = this.axisX.cellIndex + (this.axisX.sign < 0 ? 1 : 0);
 
         this.axisX.mirror();
         this.rayAngle.mirrorY();
-        this.mirrorAxis = Axis.y;
       }
       this.mirrorDistance = this.distance;
     }
@@ -98,6 +96,7 @@ class Ray {
     } else {
       this.distance = this.axisX.step();
     }
+    this.fixedDistance = this.distance * this.rayAngle.fixDistance;
     this.sideX = this.getSideX();
 
     return false;

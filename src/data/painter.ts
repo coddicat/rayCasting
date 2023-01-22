@@ -83,7 +83,7 @@ class Painter {
     this.initRefs(props);
 
     while (this.refs.top <= this.refs.bottom) {
-      this.dynamicAlpha.setAlpha(this.refs.top);
+      this.dynamicAlpha.setDistanceAlpha(this.refs.top);
 
       if (this.data[this.refs.dataIndex] !== 0 || this.dynamicAlpha.alpha < 1) {
         this.refs.top++;
@@ -146,9 +146,7 @@ class Painter {
   }
 
   private sldRefs = {
-    dist0: 0,
     dist: 0,
-    side0: 0,
     factY: 0,
     factX: 0,
     diff: 0,
@@ -157,46 +155,45 @@ class Painter {
     spriteX: 0,
     spriteY: 0,
     fixedX: 0,
-    fixedY: 0,
   };
 
-  private setSpriteIndexBySideX(textureData: TextureData): void {
+  private setSpriteIndexBySideX(textureData: TextureData, rayState: Ray): void {
     this.sldRefs.sideX =
-      this.sldRefs.side0 -
-      this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff;
+      rayState.sideX - this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff;
 
+    //find better solution
     this.sldRefs.spriteX =
       ((this.sldRefs.sideX * textureData.width) << 0) % textureData.width;
     if (this.sldRefs.spriteX < 0)
-      this.sldRefs.spriteX = this.sldRefs.spriteX + textureData.width - 1;
+      this.sldRefs.spriteX = this.sldRefs.spriteX + textureData.maxX;
 
     this.sldRefs.spriteY = (this.sldRefs.diff * this.sldRefs.factY) << 0;
     this.sldRefs.fixedX =
+      //prepare per rayAngle what condition to use
       this.rayCastingState.rayAngle.sinSign > 0
-        ? textureData.height - (this.sldRefs.spriteY % textureData.height) - 1
+        ? textureData.maxY - (this.sldRefs.spriteY % textureData.height)
         : this.sldRefs.spriteY % textureData.height;
     this.sldRefs.index =
       this.sldRefs.fixedX * textureData.width + this.sldRefs.spriteX;
   }
 
-  private setSpriteIndexBySideY(textureData: TextureData): void {
+  private setSpriteIndexBySideY(textureData: TextureData, rayState: Ray): void {
     this.sldRefs.sideX =
-      this.sldRefs.side0 -
-      this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff;
+      rayState.sideX - this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff;
 
     this.sldRefs.spriteY =
       ((this.sldRefs.sideX * textureData.height) << 0) % textureData.height;
     if (this.sldRefs.spriteY < 0)
-      this.sldRefs.spriteY = this.sldRefs.spriteY + textureData.height - 1;
+      this.sldRefs.spriteY = this.sldRefs.spriteY + textureData.maxY;
 
     this.sldRefs.spriteX = (this.sldRefs.diff * this.sldRefs.factX) << 0;
-    this.sldRefs.fixedY = this.sldRefs.spriteY % textureData.height;
     this.sldRefs.fixedX =
+      //prepare per rayAngle what condition to use
       this.rayCastingState.rayAngle.cosSign > 0
-        ? textureData.width - (this.sldRefs.spriteX % textureData.width) - 1
+        ? textureData.maxX - (this.sldRefs.spriteX % textureData.width)
         : this.sldRefs.spriteX % textureData.width;
     this.sldRefs.index =
-      this.sldRefs.fixedY * textureData.width + this.sldRefs.fixedX;
+      this.sldRefs.spriteY * textureData.width + this.sldRefs.fixedX;
   }
 
   public drawSpriteLineDynamic(
@@ -206,12 +203,9 @@ class Painter {
   ): void {
     this.initRefs(props);
 
-    this.dynamicAlpha.setDistance(props.y0);
-    this.sldRefs.dist0 = this.dynamicAlpha.distance;
-    this.sldRefs.side0 = rayState.sideX;
-    this.sldRefs.factY = //textureData.height -> const, * fix -> once
+    this.sldRefs.factY = //calculate per rayAngle
       textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
-    this.sldRefs.factX =
+    this.sldRefs.factX = //calculate per rayAngle
       textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
 
     this.sldRefs.diff = 0;
@@ -220,6 +214,8 @@ class Painter {
       rayState.side === Axis.x
         ? this.setSpriteIndexBySideX
         : this.setSpriteIndexBySideY;
+
+    let pixel;
 
     while (this.refs.top <= this.refs.bottom) {
       this.dynamicAlpha.setDistanceAlpha(this.refs.top);
@@ -231,27 +227,24 @@ class Painter {
       }
 
       this.sldRefs.diff = Math.abs(
-        this.sldRefs.dist0 - this.dynamicAlpha.distance
+        rayState.fixedDistance - this.dynamicAlpha.distance
       );
 
-      spriteIndexSetter.call(this, textureData);
-
-      if (
-        this.data[this.refs.dataIndex] !== 0 ||
-        textureData.data[this.sldRefs.index] === 0
-      ) {
+      spriteIndexSetter.call(this, textureData, rayState);
+      pixel = textureData.data[this.sldRefs.index];
+      if (this.data[this.refs.dataIndex] !== 0 || pixel === 0) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         continue;
       }
 
       this.data[this.refs.dataIndex] =
-        (this.dynamicAlpha.alpha << 24) |
-        (textureData.data[this.sldRefs.index] & 0x00ffffff);
+        (this.dynamicAlpha.alpha << 24) | (pixel & 0x00ffffff);
 
       this.pixelsCounter.count++;
       this.refs.top++;
       this.refs.dataIndex += consts.resolution.width;
+      if (this.pixelsCounter.count >= consts.resolution.height) return;
     }
   }
 }

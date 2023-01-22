@@ -44,6 +44,8 @@ async function loadTexture(url: string): Promise<TextureData> {
         data,
         width: img.width,
         height: img.height,
+        maxX: img.width - 1,
+        maxY: img.height - 1,
       });
     };
   });

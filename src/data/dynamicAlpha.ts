@@ -38,25 +38,7 @@ export class DynamicAlpha {
     }
 
     this.distance = this.b / this.a;
-    this.alpha = (consts.lookLength - this.b / this.a) * this.f;
-  }
-
-  public setAlpha(y: number): void {
-    this.a = y - this.s;
-    if (this.a === 0) {
-      this.alpha = 0;
-      return;
-    }
-    this.alpha = (consts.lookLength - this.b / this.a) * this.f;
-  }
-
-  public setDistance(y: number): void {
-    this.a = y - this.s;
-    if (this.a === 0) {
-      this.distance = consts.lookLength;
-      return;
-    }
-    this.distance = this.b / this.a;
+    this.alpha = (consts.lookLength - this.distance) * this.f;
   }
 }
 

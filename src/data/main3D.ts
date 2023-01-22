@@ -2,10 +2,7 @@ import consts from './consts';
 import { GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import RayCasting from './rayCasting';
-import { getDukeFrontSpriteData } from './spriteLoader';
 import SpriteStore from './spriteStore';
-import { TextureType } from './textureStore';
-import { SpriteObject } from './types';
 
 export class Main3D {
   private tempCtx: CanvasRenderingContext2D;
