@@ -22,7 +22,6 @@ const halfHeight = consts.resolution.height / 2;
 const maxFact = maxLight / consts.lookLength;
 
 class Render {
-  private rayCastingState: RayCasting;
   private rayHandlerState: RayHandler;
   private playerState: PlayerState;
   private pixelCounter: PixelCounter;
@@ -51,6 +50,8 @@ class Render {
 
   private drawWall(rayState: Ray, light: number, wall: Wall): void {
     const fact = consts.resolution.width / this.rayHandlerState.newDistance;
+
+    //move to playerState
     const a =
       halfHeight +
       this.playerState.lookVertical +
@@ -64,6 +65,7 @@ class Render {
         spriteX: wall.texture?.textureData
           ? (rayState.sideX * wall.texture?.textureData.width) << 0
           : 0,
+        //move to wall
         repeat: wall.top - wall.bottom,
         checkAlpha: false,
       };
@@ -104,6 +106,7 @@ class Render {
   }
 
   private drawLevel(rayState: Ray, level: Level): void {
+    //move to playerState
     const d =
       consts.resolution.width *
       (this.playerState.z + this.playerState.lookHeight - level.bottom);

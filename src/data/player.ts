@@ -184,8 +184,6 @@ class Player {
     const v0 = this.state.jumpingSpeed ?? 0;
     const newZ = (this.state.jumpingFloor ?? 0) + t * (v0 - acc * (t >> 1));
 
-    // const m = this.gameMap.check({ bx: mx, by: my });
-    // const levels = m ? this.gameMap.getItem(m).levels : [];
     const levels = this.gameMap.check(mx, my)?.levels ?? [];
 
     const topLevels = levels
