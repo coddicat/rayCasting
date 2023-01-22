@@ -41,17 +41,17 @@ const gameMap = [
   '#.........#                       #.....',
   '#..........YYYY               YYYY......',
   '#..............YYYY       YYYY..........',
-  '#..................#YYYYY#..............',
-  '#.......................................',
-  '###########..........##################MMMMMMMMMMMM....MMMMMMMMMMMMMMM',
-  '#                                      M.............................M',
-  '#                                      M .........1..................M',
-  '#                                      M.............................M',
-  '#                                      M.............................M',
-  '#                                      M.............................M',
-  '#                                      M.............................M',
-  '#                                      M.............................M',
-  '#                                      M.............................M',
+  '#..................#YYYYY#..............                     12345678900',
+  '#.......................................                     12345678900',
+  '###########..........##############################....MMMMMMMMMMMMMM#00',
+  '#                                     ##............................##~~',
+  '#                                     ## .........1.................##!!',
+  '#                                     ##............................##%%',
+  '#                                     ##............................##**',
+  '#                                     ##............................##((',
+  '#                                     ##............     ...........##))',
+  '#                                      M............     ...........##',
+  '#                                      M............     ...........##',
   '#                                      M.............................M',
   '#                                      M.............................M',
   '#                                      M.............................M',
@@ -111,6 +111,16 @@ export enum MapItemType {
   Stair5,
   Stair6,
   Stair7,
+  Stair8,
+  Stair9,
+  Stair10,
+  Stair11,
+  Stair12,
+  Stair13,
+  Stair14,
+  Stair15,
+  Stair16,
+
   Ledge,
   ColoredLedge,
   Mirror,
@@ -129,13 +139,23 @@ const mapKeys = new Map<string, MapItemType>([
   ['5', MapItemType.Stair5],
   ['6', MapItemType.Stair6],
   ['7', MapItemType.Stair7],
+  ['8', MapItemType.Stair8],
+  ['9', MapItemType.Stair9],
+  ['0', MapItemType.Stair10],
+  ['~', MapItemType.Stair11],
+  ['!', MapItemType.Stair12],
+  ['%', MapItemType.Stair13],
+  ['*', MapItemType.Stair14],
+  ['(', MapItemType.Stair15],
+  [')', MapItemType.Stair16],
+
   ['Y', MapItemType.Ledge],
   ['&', MapItemType.ColoredLedge],
   ['^', MapItemType.LowLedge],
   ['M', MapItemType.Mirror],
 ]);
 
-function getStair(top: number): MapItem {
+function getStair(top: number, open = true): MapItem {
   const bottom = (((top - 0.3) * 1000) << 0) / 1000;
 
   const walls = [
@@ -161,7 +181,14 @@ function getStair(top: number): MapItem {
   };
 
   const levels =
-    bottom === 0 ? [levelTop, ceil] : [floor, levelBottom, levelTop, ceil];
+    bottom === 0
+      ? [levelTop, ...(open ? [] : [ceil])]
+      : [
+          ...(open ? [floorEmpty] : [floor]),
+          levelBottom,
+          levelTop,
+          ...(open ? [] : [ceil]),
+        ];
   const item = {
     walls,
     levels,
@@ -194,8 +221,8 @@ const mapItems = new Map<MapItemType, MapItem>([
           },
         },
       ],
-      levels: [],
-      stopRay: true,
+      levels: [ceil],
+      stopRay: false,
     },
   ],
   [
@@ -213,7 +240,7 @@ const mapItems = new Map<MapItemType, MapItem>([
         },
       ],
       levels: [],
-      stopRay: true,
+      stopRay: false,
     },
   ],
   [MapItemType.Stair1, getStair(0.3)],
@@ -223,6 +250,16 @@ const mapItems = new Map<MapItemType, MapItem>([
   [MapItemType.Stair5, getStair(1.5)],
   [MapItemType.Stair6, getStair(1.8)],
   [MapItemType.Stair7, getStair(2.1)],
+  [MapItemType.Stair8, getStair(2.4)],
+  [MapItemType.Stair9, getStair(2.7)],
+  [MapItemType.Stair10, getStair(3)],
+  [MapItemType.Stair11, getStair(3.3)],
+  [MapItemType.Stair12, getStair(3.6)],
+  [MapItemType.Stair13, getStair(3.9)],
+  [MapItemType.Stair14, getStair(4.2)],
+  [MapItemType.Stair15, getStair(4.5)],
+  [MapItemType.Stair16, getStair(4.8)],
+
   [
     MapItemType.Ledge,
     {

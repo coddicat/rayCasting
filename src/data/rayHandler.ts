@@ -88,11 +88,8 @@ class RayHandler implements CellHandler {
     this.newDistance =
       rayState.distance * this.rayCastingState.rayAngle.fixDistance;
 
-    let i = 0;
-    while (i < this.spriteObjects.length) {
-      this.handleSprite(rayState, this.spriteState, this.spriteObjects[i]);
-      i++;
-    }
+    for (const spriteObject of this.spriteObjects)
+      this.handleSprite(rayState, this.spriteState, spriteObject);
 
     if (this.newItem !== this.prevItem || last) {
       this.emptyPixels = this.emptyPixels && this.render.handleLevels(rayState);
@@ -139,12 +136,6 @@ class RayHandler implements CellHandler {
     if (distance <= spriteState.lastDistance || this.newDistance < distance) {
       return;
     }
-
-    //const d2 = dx ** 2 + dy ** 2;
-    // const sideDistance = Math.sqrt(d2 - rayDistance ** 2);
-    //if (Math.sqrt(d2 - rayDistance ** 2) < 0.01) {
-    //  sideDistance = 0;
-    //} else {
 
     const sideDistance =
       (rayState.rayAngle.sin * rayDistance - dy) / rayState.rayAngle.cos;

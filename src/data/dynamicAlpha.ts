@@ -5,6 +5,7 @@ import { Level } from './types';
 
 const maxLight = 255;
 const halfHeight = consts.resolution.height / 2;
+const lightFact = maxLight / consts.lookLength;
 export class DynamicAlpha {
   private a = 0;
   private b = 0;
@@ -21,8 +22,11 @@ export class DynamicAlpha {
   public init(level: Level): void {
     this.b =
       consts.resolution.width *
+      //move to payerState
       (this.playerState.z + this.playerState.lookHeight - level.bottom);
-    this.f = (maxLight / consts.lookLength) * this.rayHandlerState.mirrorFact;
+    this.f = lightFact * this.rayHandlerState.mirrorFact;
+
+    //move to payerState
     this.s = halfHeight + this.playerState.lookVertical;
   }
 

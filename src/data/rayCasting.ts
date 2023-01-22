@@ -57,11 +57,10 @@ class RayCasting {
   public draw3D(): void {
     this.displayX = 0;
     let angle = this.playerState.angle - halfLookAngle;
-    while (this.displayX < consts.resolution.width) {
-      const fixDistance = Math.cos(this.playerState.angle - angle);
+    do {
       this.rayAngle.setAngle({
         angle,
-        fixDistance,
+        fixDistance: Math.cos(this.playerState.angle - angle),
       });
 
       this.handleAngle();
@@ -69,7 +68,7 @@ class RayCasting {
       this.displayX++;
       angle += angleStep;
       this.rayHandler.reset();
-    }
+    } while (this.displayX < consts.resolution.width);
 
     this.imageData.data.set(buf8);
   }

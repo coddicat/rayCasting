@@ -74,6 +74,8 @@ class Painter {
       // (color.r);
 
       this.pixelsCounter.count++;
+      if (this.pixelsCounter.count >= consts.resolution.height) return;
+
       this.refs.top++;
       this.refs.dataIndex += consts.resolution.width;
     }
@@ -95,6 +97,8 @@ class Painter {
         props.color | (this.dynamicAlpha.alpha << 24);
 
       this.pixelsCounter.count++;
+      if (this.pixelsCounter.count >= consts.resolution.height) return;
+
       this.refs.top++;
       this.refs.dataIndex += consts.resolution.width;
     }
@@ -139,6 +143,8 @@ class Painter {
       this.data[this.refs.dataIndex] = this.slRefs.pixel & this.refs.alphaMask;
 
       this.pixelsCounter.count++;
+      if (this.pixelsCounter.count >= consts.resolution.height) return;
+
       this.refs.top++;
       this.refs.dataIndex += consts.resolution.width;
       y++;
@@ -159,13 +165,11 @@ class Painter {
 
   private setSpriteIndexBySideX(textureData: TextureData, rayState: Ray): void {
     this.sldRefs.sideX =
-      rayState.sideX - this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff;
+      rayState.sideX -
+      ((this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff) % 1);
 
-    //find better solution
     this.sldRefs.spriteX =
-      ((this.sldRefs.sideX * textureData.width) << 0) % textureData.width;
-    if (this.sldRefs.spriteX < 0)
-      this.sldRefs.spriteX = this.sldRefs.spriteX + textureData.maxX;
+      ((1 + this.sldRefs.sideX) * textureData.width) % textureData.width << 0;
 
     this.sldRefs.spriteY = (this.sldRefs.diff * this.sldRefs.factY) << 0;
     this.sldRefs.fixedX =
@@ -179,12 +183,11 @@ class Painter {
 
   private setSpriteIndexBySideY(textureData: TextureData, rayState: Ray): void {
     this.sldRefs.sideX =
-      rayState.sideX - this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff;
+      rayState.sideX -
+      ((this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff) % 1);
 
     this.sldRefs.spriteY =
-      ((this.sldRefs.sideX * textureData.height) << 0) % textureData.height;
-    if (this.sldRefs.spriteY < 0)
-      this.sldRefs.spriteY = this.sldRefs.spriteY + textureData.maxY;
+      ((1 + this.sldRefs.sideX) * textureData.height) % textureData.height << 0;
 
     this.sldRefs.spriteX = (this.sldRefs.diff * this.sldRefs.factX) << 0;
     this.sldRefs.fixedX =
@@ -192,6 +195,7 @@ class Painter {
       this.rayCastingState.rayAngle.cosSign > 0
         ? textureData.maxX - (this.sldRefs.spriteX % textureData.width)
         : this.sldRefs.spriteX % textureData.width;
+
     this.sldRefs.index =
       this.sldRefs.spriteY * textureData.width + this.sldRefs.fixedX;
   }
@@ -210,6 +214,7 @@ class Painter {
 
     this.sldRefs.diff = 0;
 
+    //move to rayState
     const spriteIndexSetter =
       rayState.side === Axis.x
         ? this.setSpriteIndexBySideX
@@ -242,9 +247,10 @@ class Painter {
         (this.dynamicAlpha.alpha << 24) | (pixel & 0x00ffffff);
 
       this.pixelsCounter.count++;
+      if (this.pixelsCounter.count >= consts.resolution.height) return;
+
       this.refs.top++;
       this.refs.dataIndex += consts.resolution.width;
-      if (this.pixelsCounter.count >= consts.resolution.height) return;
     }
   }
 }

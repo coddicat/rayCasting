@@ -168,14 +168,9 @@ class Render {
       this.rayHandlerState.mirrorFact;
     if (light < 1) return true;
 
-    let i = 0;
-    while (i < this.rayHandlerState.newItem.walls.length) {
-      const wall = this.rayHandlerState.newItem.walls[i];
-      if (wall.render) {
-        this.drawWall(rayState, light, this.rayHandlerState.newItem.walls[i]);
-      }
+    for (const wall of this.rayHandlerState.newItem.walls) {
+      if (wall.render) this.drawWall(rayState, light, wall);
       if (this.pixelCounter.count >= consts.resolution.height) return false;
-      i++;
     }
 
     return true;
@@ -197,6 +192,7 @@ class Render {
       (x) => x.bottom < h
     );
 
+    //store reversed version in levels
     let i = bottomLevels.length - 1;
     while (i >= 0) {
       this.drawLevel(rayState, bottomLevels[i]);
@@ -204,11 +200,9 @@ class Render {
       i--;
     }
 
-    i = 0;
-    while (i < topLevels.length) {
-      this.drawLevel(rayState, topLevels[i]);
+    for (const level of topLevels) {
+      this.drawLevel(rayState, level);
       if (this.pixelCounter.count >= consts.resolution.height) return false;
-      i++;
     }
 
     return true;
