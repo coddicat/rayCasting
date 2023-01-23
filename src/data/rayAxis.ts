@@ -1,7 +1,7 @@
 import { RayAngle } from './rayAngle';
 import { Axis, Coordinates } from './types';
 export default class RayAxis {
-  private _step!: number;
+  private step!: number;
 
   public cellIndex!: number;
   public distance!: number;
@@ -18,33 +18,41 @@ export default class RayAxis {
     this.axis = axis;
   }
 
+  private _step!: number;
   public init(): void {
-    const step =
-      1 / (this.axis === Axis.x ? this.rayAngle.cos : this.rayAngle.sin);
-    this.sign = Math.sign(step);
-    this._step = Math.abs(step);
-    this.from = this.axis === Axis.x ? this.coordinates.x : this.coordinates.y;
-    this.cellIndex = this.from << 0;
-    this.distance = this._step * this.getShift(this.from);
-  }
-
-  private getShift(position: number): number {
-    const rest = Math.abs(position % 1);
-    if (position < 0) {
-      return this.sign < 0 ? 1 - rest : rest;
+    if (this.axis === Axis.x) {
+      this._step = 1 / this.rayAngle.cos;
+      this.from = this.coordinates.x;
+    } else {
+      this._step = 1 / this.rayAngle.sin;
+      this.from = this.coordinates.y;
     }
-    return this.sign < 0 ? rest : 1 - rest;
+
+    this.sign = Math.sign(this._step);
+    this.step = Math.abs(this._step);
+    this.cellIndex = this.from << 0;
+    this.distance = this.step * this.getShift(this.from);
   }
 
-  public step(): number {
-    const distance = this.distance;
+  private _shift = 0;
+  private getShift(position: number): number {
+    this._shift = Math.abs(position % 1);
+    if (position < 0) {
+      return this.sign < 0 ? 1 - this._shift : this._shift;
+    }
+    return this.sign < 0 ? this._shift : 1 - this._shift;
+  }
+
+  private prevDistance!: number;
+  public nextStep(): number {
+    this.prevDistance = this.distance;
     this.cellIndex += this.sign;
-    this.distance += this._step;
-    return distance;
+    this.distance += this.step;
+    return this.prevDistance;
   }
 
   public mirror(): void {
     this.sign = -this.sign;
-    this.distance -= this._step;
+    this.distance -= this.step;
   }
 }

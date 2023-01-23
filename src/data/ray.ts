@@ -61,14 +61,13 @@ class Ray {
           1;
   }
 
+  private action!: RayAction;
   private handleStep(last: boolean): boolean {
-    const action = this.cellHandler.handle(this, last);
+    this.action = this.cellHandler.handle(this, last);
 
-    if (action === RayAction.stop) {
-      return true;
-    }
+    if (this.action === RayAction.stop) return true;
 
-    if (action === RayAction.mirror) {
+    if (this.action === RayAction.mirror) {
       if (this.side === Axis.x) {
         this.axisX.from = this.axisX.cellIndex + this.getSideX();
         this.axisY.from = this.axisY.cellIndex + (this.axisY.sign < 0 ? 1 : 0);
@@ -86,7 +85,7 @@ class Ray {
     }
     this.side = this.getSide();
     this.distance =
-      this.side === Axis.x ? this.axisY.step() : this.axisX.step();
+      this.side === Axis.x ? this.axisY.nextStep() : this.axisX.nextStep();
     this.fixedDistance = this.distance * this.rayAngle.fixDistance;
     this.sideX = this.getSideX();
 

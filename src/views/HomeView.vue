@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <span>{{ fpsDisplay }}</span>
+    <span>fps: {{ fpsDisplay }}</span>
     <div>
       <canvas width="800" height="600" class="canvas" ref="mainCanvas"></canvas>
     </div>
@@ -18,6 +18,7 @@ import textureStore from '@/data/textureStore';
 import SpriteStore from '@/data/spriteStore';
 
 const playerState = new PlayerState();
+const halfHeight = consts.resolution.height / 2;
 
 export default defineComponent({
   name: 'HomeView',
@@ -45,6 +46,7 @@ export default defineComponent({
       if (playerState.lookVertical < -300) {
         playerState.lookVertical = -300;
       }
+      playerState.halfLookVertical = halfHeight + playerState.lookVertical;
     };
 
     // if ('onpointerlockchange' in document) {
@@ -76,14 +78,14 @@ export default defineComponent({
     const currentKey = ref(keyMap);
     let fps = 0;
     const fpsDisplay = ref(0);
-    let lastTime = new Date().getTime();
+    let prevTimestamp = 0;
     const stopped = ref(false);
     const gameMap = new GameMap();
     const spriteStore = new SpriteStore(playerState);
     const main3D = new Main3D(playerState, gameMap, spriteStore);
     const player = new Player(playerState, gameMap);
 
-    function keyHandler(now: number): boolean {
+    function keyHandler(timestamp: number): void {
       const up =
         currentKey.value.get('ArrowUp') || currentKey.value.get('KeyW');
       const down =
@@ -91,42 +93,39 @@ export default defineComponent({
       const moveLeft = currentKey.value.get('KeyA');
       const moveRight = currentKey.value.get('KeyD');
 
-      let updates = false;
-
-      updates =
-        player.move(
-          now,
-          up ? 1 : down ? -1 : 0,
-          moveRight ? 1 : moveLeft ? -1 : 0
-        ) || updates;
+      player.move(
+        timestamp,
+        up ? 1 : down ? -1 : 0,
+        moveRight ? 1 : moveLeft ? -1 : 0
+      );
 
       const left = currentKey.value.get('ArrowLeft');
       const right = currentKey.value.get('ArrowRight');
-      updates =
-        player.turn((left || right) ?? false, now, right ? 1 : left ? -1 : 0) ||
-        updates;
+      player.turn(
+        (left || right) ?? false,
+        timestamp,
+        right ? 1 : left ? -1 : 0
+      );
 
       if (currentKey.value.get('Space')) {
-        player.jump(now);
-        updates = true;
+        player.jump(timestamp);
       }
-
-      return updates;
     }
 
-    async function tick() {
+    let animationFrame = 0;
+
+    async function tick(timestamp: number) {
       if (stopped.value) return;
-      const now = new Date().getTime();
-      if (now % 10 === 0) {
-        const diff = now - lastTime;
+      if ((timestamp << 0) % 4 === 0) {
+        const diff = timestamp - prevTimestamp;
         fps = (1000 / diff) << 0;
         fpsDisplay.value = fps;
       }
-      keyHandler(now);
-      player.tick(now);
+      keyHandler(timestamp);
+      player.tick(timestamp);
       main3D.renderMain();
-      lastTime = now;
-      window.requestAnimationFrame(tick);
+      prevTimestamp = timestamp;
+      animationFrame = window.requestAnimationFrame(tick);
     }
 
     return {
@@ -137,10 +136,13 @@ export default defineComponent({
       keyHandler,
       start: () => {
         stopped.value = false;
-        tick();
+        animationFrame = window.requestAnimationFrame(tick);
       },
       stop: () => {
         stopped.value = true;
+        if (animationFrame) {
+          window.cancelAnimationFrame(animationFrame);
+        }
       },
       fpsDisplay,
       main3D,

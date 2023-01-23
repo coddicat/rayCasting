@@ -1,3 +1,4 @@
+import Ray from './ray';
 import { TextureType } from './textureStore';
 
 export type Coordinates = {
@@ -42,13 +43,31 @@ export enum Axis {
   y = 1,
 }
 
-export interface SpriteObject {
+export class SpriteObject {
   x: number;
   y: number;
   z: number;
   width: number;
   height: number;
   texture: Texture;
+  timestamp: number;
+  halfWidth: number;
+  constructor(
+    pos: { x: number; y: number; z: number },
+    size: { width: number; height: number },
+    textureType: TextureType
+  ) {
+    this.x = pos.x;
+    this.y = pos.y;
+    this.z = pos.z;
+    this.width = size.width;
+    this.height = size.height;
+    this.texture = {
+      type: textureType,
+    };
+    this.timestamp = 0;
+    this.halfWidth = size.width / 2;
+  }
 }
 
 export type TextureData = {
@@ -84,6 +103,7 @@ export type SpriteProps = {
   distance: number;
   top: number;
   bottom: number;
+  textureData: TextureData;
 };
 
 export type DynamicLineProps = {
@@ -95,6 +115,8 @@ export type DynamicLineProps = {
 export type DynamicSpriteLineProps = {
   y0: number;
   y1: number;
+  rayState: Ray;
+  textureData: TextureData;
 };
 
 export type PixelCounter = {

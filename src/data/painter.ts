@@ -1,6 +1,5 @@
 import consts from './consts';
 import DynamicAlpha from './dynamicAlpha';
-import Ray from './ray';
 import RayCasting from './rayCasting';
 import {
   TextureData,
@@ -163,60 +162,60 @@ class Painter {
     fixedX: 0,
   };
 
-  private setSpriteIndexBySideX(textureData: TextureData, rayState: Ray): void {
+  private setSpriteIndexBySideX(props: DynamicSpriteLineProps): void {
     this.sldRefs.sideX =
-      rayState.sideX -
+      props.rayState.sideX -
       ((this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff) % 1);
 
     this.sldRefs.spriteX =
-      ((1 + this.sldRefs.sideX) * textureData.width) % textureData.width << 0;
+      ((1 + this.sldRefs.sideX) * props.textureData.width) %
+        props.textureData.width <<
+      0;
 
     this.sldRefs.spriteY = (this.sldRefs.diff * this.sldRefs.factY) << 0;
     this.sldRefs.fixedX =
-      //prepare per rayAngle what condition to use
       this.rayCastingState.rayAngle.sinSign > 0
-        ? textureData.maxY - (this.sldRefs.spriteY % textureData.height)
-        : this.sldRefs.spriteY % textureData.height;
+        ? props.textureData.maxY -
+          (this.sldRefs.spriteY % props.textureData.height)
+        : this.sldRefs.spriteY % props.textureData.height;
     this.sldRefs.index =
-      this.sldRefs.fixedX * textureData.width + this.sldRefs.spriteX;
+      this.sldRefs.fixedX * props.textureData.width + this.sldRefs.spriteX;
   }
 
-  private setSpriteIndexBySideY(textureData: TextureData, rayState: Ray): void {
+  private setSpriteIndexBySideY(props: DynamicSpriteLineProps): void {
     this.sldRefs.sideX =
-      rayState.sideX -
+      props.rayState.sideX -
       ((this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff) % 1);
 
     this.sldRefs.spriteY =
-      ((1 + this.sldRefs.sideX) * textureData.height) % textureData.height << 0;
+      ((1 + this.sldRefs.sideX) * props.textureData.height) %
+        props.textureData.height <<
+      0;
 
     this.sldRefs.spriteX = (this.sldRefs.diff * this.sldRefs.factX) << 0;
     this.sldRefs.fixedX =
-      //prepare per rayAngle what condition to use
       this.rayCastingState.rayAngle.cosSign > 0
-        ? textureData.maxX - (this.sldRefs.spriteX % textureData.width)
-        : this.sldRefs.spriteX % textureData.width;
+        ? props.textureData.maxX -
+          (this.sldRefs.spriteX % props.textureData.width)
+        : this.sldRefs.spriteX % props.textureData.width;
 
     this.sldRefs.index =
-      this.sldRefs.spriteY * textureData.width + this.sldRefs.fixedX;
+      this.sldRefs.spriteY * props.textureData.width + this.sldRefs.fixedX;
   }
 
-  public drawSpriteLineDynamic(
-    props: DynamicSpriteLineProps,
-    rayState: Ray,
-    textureData: TextureData
-  ): void {
+  public drawSpriteLineDynamic(props: DynamicSpriteLineProps): void {
     this.initRefs(props);
 
-    this.sldRefs.factY = //calculate per rayAngle
-      textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
-    this.sldRefs.factX = //calculate per rayAngle
-      textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
+    this.sldRefs.factY =
+      props.textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
+    this.sldRefs.factX =
+      props.textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
 
     this.sldRefs.diff = 0;
 
     //move to rayState
     const spriteIndexSetter =
-      rayState.side === Axis.x
+      props.rayState.side === Axis.x
         ? this.setSpriteIndexBySideX
         : this.setSpriteIndexBySideY;
 
@@ -232,11 +231,12 @@ class Painter {
       }
 
       this.sldRefs.diff = Math.abs(
-        rayState.fixedDistance - this.dynamicAlpha.distance
+        props.rayState.fixedDistance - this.dynamicAlpha.distance
       );
 
-      spriteIndexSetter.call(this, textureData, rayState);
-      pixel = textureData.data[this.sldRefs.index];
+      spriteIndexSetter.call(this, props);
+
+      pixel = props.textureData.data[this.sldRefs.index];
       if (this.data[this.refs.dataIndex] !== 0 || pixel === 0) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;

@@ -38,6 +38,7 @@ class CollisionHandler implements CellHandler {
       );
       if (max <= bottom + 0.301) {
         this.state.z = max;
+        this.state.lookZ = max + this.state.lookHeight;
         return RayAction.continue;
       }
     }
@@ -67,13 +68,12 @@ class Player {
     return d;
   }
 
-  public move(now: number, forward: number, right: number): boolean {
+  public move(timestamp: number, forward: number, right: number): void {
     if (forward === 0 && right === 0) {
       this.state.movingRight = null;
-      return false;
     }
     if (this.state.movingRight) {
-      const t = now - this.state.movingRight;
+      const t = timestamp - this.state.movingRight;
       let userAngle = this.state.angle;
 
       if (right > 0 && forward > 0) userAngle += quartPi;
@@ -125,62 +125,61 @@ class Player {
 
       this.state.x = nx;
       this.state.y = ny;
-      this.checkFloor();
+      this.checkFloor(timestamp);
     }
-    this.state.movingRight = now;
-    return true;
+    this.state.movingRight = timestamp;
   }
 
-  private checkFloor() {
+  private checkFloor(timestamp: number): void {
     const mx = this.state.x << 0;
     const my = this.state.y << 0;
 
     const item = this.gameMap.check(mx, my);
     if (!item) {
-      this.fall();
+      this.fall(timestamp);
       return;
     }
     const fl = item.levels.find((w) => this.state.z === w.bottom);
     if (fl) {
       return;
     }
-    this.fall();
-  }
-  private fall() {
-    this.state.jumping = this.state.jumping ?? new Date().getTime();
+    this.fall(timestamp);
   }
 
-  public turn(turning: boolean, now: number, direction: number): boolean {
+  private fall(timestamp: number): void {
+    this.state.jumping = this.state.jumping ?? timestamp;
+  }
+
+  public turn(turning: boolean, timestamp: number, direction: number): void {
     if (!turning) {
       this.state.turning = null;
-      return false;
+      return;
     }
     if (this.state.turning) {
-      const t = now - this.state.turning;
+      const t = timestamp - this.state.turning;
       this.state.angle += consts.turnSpeed * t * direction;
     }
-    this.state.turning = now;
-    return true;
+    this.state.turning = timestamp;
   }
 
-  public jump(now: number): void {
+  public jump(timestamp: number): void {
     if (this.state.jumping) {
       return;
     }
-    this.state.jumping = now;
+    this.state.jumping = timestamp;
     this.state.jumpingFloor = this.state.z;
     this.state.jumpingSpeed = 0.02;
   }
 
-  public tick(now: number): boolean {
+  public tick(timestamp: number): void {
     if (!this.state.jumping) {
-      return false;
+      return;
     }
 
     const mx = this.state.x << 0;
     const my = this.state.y << 0;
 
-    const t = now - this.state.jumping;
+    const t = timestamp - this.state.jumping;
     const v0 = this.state.jumpingSpeed ?? 0;
     const newZ = (this.state.jumpingFloor ?? 0) + t * (v0 - acc * (t >> 1));
 
@@ -198,8 +197,9 @@ class Player {
     if (topLevels.length > 0) {
       this.state.jumpingSpeed = 0;
       this.state.z = topLevel - this.state.height;
+      this.state.lookZ = this.state.z + this.state.lookHeight;
       this.state.jumpingFloor = this.state.z;
-      return true;
+      return;
     }
 
     const bottomLevels = levels
@@ -215,7 +215,7 @@ class Player {
     } else {
       this.state.z = newZ;
     }
-    return true;
+    this.state.lookZ = this.state.z + this.state.lookHeight;
   }
 }
 

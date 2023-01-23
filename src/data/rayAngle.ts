@@ -5,6 +5,7 @@ export class RayAngle {
   public cos!: number;
   public sin!: number;
   public tan90!: number;
+  public spriteFact!: number;
   public cosSign!: number;
   public sinSign!: number;
   public cosAbs!: number;
@@ -16,8 +17,10 @@ export class RayAngle {
   public fixSinAbs!: number;
 
   public fixDistance!: number;
+  public timestamp: number;
 
   constructor(angle?: number) {
+    this.timestamp = 0;
     this.setAngle({ angle: angle ?? 0, fixDistance: 1 });
   }
 
@@ -38,11 +41,14 @@ export class RayAngle {
     this.sinSign = Math.sign(this.sin);
     this.cosAbs = this.cos * this.cosSign;
     this.sinAbs = Math.abs(this.sin);
+    this.spriteFact = this.sin - this.cos * this.tan90;
 
     this.fixCosAbs = this.cosAbs / this.fixDistance;
     this.fixSinAbs = this.sinAbs / this.fixDistance;
     this.fixCos = this.cos / this.fixDistance;
     this.fixSin = this.sin / this.fixDistance;
+
+    this.timestamp++;
   }
 
   public mirrorX() {

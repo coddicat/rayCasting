@@ -12,13 +12,10 @@ import {
   PixelCounter,
   StaticLineProps,
   SpriteLineProps,
-  DynamicLineProps,
-  DynamicSpriteLineProps,
   SpriteProps,
 } from './types';
 
 const maxLight = 255;
-const halfHeight = consts.resolution.height / 2;
 const maxFact = maxLight / consts.lookLength;
 
 class Render {
@@ -35,7 +32,6 @@ class Render {
     playerState: PlayerState,
     pixelCounter: PixelCounter
   ) {
-    this.rayCastingState = rayCastingState;
     this.rayHandlerState = rayHandlerState;
     this.playerState = playerState;
     this.pixelCounter = pixelCounter;
@@ -51,11 +47,7 @@ class Render {
   private drawWall(rayState: Ray, light: number, wall: Wall): void {
     const fact = consts.resolution.width / this.rayHandlerState.newDistance;
 
-    //move to playerState
-    const a =
-      halfHeight +
-      this.playerState.lookVertical +
-      fact * (this.playerState.z + this.playerState.lookHeight);
+    const a = this.playerState.halfLookVertical + fact * this.playerState.lookZ;
 
     if (wall.texture?.textureData) {
       const props: SpriteLineProps = {
@@ -87,11 +79,7 @@ class Render {
     textureData: TextureData
   ): void {
     const fact = consts.resolution.width / props.distance;
-    //move to payer
-    const a =
-      halfHeight +
-      this.playerState.lookVertical +
-      fact * (this.playerState.z + this.playerState.lookHeight);
+    const a = this.playerState.halfLookVertical + fact * this.playerState.lookZ;
 
     const lineProps: SpriteLineProps = {
       y0: a - props.top * fact,
@@ -106,50 +94,33 @@ class Render {
   }
 
   private drawLevel(rayState: Ray, level: Level): void {
-    //move to playerState
-    const d =
-      consts.resolution.width *
-      (this.playerState.z + this.playerState.lookHeight - level.bottom);
-
     this.dynamicAlpha.init(level);
 
     if (level.texture?.textureData) {
-      const props: DynamicSpriteLineProps = {
-        //move to player
+      this.painter.drawSpriteLineDynamic({
         y0:
-          halfHeight +
-          this.playerState.lookVertical +
-          d / this.rayHandlerState.newDistance,
+          this.playerState.halfLookVertical +
+          this.dynamicAlpha.distanceRate / this.rayHandlerState.newDistance,
         y1:
-          halfHeight +
-          this.playerState.lookVertical +
-          d / this.rayHandlerState.prevDistance,
-      };
-
-      this.painter.drawSpriteLineDynamic(
-        props,
+          this.playerState.halfLookVertical +
+          this.dynamicAlpha.distanceRate / this.rayHandlerState.prevDistance,
         rayState,
-        level.texture?.textureData
-      );
+        textureData: level.texture?.textureData,
+      });
     } else {
-      const props: DynamicLineProps = {
-        //move to player
+      this.painter.drawLineDynamic({
         y0:
-          halfHeight +
-          this.playerState.lookVertical +
-          d / this.rayHandlerState.newDistance,
+          this.playerState.halfLookVertical +
+          this.dynamicAlpha.distanceRate / this.rayHandlerState.newDistance,
         y1:
-          halfHeight +
-          this.playerState.lookVertical +
-          d / this.rayHandlerState.prevDistance,
+          this.playerState.halfLookVertical +
+          this.dynamicAlpha.distanceRate / this.rayHandlerState.prevDistance,
         color: level.color,
-      };
-
-      this.painter.drawLineDynamic(props);
+      });
     }
   }
 
-  public handleSprite(props: SpriteProps, textureData: TextureData): boolean {
+  public handleSprite(props: SpriteProps): boolean {
     if (props.distance <= 0) return true;
     const light =
       maxFact *
@@ -157,7 +128,7 @@ class Render {
       this.rayHandlerState.mirrorFact;
     if (light < 1) return true;
 
-    this.drawSprite(props, light, textureData);
+    this.drawSprite(props, light, props.textureData);
 
     return this.pixelCounter.count < consts.resolution.height;
   }
@@ -176,7 +147,7 @@ class Render {
       if (this.pixelCounter.count >= consts.resolution.height) return false;
     }
 
-    return true;
+    return this.pixelCounter.count < consts.resolution.height;
   }
 
   public handleLevels(rayState: Ray): boolean {
@@ -186,13 +157,11 @@ class Render {
     )
       return true;
 
-    //move h to playerState
-    const h = this.playerState.z + this.playerState.lookHeight;
     const topLevels = this.rayHandlerState.prevItem.levels.filter(
-      (x) => x.bottom > h
+      (x) => x.bottom > this.playerState.lookZ
     );
     const bottomLevels = this.rayHandlerState.prevItem.levels.filter(
-      (x) => x.bottom < h
+      (x) => x.bottom < this.playerState.lookZ
     );
 
     //store reversed version in levels
@@ -208,7 +177,7 @@ class Render {
       if (this.pixelCounter.count >= consts.resolution.height) return false;
     }
 
-    return true;
+    return this.pixelCounter.count < consts.resolution.height;
   }
 }
 

@@ -3,26 +3,30 @@ import textureStore, { TextureType } from './textureStore';
 import { SpriteObject } from './types';
 
 const sprites = [
-  {
-    x: 50.5,
-    y: 43.5,
-    z: 0.3,
-    height: 1.8,
-    width: 1,
-    texture: {
-      type: TextureType.DukeFront,
+  new SpriteObject(
+    {
+      x: 50.5,
+      y: 43.5,
+      z: 0.3,
     },
-  },
-  {
-    x: 39,
-    y: 3.5,
-    z: 2.1,
-    height: 1,
-    width: 1,
-    texture: {
-      type: TextureType.Banan,
+    {
+      height: 1.8,
+      width: 1,
     },
-  },
+    TextureType.DukeFront
+  ),
+  new SpriteObject(
+    {
+      x: 39,
+      y: 3.5,
+      z: 2.1,
+    },
+    {
+      height: 1,
+      width: 1,
+    },
+    TextureType.Banan
+  ),
 ];
 
 export default class SpriteStore {

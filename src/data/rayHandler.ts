@@ -88,11 +88,24 @@ class RayHandler implements CellHandler {
     this.newDistance =
       rayState.distance * this.rayCastingState.rayAngle.fixDistance;
 
-    for (const spriteObject of this.spriteObjects)
-      this.handleSprite(rayState, this.spriteState, spriteObject);
-
     if (this.newItem !== this.prevItem || last) {
+      const aboveObjects = this.spriteObjects.filter(
+        (o) => o.z > this.playerState.lookZ
+      );
+      const belowObjects = this.spriteObjects.filter(
+        (o) => o.z <= this.playerState.lookZ
+      );
+
+      for (const spriteObject of belowObjects)
+        this.emptyPixels =
+          this.emptyPixels && this.handleSprite(rayState, spriteObject);
+
       this.emptyPixels = this.emptyPixels && this.render.handleLevels(rayState);
+
+      for (const spriteObject of aboveObjects)
+        this.emptyPixels =
+          this.emptyPixels && this.handleSprite(rayState, spriteObject);
+
       this.emptyPixels = this.emptyPixels && this.render.handleWalls(rayState);
 
       this.prevItem = this.newItem;
@@ -109,55 +122,41 @@ class RayHandler implements CellHandler {
       : RayAction.continue;
   }
 
-  private handleSprite(
-    rayState: Ray,
-    spriteState: SpriteAngleState,
-    sprite: SpriteObject
-  ): void {
-    if (rayState.axisX.cellIndex < sprite.x - sprite.width / 2 - 1.6) return;
-    if (rayState.axisX.cellIndex > sprite.x + sprite.width / 2 + 1.6) return;
-    if (rayState.axisY.cellIndex < sprite.y - sprite.width / 2 - 1.6) return;
-    if (rayState.axisY.cellIndex > sprite.y + sprite.width / 2 + 1.6) return;
+  private handleSprite(rayState: Ray, sprite: SpriteObject): boolean {
+    if (sprite.timestamp === rayState.rayAngle.timestamp) return true;
 
     const dx = sprite.x - rayState.axisX.from;
     const dy = sprite.y - rayState.axisY.from;
 
     const rayDistance =
-      (dy - dx * rayState.rayAngle.tan90) /
-      (rayState.rayAngle.sin - rayState.rayAngle.cos * rayState.rayAngle.tan90);
+      (dy - dx * rayState.rayAngle.tan90) / rayState.rayAngle.spriteFact;
 
-    if (rayDistance < 0.5) {
-      return;
-    }
+    if (rayDistance < 0.2) return true;
+
     const distance =
       (rayState.mirrorDistance + rayDistance) *
       this.rayCastingState.rayAngle.fixDistance;
 
-    if (distance <= spriteState.lastDistance || this.newDistance < distance) {
-      return;
-    }
+    if (this.newDistance < distance) return true;
 
     const sideDistance =
       (rayState.rayAngle.sin * rayDistance - dy) / rayState.rayAngle.cos;
 
-    const half = sprite.width / 2;
-    if (sideDistance > half || sideDistance < -half) return;
+    if (Math.abs(sideDistance) > sprite.halfWidth) return true;
 
+    //move calculation
     const wRate = sprite.texture.textureData!.width / sprite.width;
-    const spriteX = ((sideDistance + half) * wRate) << 0;
+    const spriteX = ((sideDistance + sprite.halfWidth) * wRate) << 0;
 
-    const props: SpriteProps = {
+    sprite.timestamp = this.rayCastingState.rayAngle.timestamp;
+
+    return this.render.handleSprite({
       spriteX,
       distance,
       top: sprite.z + sprite.height,
       bottom: sprite.z,
-    };
-
-    this.emptyPixels =
-      this.emptyPixels &&
-      this.render.handleSprite(props, sprite.texture.textureData!);
-
-    //spriteState.lastDistance = distance;
+      textureData: sprite.texture.textureData!,
+    });
   }
 }
 

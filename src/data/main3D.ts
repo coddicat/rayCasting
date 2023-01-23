@@ -23,6 +23,7 @@ export class Main3D {
     this.tempCanvas.width = consts.resolution.width;
     this.tempCanvas.height = consts.resolution.height;
     const tempCtx = this.tempCanvas.getContext('2d', {
+      alpha: true,
       willReadFrequently: true,
     });
     if (!tempCtx) throw 'Cannot get context';
