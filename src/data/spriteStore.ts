@@ -2,6 +2,21 @@ import { PlayerState } from './playerState';
 import textureStore, { TextureType } from './textureStore';
 import { SpriteObject } from './types';
 
+function getBanan(x: number, y: number, z: number): SpriteObject {
+  return new SpriteObject(
+    {
+      x,
+      y,
+      z,
+    },
+    {
+      height: 0.5,
+      width: 0.5,
+    },
+    TextureType.Banan
+  );
+}
+
 const sprites = [
   new SpriteObject(
     {
@@ -15,18 +30,11 @@ const sprites = [
     },
     TextureType.DukeFront
   ),
-  new SpriteObject(
-    {
-      x: 39,
-      y: 3.5,
-      z: 2.1,
-    },
-    {
-      height: 1,
-      width: 1,
-    },
-    TextureType.Banan
-  ),
+  getBanan(39, 3.5, 2.1),
+  getBanan(28.5, 1.5, 0.6),
+  getBanan(28.5, 1.5, 1.2),
+  getBanan(28.5, 1.5, 1.8),
+  getBanan(28.5, 1.5, 2.4),
 ];
 
 export default class SpriteStore {

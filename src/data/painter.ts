@@ -160,9 +160,10 @@ class Painter {
     spriteX: 0,
     spriteY: 0,
     fixedX: 0,
+    pixel: 0,
   };
 
-  private setSpriteIndexBySideX(props: DynamicSpriteLineProps): void {
+  public setSpriteIndexBySideX(props: DynamicSpriteLineProps): void {
     this.sldRefs.sideX =
       props.rayState.sideX -
       ((this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff) % 1);
@@ -182,7 +183,7 @@ class Painter {
       this.sldRefs.fixedX * props.textureData.width + this.sldRefs.spriteX;
   }
 
-  private setSpriteIndexBySideY(props: DynamicSpriteLineProps): void {
+  public setSpriteIndexBySideY(props: DynamicSpriteLineProps): void {
     this.sldRefs.sideX =
       props.rayState.sideX -
       ((this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff) % 1);
@@ -206,21 +207,13 @@ class Painter {
   public drawSpriteLineDynamic(props: DynamicSpriteLineProps): void {
     this.initRefs(props);
 
+    //calculate one for rayAngle
     this.sldRefs.factY =
       props.textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
     this.sldRefs.factX =
       props.textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
 
     this.sldRefs.diff = 0;
-
-    //move to rayState
-    const spriteIndexSetter =
-      props.rayState.side === Axis.x
-        ? this.setSpriteIndexBySideX
-        : this.setSpriteIndexBySideY;
-
-    let pixel;
-
     while (this.refs.top <= this.refs.bottom) {
       this.dynamicAlpha.setDistanceAlpha(this.refs.top);
 
@@ -234,17 +227,17 @@ class Painter {
         props.rayState.fixedDistance - this.dynamicAlpha.distance
       );
 
-      spriteIndexSetter.call(this, props);
+      props.rayState.spriteIndexSetter.call(this, props);
 
-      pixel = props.textureData.data[this.sldRefs.index];
-      if (this.data[this.refs.dataIndex] !== 0 || pixel === 0) {
+      this.sldRefs.pixel = props.textureData.data[this.sldRefs.index];
+      if (this.data[this.refs.dataIndex] !== 0 || this.sldRefs.pixel === 0) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         continue;
       }
 
       this.data[this.refs.dataIndex] =
-        (this.dynamicAlpha.alpha << 24) | (pixel & 0x00ffffff);
+        (this.dynamicAlpha.alpha << 24) | (this.sldRefs.pixel & 0x00ffffff);
 
       this.pixelsCounter.count++;
       if (this.pixelsCounter.count >= consts.resolution.height) return;

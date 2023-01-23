@@ -3,19 +3,19 @@ import { Level, MapItem, Wall } from './types';
 
 const gameMap = [
   '#####@@@@#####@@@@########MMMMM#############MMMMMM#',
-  '#...........................1.....................M',
+  '#...........................S.....................M',
   '#...............................123456777.........M',
   '#...............................123456777.........M',
   '#...............................123456777.........M',
   '#.................................................#',
-  '#.................................................#',
-  '##################......^^^^......................#',
-  '#@@@@@@@@@@@@@@@@#......^^^^......................#',
+  '#.........................MMMMM...................#',
+  '##################................................#',
+  '#@@@@@@@@@@@@@@@@#................................#',
   '#................@......................####YYY####',
   '#................&......................#.........M',
   '#................&......................@.........M',
   '#................&......................#.........M',
-  '#................@......................@.........M',
+  '#......^^^^......@......................@.........M',
   '#................#......................#.........M',
   '#................#......................@.........M',
   '#................#......................####YYY####',
@@ -74,7 +74,7 @@ const floor: Level = {
   color: 0xc8c8dc,
   bottom: 0,
   texture: {
-    type: TextureType.FloorNumber,
+    type: TextureType.Ground,
   },
 };
 
@@ -120,7 +120,7 @@ export enum MapItemType {
   Stair14,
   Stair15,
   Stair16,
-
+  Selfs,
   Ledge,
   ColoredLedge,
   Mirror,
@@ -153,6 +153,7 @@ const mapKeys = new Map<string, MapItemType>([
   ['&', MapItemType.ColoredLedge],
   ['^', MapItemType.LowLedge],
   ['M', MapItemType.Mirror],
+  ['S', MapItemType.Selfs],
 ]);
 
 function getStair(top: number, open = true): MapItem {
@@ -197,7 +198,51 @@ function getStair(top: number, open = true): MapItem {
   return item;
 }
 
+function getShelfLevels(bottom: number): Level[] {
+  return [
+    {
+      color: 0xc8c8dc,
+      bottom,
+      texture: null,
+    },
+    {
+      color: 0xc8c8dc,
+      bottom: bottom - 0.2,
+      texture: null,
+    },
+  ];
+}
+
+function getShelfWall(bottom: number): Wall {
+  return {
+    color: 0xc0c0dc,
+    top: bottom,
+    bottom: bottom - 0.2,
+    render: true,
+    texture: null,
+  };
+}
+
 const mapItems = new Map<MapItemType, MapItem>([
+  [
+    MapItemType.Selfs,
+    {
+      stopRay: false,
+      walls: [
+        getShelfWall(0.6),
+        getShelfWall(1.2),
+        getShelfWall(1.8),
+        getShelfWall(2.4),
+      ],
+      levels: [
+        floor,
+        ...getShelfLevels(0.6),
+        ...getShelfLevels(1.2),
+        ...getShelfLevels(1.8),
+        ...getShelfLevels(2.4),
+      ],
+    },
+  ],
   [MapItemType.RoomSpace, roomItem],
   [
     MapItemType.OpenCeil,

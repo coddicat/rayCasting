@@ -1,7 +1,7 @@
 const lookAngleDegrees = 60;
 const resolution = {
-  width: 800,
-  height: 600,
+  width: 600,
+  height: 400,
 };
 const rad = Math.PI / 180;
 

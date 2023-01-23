@@ -157,6 +157,7 @@ class Render {
     )
       return true;
 
+    //calculate once per this.playerState.lookZ changed
     const topLevels = this.rayHandlerState.prevItem.levels.filter(
       (x) => x.bottom > this.playerState.lookZ
     );

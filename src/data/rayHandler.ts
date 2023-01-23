@@ -89,6 +89,7 @@ class RayHandler implements CellHandler {
       rayState.distance * this.rayCastingState.rayAngle.fixDistance;
 
     if (this.newItem !== this.prevItem || last) {
+      //calculate once per playerState z changed
       const aboveObjects = this.spriteObjects.filter(
         (o) => o.z > this.playerState.lookZ
       );
