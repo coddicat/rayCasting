@@ -40,11 +40,11 @@ class Painter {
 
   private initRefs(props: { y0: number; y1: number }) {
     if (props.y0 > props.y1) {
-      this.refs.top = props.y1 << 0;
-      this.refs.bottom = props.y0 << 0;
+      this.refs.top = props.y1 | 0;
+      this.refs.bottom = props.y0 | 0;
     } else {
-      this.refs.top = props.y0 << 0;
-      this.refs.bottom = props.y1 << 0;
+      this.refs.top = props.y0 | 0;
+      this.refs.bottom = props.y1 | 0;
     }
 
     if (this.refs.top < 0) this.refs.top = 0;
@@ -52,8 +52,8 @@ class Painter {
       this.refs.bottom = maxBottom;
 
     this.refs.dataIndex =
-      this.refs.top * consts.resolution.width +
-      (this.rayCastingState.displayX << 0);
+      Math.imul(this.refs.top, consts.resolution.width) +
+      (this.rayCastingState.displayX | 0);
   }
 
   public drawLineStatic(props: StaticLineProps): void {
@@ -61,7 +61,7 @@ class Painter {
     this.initRefs(props);
     this.refs.alphaMask = props.light << 24;
     while (this.refs.top <= this.refs.bottom) {
-      if (this.data[this.refs.dataIndex] !== 0) {
+      if (this.data[this.refs.dataIndex]) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         continue;
@@ -86,7 +86,7 @@ class Painter {
     while (this.refs.top <= this.refs.bottom) {
       this.dynamicAlpha.setDistanceAlpha(this.refs.top);
 
-      if (this.data[this.refs.dataIndex] !== 0 || this.dynamicAlpha.alpha < 1) {
+      if (this.data[this.refs.dataIndex] || this.dynamicAlpha.alpha < 1) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         continue;
@@ -118,20 +118,21 @@ class Painter {
     this.initRefs(props);
 
     let y = this.refs.top - props.y0;
-    this.slRefs.hRate = //height * repeat -> const
+    this.slRefs.hRate = //move to textureData
       (textureData.height * props.repeat) / (props.y1 - props.y0);
 
     while (this.refs.top <= this.refs.bottom) {
       this.slRefs.index =
-        (((y * this.slRefs.hRate) << 0) % textureData.height) *
-          textureData.width +
-        props.spriteX;
+        Math.imul(
+          ((y * this.slRefs.hRate) | 0) % textureData.height,
+          textureData.width
+        ) + props.spriteX;
 
       this.slRefs.pixel = textureData.data[this.slRefs.index];
 
       if (
-        this.data[this.refs.dataIndex] !== 0 ||
-        (props.checkAlpha && this.slRefs.pixel === 0)
+        this.data[this.refs.dataIndex] ||
+        (props.checkAlpha && !this.slRefs.pixel)
       ) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
@@ -170,17 +171,18 @@ class Painter {
 
     this.sldRefs.spriteX =
       ((1 + this.sldRefs.sideX) * props.textureData.width) %
-        props.textureData.width <<
+        props.textureData.width |
       0;
 
-    this.sldRefs.spriteY = (this.sldRefs.diff * this.sldRefs.factY) << 0;
+    this.sldRefs.spriteY = (this.sldRefs.diff * this.sldRefs.factY) | 0;
     this.sldRefs.fixedX =
       this.rayCastingState.rayAngle.sinSign > 0
         ? props.textureData.maxY -
           (this.sldRefs.spriteY % props.textureData.height)
         : this.sldRefs.spriteY % props.textureData.height;
     this.sldRefs.index =
-      this.sldRefs.fixedX * props.textureData.width + this.sldRefs.spriteX;
+      Math.imul(this.sldRefs.fixedX, props.textureData.width) +
+      this.sldRefs.spriteX;
   }
 
   public setSpriteIndexBySideY(props: DynamicSpriteLineProps): void {
@@ -190,10 +192,10 @@ class Painter {
 
     this.sldRefs.spriteY =
       ((1 + this.sldRefs.sideX) * props.textureData.height) %
-        props.textureData.height <<
+        props.textureData.height |
       0;
 
-    this.sldRefs.spriteX = (this.sldRefs.diff * this.sldRefs.factX) << 0;
+    this.sldRefs.spriteX = (this.sldRefs.diff * this.sldRefs.factX) | 0;
     this.sldRefs.fixedX =
       this.rayCastingState.rayAngle.cosSign > 0
         ? props.textureData.maxX -
@@ -201,7 +203,8 @@ class Painter {
         : this.sldRefs.spriteX % props.textureData.width;
 
     this.sldRefs.index =
-      this.sldRefs.spriteY * props.textureData.width + this.sldRefs.fixedX;
+      Math.imul(this.sldRefs.spriteY, props.textureData.width) +
+      this.sldRefs.fixedX;
   }
 
   public drawSpriteLineDynamic(props: DynamicSpriteLineProps): void {
@@ -230,7 +233,7 @@ class Painter {
       props.rayState.spriteIndexSetter.call(this, props);
 
       this.sldRefs.pixel = props.textureData.data[this.sldRefs.index];
-      if (this.data[this.refs.dataIndex] !== 0 || this.sldRefs.pixel === 0) {
+      if (this.data[this.refs.dataIndex] || !this.sldRefs.pixel) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         continue;

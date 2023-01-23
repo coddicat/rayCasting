@@ -52,6 +52,8 @@ export class SpriteObject {
   texture: Texture;
   timestamp: number;
   halfWidth: number;
+  top: number;
+
   constructor(
     pos: { x: number; y: number; z: number },
     size: { width: number; height: number },
@@ -67,6 +69,7 @@ export class SpriteObject {
     };
     this.timestamp = 0;
     this.halfWidth = size.width / 2;
+    this.top = pos.z + size.height;
   }
 }
 

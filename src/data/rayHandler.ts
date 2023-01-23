@@ -147,14 +147,14 @@ class RayHandler implements CellHandler {
 
     //move calculation
     const wRate = sprite.texture.textureData!.width / sprite.width;
-    const spriteX = ((sideDistance + sprite.halfWidth) * wRate) << 0;
+    const spriteX = ((sideDistance + sprite.halfWidth) * wRate) | 0;
 
     sprite.timestamp = this.rayCastingState.rayAngle.timestamp;
 
     return this.render.handleSprite({
       spriteX,
       distance,
-      top: sprite.z + sprite.height,
+      top: sprite.top,
       bottom: sprite.z,
       textureData: sprite.texture.textureData!,
     });

@@ -30,7 +30,7 @@ export default class RayAxis {
 
     this.sign = Math.sign(this._step);
     this.step = Math.abs(this._step);
-    this.cellIndex = this.from << 0;
+    this.cellIndex = this.from | 0;
     this.distance = this.step * this.getShift(this.from);
   }
 

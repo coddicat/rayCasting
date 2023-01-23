@@ -55,7 +55,7 @@ class Render {
         y1: a - wall.bottom * fact,
         light,
         spriteX: wall.texture?.textureData
-          ? (rayState.sideX * wall.texture?.textureData.width) << 0
+          ? (rayState.sideX * wall.texture?.textureData.width) | 0
           : 0,
         //move to wall
         repeat: wall.top - wall.bottom,

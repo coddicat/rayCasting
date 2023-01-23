@@ -24,7 +24,7 @@ class CollisionHandler implements CellHandler {
 
   private checkMoveCollision(bx: number, by: number): RayAction {
     const item = this.gameMap.check(bx, by);
-    if (!item || item.walls.length === 0) return RayAction.continue;
+    if (!item || !item.walls.length) return RayAction.continue;
     const top = this.state.z + this.state.height;
     const bottom = this.state.z;
     const collisions = item.walls.filter(
@@ -39,6 +39,7 @@ class CollisionHandler implements CellHandler {
       if (max <= bottom + 0.301) {
         this.state.z = max;
         this.state.lookZ = max + this.state.lookHeight;
+        this.state.top = max + this.state.height;
         return RayAction.continue;
       }
     }
@@ -69,7 +70,7 @@ class Player {
   }
 
   public move(timestamp: number, forward: number, right: number): void {
-    if (forward === 0 && right === 0) {
+    if (!forward && !right) {
       this.state.movingRight = null;
     }
     if (this.state.movingRight) {
@@ -131,8 +132,8 @@ class Player {
   }
 
   private checkFloor(timestamp: number): void {
-    const mx = this.state.x << 0;
-    const my = this.state.y << 0;
+    const mx = this.state.x | 0;
+    const my = this.state.y | 0;
 
     const item = this.gameMap.check(mx, my);
     if (!item) {
@@ -176,8 +177,8 @@ class Player {
       return;
     }
 
-    const mx = this.state.x << 0;
-    const my = this.state.y << 0;
+    const mx = this.state.x | 0;
+    const my = this.state.y | 0;
 
     const t = timestamp - this.state.jumping;
     const v0 = this.state.jumpingSpeed ?? 0;
@@ -198,6 +199,7 @@ class Player {
       this.state.jumpingSpeed = 0;
       this.state.z = topLevel - this.state.height;
       this.state.lookZ = this.state.z + this.state.lookHeight;
+      this.state.top = this.state.z + this.state.height;
       this.state.jumpingFloor = this.state.z;
       return;
     }
@@ -216,6 +218,7 @@ class Player {
       this.state.z = newZ;
     }
     this.state.lookZ = this.state.z + this.state.lookHeight;
+    this.state.top = this.state.z + this.state.height;
   }
 }
 

@@ -28,7 +28,7 @@ export class DynamicAlpha {
 
   public setDistanceAlpha(y: number): void {
     this.shift = y - this.playerState.halfLookVertical;
-    if (this.shift === 0) {
+    if (!this.shift) {
       this.alpha = 0;
       this.distance = consts.lookLength;
       return;

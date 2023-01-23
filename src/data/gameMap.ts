@@ -157,7 +157,7 @@ const mapKeys = new Map<string, MapItemType>([
 ]);
 
 function getStair(top: number, open = true): MapItem {
-  const bottom = (((top - 0.3) * 1000) << 0) / 1000;
+  const bottom = (((top - 0.3) * 1000) | 0) / 1000;
 
   const walls = [
     {
@@ -181,15 +181,14 @@ function getStair(top: number, open = true): MapItem {
     texture: null,
   };
 
-  const levels =
-    bottom === 0
-      ? [levelTop, ...(open ? [] : [ceil])]
-      : [
-          ...(open ? [floorEmpty] : [floor]),
-          levelBottom,
-          levelTop,
-          ...(open ? [] : [ceil]),
-        ];
+  const levels = !bottom
+    ? [levelTop, ...(open ? [] : [ceil])]
+    : [
+        ...(open ? [floorEmpty] : [floor]),
+        levelBottom,
+        levelTop,
+        ...(open ? [] : [ceil]),
+      ];
   const item = {
     walls,
     levels,

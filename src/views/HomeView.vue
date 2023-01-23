@@ -116,9 +116,9 @@ export default defineComponent({
 
     async function tick(timestamp: number) {
       if (stopped.value) return;
-      if ((timestamp << 0) % 4 === 0) {
+      if ((timestamp | 0) % 4 === 0) {
         const diff = timestamp - prevTimestamp;
-        fps = (1000 / diff) << 0;
+        fps = (1000 / diff) | 0;
         fpsDisplay.value = fps;
       }
       keyHandler(timestamp);

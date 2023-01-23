@@ -18,6 +18,7 @@ export class PlayerState implements SpriteObject, Coordinates {
   public height: number = consts.playerHeight;
   public lookHeight: number = consts.playerHeight * 0.9;
   public lookZ = consts.playerHeight * 0.9;
+  public top = consts.playerHeight;
 
   public angle = 0; //-Math.PI / 2;
   public lookVertical = 0;

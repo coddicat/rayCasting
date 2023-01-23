@@ -4,7 +4,7 @@ import { PlayerState } from './playerState';
 import Ray from './ray';
 import { RayAngle } from './rayAngle';
 import RayHandler from './rayHandler';
-import { SpriteObject, TextureData } from './types';
+import { SpriteObject } from './types';
 
 const halfLookAngle = consts.lookAngle / 2;
 const buf = new ArrayBuffer(
