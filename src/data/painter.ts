@@ -3,7 +3,6 @@ import DynamicAlpha from './dynamicAlpha';
 import RayCasting from './rayCasting';
 import {
   TextureData,
-  Axis,
   PixelCounter,
   StaticLineProps,
   SpriteLineProps,
@@ -84,9 +83,15 @@ class Painter {
     this.initRefs(props);
 
     while (this.refs.top <= this.refs.bottom) {
+      if (this.data[this.refs.dataIndex]) {
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
+        continue;
+      }
+
       this.dynamicAlpha.setDistanceAlpha(this.refs.top);
 
-      if (this.data[this.refs.dataIndex] || this.dynamicAlpha.alpha < 1) {
+      if (this.dynamicAlpha.alpha < 1) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         continue;
@@ -118,10 +123,16 @@ class Painter {
     this.initRefs(props);
 
     let y = this.refs.top - props.y0;
-    this.slRefs.hRate = //move to textureData
-      (textureData.height * props.repeat) / (props.y1 - props.y0);
+    this.slRefs.hRate = props.repeatedHeight / (props.y1 - props.y0);
 
     while (this.refs.top <= this.refs.bottom) {
+      if (this.data[this.refs.dataIndex]) {
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
+        y++;
+        continue;
+      }
+
       this.slRefs.index =
         Math.imul(
           ((y * this.slRefs.hRate) | 0) % textureData.height,
@@ -130,10 +141,7 @@ class Painter {
 
       this.slRefs.pixel = textureData.data[this.slRefs.index];
 
-      if (
-        this.data[this.refs.dataIndex] ||
-        (props.checkAlpha && !this.slRefs.pixel)
-      ) {
+      if (props.checkAlpha && !this.slRefs.pixel) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         y++;
@@ -153,8 +161,6 @@ class Painter {
 
   private sldRefs = {
     dist: 0,
-    factY: 0,
-    factX: 0,
     diff: 0,
     index: 0,
     sideX: 0,
@@ -174,12 +180,13 @@ class Painter {
         props.textureData.width |
       0;
 
-    this.sldRefs.spriteY = (this.sldRefs.diff * this.sldRefs.factY) | 0;
+    this.sldRefs.spriteY = (this.sldRefs.diff * props.textureData.factY) | 0;
     this.sldRefs.fixedX =
       this.rayCastingState.rayAngle.sinSign > 0
         ? props.textureData.maxY -
           (this.sldRefs.spriteY % props.textureData.height)
         : this.sldRefs.spriteY % props.textureData.height;
+
     this.sldRefs.index =
       Math.imul(this.sldRefs.fixedX, props.textureData.width) +
       this.sldRefs.spriteX;
@@ -195,7 +202,7 @@ class Painter {
         props.textureData.height |
       0;
 
-    this.sldRefs.spriteX = (this.sldRefs.diff * this.sldRefs.factX) | 0;
+    this.sldRefs.spriteX = (this.sldRefs.diff * props.textureData.factX) | 0;
     this.sldRefs.fixedX =
       this.rayCastingState.rayAngle.cosSign > 0
         ? props.textureData.maxX -
@@ -210,14 +217,22 @@ class Painter {
   public drawSpriteLineDynamic(props: DynamicSpriteLineProps): void {
     this.initRefs(props);
 
-    //calculate one for rayAngle
-    this.sldRefs.factY =
-      props.textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
-    this.sldRefs.factX =
-      props.textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
+    if (props.textureData.rayTimestamp !== props.rayState.rayAngle.timestamp) {
+      props.textureData.factX =
+        props.textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
+      props.textureData.factY =
+        props.textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
+      props.textureData.rayTimestamp = props.rayState.rayAngle.timestamp;
+    }
 
     this.sldRefs.diff = 0;
     while (this.refs.top <= this.refs.bottom) {
+      if (this.data[this.refs.dataIndex]) {
+        this.refs.top++;
+        this.refs.dataIndex += consts.resolution.width;
+        continue;
+      }
+
       this.dynamicAlpha.setDistanceAlpha(this.refs.top);
 
       if (this.dynamicAlpha.alpha < 1) {
@@ -233,7 +248,7 @@ class Painter {
       props.rayState.spriteIndexSetter.call(this, props);
 
       this.sldRefs.pixel = props.textureData.data[this.sldRefs.index];
-      if (this.data[this.refs.dataIndex] || !this.sldRefs.pixel) {
+      if (!this.sldRefs.pixel) {
         this.refs.top++;
         this.refs.dataIndex += consts.resolution.width;
         continue;

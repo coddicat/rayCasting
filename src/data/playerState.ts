@@ -7,6 +7,7 @@ const halfHeight = consts.resolution.height / 2;
 export class PlayerState implements SpriteObject, Coordinates {
   public texture: Texture = {
     type: TextureType.DukeFront,
+    repeat: 1,
   };
 
   public x = 10;

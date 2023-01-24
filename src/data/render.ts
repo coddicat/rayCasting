@@ -57,8 +57,7 @@ class Render {
         spriteX: wall.texture?.textureData
           ? (rayState.sideX * wall.texture?.textureData.width) | 0
           : 0,
-        //move to wall
-        repeat: wall.top - wall.bottom,
+        repeatedHeight: wall.texture.repeatedHeight!,
         checkAlpha: false,
       };
       this.painter.drawSpriteLine(props, wall.texture?.textureData);
@@ -86,7 +85,7 @@ class Render {
       y1: a - props.bottom * fact,
       spriteX: props.spriteX,
       light,
-      repeat: 1,
+      repeatedHeight: textureData.height,
       checkAlpha: true,
     };
 

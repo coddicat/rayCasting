@@ -8,6 +8,8 @@ export type Coordinates = {
 
 export type Texture = {
   type: TextureType;
+  repeat: number;
+  repeatedHeight?: number;
   textureData?: TextureData | null;
 };
 
@@ -57,7 +59,8 @@ export class SpriteObject {
   constructor(
     pos: { x: number; y: number; z: number },
     size: { width: number; height: number },
-    textureType: TextureType
+    textureType: TextureType,
+    repeat: number
   ) {
     this.x = pos.x;
     this.y = pos.y;
@@ -66,6 +69,7 @@ export class SpriteObject {
     this.height = size.height;
     this.texture = {
       type: textureType,
+      repeat,
     };
     this.timestamp = 0;
     this.halfWidth = size.width / 2;
@@ -73,13 +77,24 @@ export class SpriteObject {
   }
 }
 
-export type TextureData = {
-  width: number;
-  height: number;
-  maxX: number;
-  maxY: number;
-  data: Uint32Array;
-};
+export class TextureData {
+  public width: number;
+  public height: number;
+  public maxX: number;
+  public maxY: number;
+  public data: Uint32Array;
+  public rayTimestamp = 0;
+  public factX = 0;
+  public factY = 0;
+
+  constructor(width: number, height: number, data: Uint32Array) {
+    this.width = width;
+    this.height = height;
+    this.data = data;
+    this.maxX = width - 1;
+    this.maxY = height - 1;
+  }
+}
 
 export type SpriteAngleState = {
   lastDistance: number;
@@ -97,7 +112,8 @@ export type SpriteLineProps = {
   y0: number;
   y1: number;
   light: number;
-  repeat: number;
+  // repeat: number;
+  repeatedHeight: number;
   checkAlpha: boolean;
 };
 

@@ -67,6 +67,7 @@ const ceil: Level = {
   bottom: 5,
   texture: {
     type: TextureType.FloorNumber,
+    repeat: 1,
   },
 };
 
@@ -75,6 +76,7 @@ const floor: Level = {
   bottom: 0,
   texture: {
     type: TextureType.Ground,
+    repeat: 1,
   },
 };
 
@@ -83,6 +85,7 @@ const floorEmpty: Level = {
   bottom: 0,
   texture: {
     type: TextureType.Ground,
+    repeat: 1,
   },
 };
 
@@ -262,11 +265,12 @@ const mapItems = new Map<MapItemType, MapItem>([
           render: true,
           texture: {
             type: TextureType.WallBriks,
+            repeat: 5,
           },
         },
       ],
       levels: [ceil],
-      stopRay: false,
+      stopRay: true,
     },
   ],
   [
@@ -280,11 +284,12 @@ const mapItems = new Map<MapItemType, MapItem>([
           render: true,
           texture: {
             type: TextureType.WallWood,
+            repeat: 5,
           },
         },
       ],
       levels: [],
-      stopRay: false,
+      stopRay: true,
     },
   ],
   [MapItemType.Stair1, getStair(0.3)],
@@ -413,12 +418,11 @@ export class GameMap {
   private initTextures(arr: Level[] | Wall[]): void {
     arr
       .filter((l) => l.texture)
-      .forEach(
-        (l) =>
-          (l.texture!.textureData = textureStore.getTextureData(
-            l.texture!.type
-          ))
-      );
+      .forEach((l) => {
+        l.texture!.textureData = textureStore.getTextureData(l.texture!.type);
+        l.texture!.repeatedHeight =
+          l.texture!.textureData!.height * l.texture!.repeat;
+      });
   }
 
   private getItem(strKey: string): MapItem {

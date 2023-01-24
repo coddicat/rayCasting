@@ -40,13 +40,7 @@ async function loadTexture(url: string): Promise<TextureData> {
       ctx.drawImage(img, 0, 0, img.width, img.height);
       const imageData = ctx.getImageData(0, 0, img.width, img.height);
       const data = new Uint32Array(imageData.data.buffer);
-      resolve({
-        data,
-        width: img.width,
-        height: img.height,
-        maxX: img.width - 1,
-        maxY: img.height - 1,
-      });
+      resolve(new TextureData(img.width, img.height, data));
     };
   });
 }

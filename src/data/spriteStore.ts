@@ -13,7 +13,8 @@ function getBanan(x: number, y: number, z: number): SpriteObject {
       height: 0.5,
       width: 0.5,
     },
-    TextureType.Banan
+    TextureType.Banan,
+    1
   );
 }
 
@@ -28,7 +29,8 @@ const sprites = [
       height: 1.8,
       width: 1,
     },
-    TextureType.DukeFront
+    TextureType.DukeFront,
+    1
   ),
   getBanan(39, 3.5, 2.1),
   getBanan(28.5, 1.5, 0.6),
@@ -49,6 +51,8 @@ export default class SpriteStore {
       sprite.texture.textureData = textureStore.getTextureData(
         sprite.texture.type
       );
+      sprite.texture.repeatedHeight =
+        sprite.texture.textureData!.height * sprite.texture.repeat;
     });
   }
 
