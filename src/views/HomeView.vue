@@ -104,7 +104,10 @@ export default defineComponent({
       const enter = currentKey.value.get('Enter');
 
       if (enter) {
-        gameMap.toggleDoor(timestamp);
+        const door = player.checkDoor();
+        if (door) {
+          gameMap.toggleDoor(door, timestamp);
+        }
       }
 
       player.move(

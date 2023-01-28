@@ -1,6 +1,18 @@
 import textureStore, { TextureType } from './textureStore';
 import { Level, MapItem, Wall } from './types';
 
+type DoorSet = {
+  x: number;
+  y: number;
+}[];
+
+export type Door = {
+  mapItem: MapItem;
+  set: DoorSet;
+  state: boolean;
+  timestamp: number;
+};
+
 const gameMap = [
   '#####@@@@#####@@@@########MMMMM#############MMMMMM#',
   '#...........................S.....................M',
@@ -11,7 +23,7 @@ const gameMap = [
   '#.........................MMMMM...................#',
   '##################................................#',
   '#@@@@@@@@@@@@@@@@#................................#',
-  '#................@......................####YYY####',
+  '#................@......................####DDD####',
   '#................D......................#.........M',
   '#................D......................@.........M',
   '#................D......................#.........M',
@@ -23,8 +35,8 @@ const gameMap = [
   '####################....................#.........#',
   '#..................#....................@.........#',
   '#..................#....................#.........#',
-  '#..................#....................@.........#',
-  '#..................#....................####YYY####',
+  '#..................D....................@.........#',
+  '#..................D....................####YYY####',
   '#..................#....................#.........#',
   '#..................#....................#.........#',
   '########YYY#########....................#.........#',
@@ -101,31 +113,32 @@ const emptyItem: MapItem = {
   stopRay: false,
 };
 
-const doorLevelTop = {
+const getDoorLevelTop = () => ({
   color: 0xc800dc,
   bottom: 2.5,
   texture: null,
-};
-const doorLevelBottom = {
+});
+const getDoorLevelBottom = () => ({
   color: 0xc800dc,
   bottom: 2.5,
   texture: null,
-};
-const doorWallTop = {
+});
+const getDoorWallTop = () => ({
   color: 0x0000ff,
   top: 4,
   bottom: 2,
   render: true,
   texture: null,
-};
-const doorWallBottom = {
+});
+const getDoorWallBottom = () => ({
   color: 0x0000ff,
   top: 2,
   bottom: 0,
   render: true,
   texture: null,
-};
-const doorItem: MapItem = {
+});
+
+const getDoorItem = (): MapItem => ({
   walls: [
     {
       color: 0xc8c8dc,
@@ -137,12 +150,12 @@ const doorItem: MapItem = {
         repeat: 1,
       },
     },
-    doorWallBottom,
-    doorWallTop,
+    getDoorWallBottom(),
+    getDoorWallTop(),
   ],
-  levels: [doorLevelBottom, doorLevelTop],
+  levels: [getDoorLevelBottom(), getDoorLevelTop()],
   stopRay: false,
-};
+});
 
 export enum MapItemType {
   Empty,
@@ -456,7 +469,7 @@ const mapItems = new Map<MapItemType, MapItem>([
       mirror: true,
     },
   ],
-  [MapItemType.Door, doorItem],
+  //[MapItemType.Door, () =>doorItem],
 ]);
 
 export class GameMap {
@@ -472,9 +485,17 @@ export class GameMap {
       });
   }
 
-  private getItem(strKey: string): MapItem {
+  private getItem(strKey: string, x: number, y: number): MapItem {
     const key = mapKeys.get(strKey);
-    const item = (key && mapItems.get(key)) || emptyItem;
+    let item;
+    if (key === MapItemType.Door) {
+      const door = this.doors.find((d) =>
+        d.set.find((s) => s.x === x && s.y === y)
+      );
+      item = door?.mapItem ?? emptyItem;
+    } else {
+      item = (key && mapItems.get(key)) || emptyItem;
+    }
     this.initTextures(item.levels);
     this.initTextures(item.walls);
     item.levels.sort((a, b) => a.bottom - b.bottom);
@@ -483,8 +504,9 @@ export class GameMap {
   }
 
   public init(): void {
-    this.mapData = gameMap.map((row: string) =>
-      [...row].map((c: string) => this.getItem(c))
+    this.findDoors();
+    this.mapData = gameMap.map((row: string, y: number) =>
+      [...row].map((c: string, x: number) => this.getItem(c, x, y))
     );
   }
 
@@ -498,30 +520,89 @@ export class GameMap {
     return this.mapData[by][bx];
   }
 
-  private door: null | number = null;
-  //  private doorTimestamp: null | number = null;
-  private doorDirection = -1;
+  private doorSet(arr: boolean[][], y: number, x: number): DoorSet | null {
+    if (arr[y] && arr[y][x]) return null;
+    let res = null as null | DoorSet;
+    if (gameMap[y][x] === 'D') {
+      res = [{ x, y }];
+      //right
+      if (x + 1 < gameMap[y].length - 1) {
+        const right = this.doorSet(arr, y, x + 1);
+        if (right) {
+          res = [...res, ...right];
+        }
+      }
+      //down
+      if (y + 1 < gameMap.length - 1) {
+        const down = this.doorSet(arr, y + 1, x);
+        if (down) {
+          res = [...res, ...down];
+        }
+      }
+    }
+
+    if (!arr[y]) arr[y] = [];
+    arr[y][x] = true;
+
+    return res;
+  }
+
+  public doors: Door[] = [];
+
+  private findDoors(): void {
+    const arr = [] as boolean[][];
+    for (let r = 0; r < gameMap.length; r++) {
+      const row = gameMap[r];
+      for (let c = 0; c < row.length; c++) {
+        const doorSet = this.doorSet(arr, r, c);
+        if (doorSet) {
+          this.doors.push({
+            set: doorSet,
+            mapItem: getDoorItem(),
+            state: true, //closed
+            timestamp: 0,
+          });
+        }
+      }
+    }
+  }
+
+  private door: Door | null = null;
 
   public tick(timestamp: number): boolean {
     if (!this.door) return false;
-    const t = timestamp - this.door;
+
+    const t = timestamp - this.door.timestamp;
     let s = 0.003 * t;
+    let finish = false;
     if (s >= 2) {
       s = 2;
+      finish = true;
+    }
+    const top = this.door.state ? 4 - s : 2 + s;
+    const bottom = this.door.state ? s : 2 - s;
+
+    const mapItem = this.door.mapItem;
+    const topWall = mapItem.walls.find((w) => w.top === 4);
+    const bottomWall = mapItem.walls.find((w) => w.bottom === 0);
+    const topLevel = mapItem.levels[0];
+    const bottomLevel = mapItem.levels[1];
+    bottomWall!.top = bottom;
+    bottomLevel.bottom = bottom;
+    topWall!.bottom = top;
+    topLevel.bottom = top;
+
+    if (finish) {
       this.door = null;
     }
-    const top = this.doorDirection < 0 ? 4 - s : 2 + s;
-    const bottom = this.doorDirection < 0 ? s : 2 - s;
-    doorWallBottom.top = bottom;
-    doorLevelBottom.bottom = bottom;
-    doorWallTop.bottom = top;
-    doorLevelTop.bottom = top;
+
     return true;
   }
 
-  public toggleDoor(timestamp: number): void {
+  public toggleDoor(door: Door, timestamp: number): void {
     if (this.door) return;
-    this.door = timestamp;
-    this.doorDirection = -this.doorDirection;
+    this.door = door;
+    this.door.timestamp = timestamp;
+    this.door.state = !this.door.state;
   }
 }

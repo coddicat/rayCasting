@@ -1,5 +1,5 @@
 import consts from './consts';
-import { GameMap } from './gameMap';
+import { Door, GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import Ray from './ray';
 import { RayAngle } from './rayAngle';
@@ -12,6 +12,27 @@ const Pi_34 = (Math.PI / 4) * 3;
 const halfPi = Math.PI / 2;
 const Pi1_5 = Math.PI * 1.5;
 const acc = 0.0001;
+
+class DoorHandler implements CellHandler {
+  public door?: Door;
+  private gameMap: GameMap;
+
+  constructor(state: PlayerState, gameMap: GameMap) {
+    this.gameMap = gameMap;
+  }
+
+  public handle(rayState: Ray): RayAction {
+    const x = rayState.axisX.cellIndex;
+    const y = rayState.axisY.cellIndex;
+    this.door = this.gameMap.doors.find((d) =>
+      d.set.find((s) => s.x === x && s.y === y)
+    );
+    if (this.door) {
+      return RayAction.stop;
+    }
+    return RayAction.continue;
+  }
+}
 
 class CollisionHandler implements CellHandler {
   private state: PlayerState;
@@ -181,6 +202,18 @@ class Player {
     this.state.jumping = timestamp;
     this.state.jumpingFloor = this.state.z;
     this.state.jumpingSpeed = 0.02;
+  }
+
+  public checkDoor(): Door | null {
+    const doorHandler = new DoorHandler(this.state, this.gameMap);
+    const ray = new Ray(
+      this.state,
+      new RayAngle(this.state.angle),
+      doorHandler
+    );
+    ray.send(5, false);
+
+    return doorHandler.door ?? null;
   }
 
   public tick(timestamp: number): void {
