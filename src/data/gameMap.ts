@@ -12,9 +12,9 @@ const gameMap = [
   '##################................................#',
   '#@@@@@@@@@@@@@@@@#................................#',
   '#................@......................####YYY####',
-  '#................&......................#.........M',
-  '#................&......................@.........M',
-  '#................&......................#.........M',
+  '#................D......................#.........M',
+  '#................D......................@.........M',
+  '#................D......................#.........M',
   '#......^^^^......@......................@.........M',
   '#................#......................#.........M',
   '#................#......................@.........M',
@@ -75,7 +75,7 @@ const floor: Level = {
   color: 0xc8c8dc,
   bottom: 0,
   texture: {
-    type: TextureType.Ground,
+    type: TextureType.FloorNumber,
     repeat: 1,
   },
 };
@@ -84,7 +84,7 @@ const floorEmpty: Level = {
   color: 0xc8c8dc,
   bottom: 0,
   texture: {
-    type: TextureType.Ground,
+    type: TextureType.FloorNumber,
     repeat: 1,
   },
 };
@@ -98,6 +98,49 @@ const roomItem: MapItem = {
 const emptyItem: MapItem = {
   walls: [],
   levels: [floorEmpty],
+  stopRay: false,
+};
+
+const doorLevelTop = {
+  color: 0xc800dc,
+  bottom: 2.5,
+  texture: null,
+};
+const doorLevelBottom = {
+  color: 0xc800dc,
+  bottom: 2.5,
+  texture: null,
+};
+const doorWallTop = {
+  color: 0x0000ff,
+  top: 4,
+  bottom: 2,
+  render: true,
+  texture: null,
+};
+const doorWallBottom = {
+  color: 0x0000ff,
+  top: 2,
+  bottom: 0,
+  render: true,
+  texture: null,
+};
+const doorItem: MapItem = {
+  walls: [
+    {
+      color: 0xc8c8dc,
+      top: 5,
+      bottom: 4,
+      render: true,
+      texture: {
+        type: TextureType.WallWood,
+        repeat: 1,
+      },
+    },
+    doorWallBottom,
+    doorWallTop,
+  ],
+  levels: [doorLevelBottom, doorLevelTop],
   stopRay: false,
 };
 
@@ -128,6 +171,7 @@ export enum MapItemType {
   ColoredLedge,
   Mirror,
   LowLedge,
+  Door,
 }
 
 const mapKeys = new Map<string, MapItemType>([
@@ -157,6 +201,8 @@ const mapKeys = new Map<string, MapItemType>([
   ['^', MapItemType.LowLedge],
   ['M', MapItemType.Mirror],
   ['S', MapItemType.Selfs],
+
+  ['D', MapItemType.Door],
 ]);
 
 function getStair(top: number, open = true): MapItem {
@@ -410,6 +456,7 @@ const mapItems = new Map<MapItemType, MapItem>([
       mirror: true,
     },
   ],
+  [MapItemType.Door, doorItem],
 ]);
 
 export class GameMap {
@@ -449,5 +496,32 @@ export class GameMap {
       return emptyItem;
     }
     return this.mapData[by][bx];
+  }
+
+  private door: null | number = null;
+  //  private doorTimestamp: null | number = null;
+  private doorDirection = -1;
+
+  public tick(timestamp: number): boolean {
+    if (!this.door) return false;
+    const t = timestamp - this.door;
+    let s = 0.003 * t;
+    if (s >= 2) {
+      s = 2;
+      this.door = null;
+    }
+    const top = this.doorDirection < 0 ? 4 - s : 2 + s;
+    const bottom = this.doorDirection < 0 ? s : 2 - s;
+    doorWallBottom.top = bottom;
+    doorLevelBottom.bottom = bottom;
+    doorWallTop.bottom = top;
+    doorLevelTop.bottom = top;
+    return true;
+  }
+
+  public toggleDoor(timestamp: number): void {
+    if (this.door) return;
+    this.door = timestamp;
+    this.doorDirection = -this.doorDirection;
   }
 }

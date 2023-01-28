@@ -48,6 +48,9 @@ class CollisionHandler implements CellHandler {
   }
 
   public handle(rayState: Ray): RayAction {
+    if (rayState.axisX.cellIndex <= 0 || rayState.axisY.cellIndex <= 0) {
+      return RayAction.stop;
+    }
     return this.checkMoveCollision(
       rayState.axisX.cellIndex,
       rayState.axisY.cellIndex
@@ -126,8 +129,9 @@ class Player {
 
       this.state.x = nx;
       this.state.y = ny;
-      this.checkFloor(timestamp);
     }
+
+    this.checkFloor(timestamp);
     this.state.movingRight = timestamp;
   }
 
@@ -140,8 +144,15 @@ class Player {
       this.fall(timestamp);
       return;
     }
-    const fl = item.levels.find((w) => this.state.z === w.bottom);
+    const fl = item.levels.find(
+      (level) =>
+        this.state.z <= level.bottom && this.state.z >= level.bottom - 0.301
+    );
     if (fl) {
+      this.state.z = fl.bottom;
+      this.state.lookZ = fl.bottom + this.state.lookHeight;
+      this.state.top = fl.bottom + this.state.height;
+
       return;
     }
     this.fall(timestamp);
@@ -184,6 +195,9 @@ class Player {
     const v0 = this.state.jumpingSpeed ?? 0;
     const newZ = (this.state.jumpingFloor ?? 0) + t * (v0 - acc * (t >> 1));
 
+    if (newZ === this.state.z) return;
+
+    this.state.timestamp++;
     const levels = this.gameMap.check(mx, my)?.levels ?? [];
 
     const topLevels = levels

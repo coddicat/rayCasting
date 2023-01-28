@@ -13,6 +13,7 @@ import {
   StaticLineProps,
   SpriteLineProps,
   SpriteProps,
+  SpriteObject,
 } from './types';
 
 const maxLight = 255;
@@ -92,7 +93,7 @@ class Render {
     this.painter.drawSpriteLine(lineProps, textureData);
   }
 
-  private drawLevel(rayState: Ray, level: Level): void {
+  public handleLevel(rayState: Ray, level: Level): boolean {
     this.dynamicAlpha.init(level);
 
     if (level.texture?.textureData) {
@@ -117,6 +118,8 @@ class Render {
         color: level.color,
       });
     }
+
+    return this.pixelCounter.count < consts.resolution.height;
   }
 
   public handleSprite(props: SpriteProps): boolean {
@@ -143,37 +146,6 @@ class Render {
 
     for (const wall of this.rayHandlerState.newItem.walls) {
       if (wall.render) this.drawWall(rayState, light, wall);
-      if (this.pixelCounter.count >= consts.resolution.height) return false;
-    }
-
-    return this.pixelCounter.count < consts.resolution.height;
-  }
-
-  public handleLevels(rayState: Ray): boolean {
-    if (
-      !this.rayHandlerState.prevItem ||
-      this.rayHandlerState.prevDistance < 0.2
-    )
-      return true;
-
-    //calculate once per this.playerState.lookZ changed
-    const topLevels = this.rayHandlerState.prevItem.levels.filter(
-      (x) => x.bottom > this.playerState.lookZ
-    );
-    const bottomLevels = this.rayHandlerState.prevItem.levels.filter(
-      (x) => x.bottom < this.playerState.lookZ
-    );
-
-    //store reversed version in levels
-    let i = bottomLevels.length - 1;
-    while (i >= 0) {
-      this.drawLevel(rayState, bottomLevels[i]);
-      if (this.pixelCounter.count >= consts.resolution.height) return false;
-      i--;
-    }
-
-    for (const level of topLevels) {
-      this.drawLevel(rayState, level);
       if (this.pixelCounter.count >= consts.resolution.height) return false;
     }
 

@@ -12,12 +12,21 @@ import { defineComponent, ref } from 'vue';
 import Player from '@/data/player';
 import { PlayerState } from '@/data/playerState';
 import { Main3D } from '@/data/main3D';
-import consts from '@/data/consts';
+import consts, { mod } from '@/data/consts';
 import { GameMap } from '@/data/gameMap';
-import textureStore from '@/data/textureStore';
+import textureStore, { TextureType } from '@/data/textureStore';
 import SpriteStore from '@/data/spriteStore';
 
-const playerState = new PlayerState();
+const playerState = new PlayerState(
+  {
+    x: 10,
+    y: 3,
+    z: 0,
+  },
+  { width: consts.playerWidth, height: consts.playerWidth },
+  TextureType.DukeFront,
+  1
+);
 const halfHeight = consts.resolution.height / 2;
 
 export default defineComponent({
@@ -92,6 +101,11 @@ export default defineComponent({
         currentKey.value.get('ArrowDown') || currentKey.value.get('KeyS');
       const moveLeft = currentKey.value.get('KeyA');
       const moveRight = currentKey.value.get('KeyD');
+      const enter = currentKey.value.get('Enter');
+
+      if (enter) {
+        gameMap.toggleDoor(timestamp);
+      }
 
       player.move(
         timestamp,
@@ -116,12 +130,13 @@ export default defineComponent({
 
     async function tick(timestamp: number) {
       if (stopped.value) return;
-      if ((timestamp | 0) % 4 === 0) {
+      if (mod(timestamp | 0, 4) === 0) {
         const diff = timestamp - prevTimestamp;
         fps = (1000 / diff) | 0;
         fpsDisplay.value = fps;
       }
       keyHandler(timestamp);
+      gameMap.tick(timestamp);
       player.tick(timestamp);
       main3D.renderMain();
       prevTimestamp = timestamp;

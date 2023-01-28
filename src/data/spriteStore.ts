@@ -32,7 +32,7 @@ const sprites = [
     TextureType.DukeFront,
     1
   ),
-  getBanan(39, 3.5, 2.1),
+  getBanan(39, 3.5, 3.1),
   getBanan(28.5, 1.5, 0.6),
   getBanan(28.5, 1.5, 1.2),
   getBanan(28.5, 1.5, 1.8),
@@ -48,11 +48,12 @@ export default class SpriteStore {
     this.spriteObjects = [this.playerState, ...sprites];
 
     this.spriteObjects.forEach((sprite) => {
-      sprite.texture.textureData = textureStore.getTextureData(
-        sprite.texture.type
-      );
-      sprite.texture.repeatedHeight =
-        sprite.texture.textureData!.height * sprite.texture.repeat;
+      const textureData = textureStore.getTextureData(sprite.texture.type);
+      if (textureData) {
+        sprite.setTextureData(textureData);
+        sprite.texture.repeatedHeight =
+          sprite.texture.textureData!.height * sprite.texture.repeat;
+      }
     });
   }
 

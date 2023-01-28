@@ -32,6 +32,11 @@ export type MapItem = {
   levels: Level[];
   stopRay: boolean;
   mirror?: boolean;
+
+  //runtime
+  aboveLevels?: Level[];
+  belowLevels?: Level[];
+  playerStateTimestamp?: number;
 };
 
 export enum RayAction {
@@ -55,6 +60,7 @@ export class SpriteObject {
   timestamp: number;
   halfWidth: number;
   top: number;
+  wRate = 1;
 
   constructor(
     pos: { x: number; y: number; z: number },
@@ -75,6 +81,11 @@ export class SpriteObject {
     this.halfWidth = size.width / 2;
     this.top = pos.z + size.height;
   }
+
+  public setTextureData(data: TextureData): void {
+    this.texture.textureData = data;
+    this.wRate = data.width / this.width;
+  }
 }
 
 export class TextureData {
@@ -83,7 +94,7 @@ export class TextureData {
   public maxX: number;
   public maxY: number;
   public data: Uint32Array;
-  public rayTimestamp = 0;
+  public rayTimestamp = null as null | number;
   public factX = 0;
   public factY = 0;
 
@@ -112,7 +123,6 @@ export type SpriteLineProps = {
   y0: number;
   y1: number;
   light: number;
-  // repeat: number;
   repeatedHeight: number;
   checkAlpha: boolean;
 };

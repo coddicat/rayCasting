@@ -4,15 +4,7 @@ import { Coordinates, SpriteObject, Texture } from './types';
 
 const halfHeight = consts.resolution.height / 2;
 
-export class PlayerState implements SpriteObject, Coordinates {
-  public texture: Texture = {
-    type: TextureType.DukeFront,
-    repeat: 1,
-  };
-
-  public x = 10;
-  public y = 3;
-  public z = 0;
+export class PlayerState extends SpriteObject implements Coordinates {
   public timestamp = 0;
   public halfWidth: number = consts.playerWidth / 2;
   public width: number = consts.playerWidth;
@@ -21,7 +13,7 @@ export class PlayerState implements SpriteObject, Coordinates {
   public lookZ = consts.playerHeight * 0.9;
   public top = consts.playerHeight;
 
-  public angle = 0; //-Math.PI / 2;
+  public angle = 0;
   public lookVertical = 0;
   public halfLookVertical = halfHeight;
   public jumping: number | null = null;

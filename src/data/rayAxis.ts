@@ -31,17 +31,14 @@ export default class RayAxis {
     this.sign = Math.sign(this._step);
     this.step = Math.abs(this._step);
     this.cellIndex = this.from | 0;
-    this.distance = this.step * this.getShift(this.from);
+    this._shift = this.from - (this.from | 0);
+    if (this.sign >= 0) {
+      this._shift = 1 - this._shift;
+    }
+    this.distance = this.step * this._shift;
   }
 
   private _shift = 0;
-  private getShift(position: number): number {
-    this._shift = Math.abs(position % 1);
-    if (position < 0) {
-      return this.sign < 0 ? 1 - this._shift : this._shift;
-    }
-    return this.sign < 0 ? this._shift : 1 - this._shift;
-  }
 
   private prevDistance!: number;
   public nextStep(): number {

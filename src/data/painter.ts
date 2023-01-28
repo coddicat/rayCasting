@@ -1,4 +1,4 @@
-import consts from './consts';
+import consts, { mod } from './consts';
 import DynamicAlpha from './dynamicAlpha';
 import RayCasting from './rayCasting';
 import {
@@ -135,7 +135,7 @@ class Painter {
 
       this.slRefs.index =
         Math.imul(
-          ((y * this.slRefs.hRate) | 0) % textureData.height,
+          mod((y * this.slRefs.hRate) | 0, textureData.height),
           textureData.width
         ) + props.spriteX;
 
@@ -168,24 +168,33 @@ class Painter {
     spriteY: 0,
     fixedX: 0,
     pixel: 0,
+
+    fixSinDiff: 0,
+    fixCosDiff: 0,
   };
 
   public setSpriteIndexBySideX(props: DynamicSpriteLineProps): void {
+    this.sldRefs.fixCosDiff =
+      this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff;
+
     this.sldRefs.sideX =
       props.rayState.sideX -
-      ((this.rayCastingState.rayAngle.fixCos * this.sldRefs.diff) % 1);
+      this.sldRefs.fixCosDiff +
+      (this.sldRefs.fixCosDiff | 0) +
+      1;
 
     this.sldRefs.spriteX =
-      ((1 + this.sldRefs.sideX) * props.textureData.width) %
-        props.textureData.width |
+      ((this.sldRefs.sideX - (this.sldRefs.sideX | 0)) *
+        props.textureData.width) |
       0;
 
     this.sldRefs.spriteY = (this.sldRefs.diff * props.textureData.factY) | 0;
+
     this.sldRefs.fixedX =
       this.rayCastingState.rayAngle.sinSign > 0
         ? props.textureData.maxY -
-          (this.sldRefs.spriteY % props.textureData.height)
-        : this.sldRefs.spriteY % props.textureData.height;
+          mod(this.sldRefs.spriteY, props.textureData.height)
+        : mod(this.sldRefs.spriteY, props.textureData.height);
 
     this.sldRefs.index =
       Math.imul(this.sldRefs.fixedX, props.textureData.width) +
@@ -193,25 +202,27 @@ class Painter {
   }
 
   public setSpriteIndexBySideY(props: DynamicSpriteLineProps): void {
-    this.sldRefs.sideX =
-      props.rayState.sideX -
-      ((this.rayCastingState.rayAngle.fixSin * this.sldRefs.diff) % 1);
+    const { diff } = this.sldRefs;
+    const { width, height, maxX, factX } = props.textureData;
+    const {
+      rayState: { sideX },
+    } = props;
+    const {
+      rayAngle: { fixSin, cosSign },
+    } = this.rayCastingState;
 
-    this.sldRefs.spriteY =
-      ((1 + this.sldRefs.sideX) * props.textureData.height) %
-        props.textureData.height |
-      0;
+    const fixSinDiff = fixSin * diff;
 
-    this.sldRefs.spriteX = (this.sldRefs.diff * props.textureData.factX) | 0;
-    this.sldRefs.fixedX =
-      this.rayCastingState.rayAngle.cosSign > 0
-        ? props.textureData.maxX -
-          (this.sldRefs.spriteX % props.textureData.width)
-        : this.sldRefs.spriteX % props.textureData.width;
+    const side = sideX - fixSinDiff + (fixSinDiff | 0) + 1;
 
-    this.sldRefs.index =
-      Math.imul(this.sldRefs.spriteY, props.textureData.width) +
-      this.sldRefs.fixedX;
+    const spriteY = (side - (side | 0)) * height;
+
+    const spriteX = (diff * factX) | 0;
+
+    const fixedX =
+      cosSign > 0 ? maxX - mod(spriteX, width) : mod(spriteX, width);
+
+    this.sldRefs.index = Math.imul(spriteY, width) + fixedX;
   }
 
   public drawSpriteLineDynamic(props: DynamicSpriteLineProps): void {
@@ -222,6 +233,7 @@ class Painter {
         props.textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
       props.textureData.factY =
         props.textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
+
       props.textureData.rayTimestamp = props.rayState.rayAngle.timestamp;
     }
 

@@ -1,9 +1,11 @@
 const lookAngleDegrees = 60;
 const resolution = {
-  width: 640,
-  height: 480,
+  width: 320,
+  height: 240,
 };
 const rad = Math.PI / 180;
+
+export const mod = (x: number, y: number) => x - ((x / y) | 0) * y;
 
 export default {
   resolution,
