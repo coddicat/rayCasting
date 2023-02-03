@@ -1,5 +1,5 @@
 import consts from './consts';
-import { Door, GameMap } from './gameMap';
+import { MovingItem, GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import Ray from './ray';
 import { RayAngle } from './rayAngle';
@@ -14,7 +14,8 @@ const Pi1_5 = Math.PI * 1.5;
 const acc = 0.0001;
 
 class DoorHandler implements CellHandler {
-  public door?: Door;
+  public door?: MovingItem;
+  public platform?: MovingItem;
   private gameMap: GameMap;
 
   constructor(state: PlayerState, gameMap: GameMap) {
@@ -28,6 +29,12 @@ class DoorHandler implements CellHandler {
       d.set.find((s) => s.x === x && s.y === y)
     );
     if (this.door) {
+      return RayAction.stop;
+    }
+    this.platform = this.gameMap.platforms.find((d) =>
+      d.set.find((s) => s.x === x && s.y === y)
+    );
+    if (this.platform) {
       return RayAction.stop;
     }
     return RayAction.continue;
@@ -152,13 +159,13 @@ class Player {
       this.state.y = ny;
     }
 
-    this.checkFloor(timestamp);
+    this.checkFloor(this.state.x, this.state.y, timestamp);
     this.state.movingRight = timestamp;
   }
 
-  private checkFloor(timestamp: number): void {
-    const mx = this.state.x | 0;
-    const my = this.state.y | 0;
+  private checkFloor(x: number, y: number, timestamp: number): void {
+    const mx = x | 0;
+    const my = y | 0;
 
     const item = this.gameMap.check(mx, my);
     if (!item) {
@@ -167,13 +174,26 @@ class Player {
     }
     const fl = item.levels.find(
       (level) =>
-        this.state.z <= level.bottom && this.state.z >= level.bottom - 0.301
+        this.state.z <= level.bottom + 0.1 && this.state.z >= level.bottom - 0.1
+    );
+    const cl = item.levels.find(
+      (level) =>
+        this.state.z + this.state.height > level.bottom &&
+        this.state.z < level.bottom &&
+        level != fl
     );
     if (fl) {
+      if (fl && cl) {
+        //dead;
+        alert('dead');
+        this.state.x = 3;
+        this.state.y = 3;
+        return;
+      }
       this.state.z = fl.bottom;
-      this.state.lookZ = fl.bottom + this.state.lookHeight;
-      this.state.top = fl.bottom + this.state.height;
-
+      this.state.lookZ = this.state.z + this.state.lookHeight;
+      this.state.top = this.state.z + this.state.height;
+      this.state.jumpingFloor = this.state.z;
       return;
     }
     this.fall(timestamp);
@@ -204,7 +224,7 @@ class Player {
     this.state.jumpingSpeed = 0.02;
   }
 
-  public checkDoor(): Door | null {
+  public checkDoor(): { door: MovingItem | null; platform: MovingItem | null } {
     const doorHandler = new DoorHandler(this.state, this.gameMap);
     const ray = new Ray(
       this.state,
@@ -213,7 +233,10 @@ class Player {
     );
     ray.send(5, false);
 
-    return doorHandler.door ?? null;
+    return {
+      door: doorHandler.door ?? null,
+      platform: doorHandler.platform ?? null,
+    };
   }
 
   public tick(timestamp: number): void {

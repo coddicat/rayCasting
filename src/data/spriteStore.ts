@@ -13,10 +13,12 @@ function getBanan(x: number, y: number, z: number): SpriteObject {
       height: 0.5,
       width: 0.5,
     },
-    TextureType.Banan,
+    [TextureType.Banan],
     1
   );
 }
+const rad45 = Math.PI / 4;
+const rad90 = Math.PI / 2;
 
 const sprites = [
   new SpriteObject(
@@ -27,10 +29,12 @@ const sprites = [
     },
     {
       height: 1.8,
-      width: 1,
+      width: 1.34,
     },
-    TextureType.DukeFront,
-    1
+    [TextureType.DukeFront, TextureType.DukeBack, TextureType.DukeSide],
+    1,
+    -rad90,
+    true
   ),
   getBanan(39, 3.5, 3.1),
   getBanan(28.5, 1.5, 0.6),
@@ -44,16 +48,22 @@ export default class SpriteStore {
   constructor(playerState: PlayerState) {
     this.playerState = playerState;
   }
+  public tick(timestamp: number): void {
+    this.spriteObjects
+      .filter((x) => x.rotate)
+      .forEach((x) => x.tick(timestamp));
+  }
   public async init(): Promise<void> {
     this.spriteObjects = [this.playerState, ...sprites];
 
     this.spriteObjects.forEach((sprite) => {
-      const textureData = textureStore.getTextureData(sprite.texture.type);
-      if (textureData) {
-        sprite.setTextureData(textureData);
-        sprite.texture.repeatedHeight =
-          sprite.texture.textureData!.height * sprite.texture.repeat;
-      }
+      sprite.textures.forEach((texture) => {
+        const textureData = textureStore.getTextureData(texture.type);
+        if (textureData) {
+          sprite.setTextureData(texture.type, textureData);
+          texture.repeatedHeight = texture.textureData!.height * texture.repeat;
+        }
+      });
     });
   }
 

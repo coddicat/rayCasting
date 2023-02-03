@@ -11,6 +11,10 @@ export type Texture = {
   repeat: number;
   repeatedHeight?: number;
   textureData?: TextureData | null;
+  revert?: boolean;
+  repeatX?: number;
+  startX?: number;
+  startY?: number;
 };
 
 export type Level = {
@@ -56,35 +60,49 @@ export class SpriteObject {
   z: number;
   width: number;
   height: number;
-  texture: Texture;
+  textures: Texture[];
   timestamp: number;
-  halfWidth: number;
+  //halfWidth: number;
   top: number;
-  wRate = 1;
+  //wRate = 1;
+  angle = 0;
+  public rotate = false;
+  rotateTimestamp = null as null | number;
 
   constructor(
     pos: { x: number; y: number; z: number },
     size: { width: number; height: number },
-    textureType: TextureType,
-    repeat: number
+    textureTypes: TextureType[],
+    repeat: number,
+    angle = 0,
+    rotate = false
   ) {
     this.x = pos.x;
     this.y = pos.y;
     this.z = pos.z;
     this.width = size.width;
     this.height = size.height;
-    this.texture = {
-      type: textureType,
+    this.textures = textureTypes.map((t) => ({
+      type: t,
       repeat,
-    };
+    }));
     this.timestamp = 0;
-    this.halfWidth = size.width / 2;
+    //this.halfWidth = size.width / 2;
     this.top = pos.z + size.height;
+    this.angle = angle;
+    this.rotate = rotate;
   }
 
-  public setTextureData(data: TextureData): void {
-    this.texture.textureData = data;
-    this.wRate = data.width / this.width;
+  public setTextureData(type: TextureType, data: TextureData): void {
+    const texture = this.textures.find((t) => t.type === type);
+    if (!texture) return;
+    texture.textureData = data;
+    //this.wRate = data.width / this.width;
+  }
+
+  public tick(timestamp: number): void {
+    if (this.rotateTimestamp === null) this.rotateTimestamp = timestamp;
+    this.angle = (timestamp - this.rotateTimestamp) * 0.01;
   }
 }
 
@@ -125,6 +143,7 @@ export type SpriteLineProps = {
   light: number;
   repeatedHeight: number;
   checkAlpha: boolean;
+  revert?: boolean;
 };
 
 export type SpriteProps = {

@@ -1,4 +1,4 @@
-import consts from './consts';
+import consts, { angle } from './consts';
 import { GameMap } from './gameMap';
 import { PlayerState } from './playerState';
 import Ray from './ray';
@@ -16,6 +16,12 @@ import {
 export interface CellHandler {
   handle(rayState: Ray, last: boolean): RayAction;
 }
+
+//const rad135 = Math.PI / 2;
+const rad90 = Math.PI / 2;
+const rad45 = Math.PI / 4;
+const rad180 = Math.PI;
+const rad360 = Math.PI * 2;
 
 class RayHandler implements CellHandler {
   public data: Uint32Array;
@@ -180,9 +186,45 @@ class RayHandler implements CellHandler {
     const sideDistance =
       (rayState.rayAngle.sin * rayDistance - dy) / rayState.rayAngle.cos;
 
-    if (Math.abs(sideDistance) > sprite.halfWidth) return true;
+    let texture;
+    let m = 1;
+    if (sprite.textures.length > 2 && sprite !== this.playerState) {
+      let s = sprite.angle;
+      if (s < 0) {
+        s = rad360 + s;
+      }
+      s = s % rad360;
 
-    const spriteX = ((sideDistance + sprite.halfWidth) * sprite.wRate) | 0;
+      let a = angle(
+        sprite.x,
+        sprite.y,
+        //todo should be due to user coordinates but with mirror fact
+        rayState.axisX.from,
+        rayState.axisY.from
+      );
+      a += s;
+      if (a < 0) {
+        a = rad360 + a;
+      }
+      a = a % rad360;
+
+      if (a < rad45 || a > rad360 - rad45) {
+        texture = sprite.textures[1];
+      } else if (a < rad180 + rad45 && a > rad180 - rad45) {
+        texture = sprite.textures[0];
+      } else {
+        texture = sprite.textures[2];
+        m = a < rad180 ? 1 : -1;
+      }
+    } else {
+      texture = sprite.textures[0];
+    }
+    const halfWidth = sprite.width / 2;
+    if (Math.abs(sideDistance) > halfWidth) return true;
+
+    const wRate = texture.textureData!.width / sprite.width;
+
+    const spriteX = ((m * sideDistance + halfWidth) * wRate) | 0;
 
     sprite.timestamp = this.rayCastingState.rayAngle.timestamp;
 
@@ -191,7 +233,12 @@ class RayHandler implements CellHandler {
       distance,
       top: sprite.top,
       bottom: sprite.z,
-      textureData: sprite.texture.textureData!,
+      textureData: texture.textureData!,
+      // sprite.textures.length > 2 && Math.abs(a) < rad45
+      //   ? sprite.textures[2].textureData!
+      //   : sprite.textures.length > 1 && Math.abs(a) < rad90
+      //   ? sprite.textures[1].textureData!
+      //   : sprite.textures[0].textureData!,
     });
   }
 }

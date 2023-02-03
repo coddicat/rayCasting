@@ -6,6 +6,11 @@ const resolution = {
 const rad = Math.PI / 180;
 
 export const mod = (x: number, y: number) => x - ((x / y) | 0) * y;
+export const angle = (x0: number, y0: number, x: number, y: number): number => {
+  const Vx = x - x0;
+  const Vy = y - y0;
+  return Math.PI + (Vx || Vy ? Math.atan2(Vy, Vx) : 0);
+};
 
 export default {
   resolution,
@@ -15,5 +20,5 @@ export default {
   lookAngle: lookAngleDegrees * rad,
   lookMapStep: (lookAngleDegrees * rad) / 20,
   playerHeight: 1.8,
-  playerWidth: 0.9,
+  playerWidth: 1.34,
 };

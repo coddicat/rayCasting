@@ -16,15 +16,14 @@ import consts, { mod } from '@/data/consts';
 import { GameMap } from '@/data/gameMap';
 import textureStore, { TextureType } from '@/data/textureStore';
 import SpriteStore from '@/data/spriteStore';
-
 const playerState = new PlayerState(
   {
-    x: 10,
+    x: 3,
     y: 3,
     z: 0,
   },
   { width: consts.playerWidth, height: consts.playerWidth },
-  TextureType.DukeFront,
+  [TextureType.DukeFront, TextureType.DukeBack, TextureType.DukeSide],
   1
 );
 const halfHeight = consts.resolution.height / 2;
@@ -104,9 +103,12 @@ export default defineComponent({
       const enter = currentKey.value.get('Enter');
 
       if (enter) {
-        const door = player.checkDoor();
-        if (door) {
-          gameMap.toggleDoor(door, timestamp);
+        const res = player.checkDoor();
+        if (res.door) {
+          gameMap.toggleDoor(res.door, timestamp);
+        }
+        if (res.platform) {
+          gameMap.togglePlatform(res.platform, timestamp);
         }
       }
 
@@ -139,8 +141,10 @@ export default defineComponent({
         fpsDisplay.value = fps;
       }
       keyHandler(timestamp);
-      gameMap.tick(timestamp);
+      gameMap.tickDoor(timestamp);
+      gameMap.tickPlatform(timestamp);
       player.tick(timestamp);
+      spriteStore.tick(timestamp);
       main3D.renderMain();
       prevTimestamp = timestamp;
       animationFrame = window.requestAnimationFrame(tick);

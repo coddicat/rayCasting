@@ -1,4 +1,4 @@
-import consts from './consts';
+import consts, { mod } from './consts';
 import DynamicAlpha from './dynamicAlpha';
 import Painter from './painter';
 import { PlayerState } from './playerState';
@@ -14,6 +14,7 @@ import {
   SpriteLineProps,
   SpriteProps,
   SpriteObject,
+  Axis,
 } from './types';
 
 const maxLight = 255;
@@ -47,8 +48,17 @@ class Render {
 
   private drawWall(rayState: Ray, light: number, wall: Wall): void {
     const fact = consts.resolution.width / this.rayHandlerState.newDistance;
-
     const a = this.playerState.halfLookVertical + fact * this.playerState.lookZ;
+    const repeatX = wall.texture?.repeatX ?? 1;
+    const startY = wall.texture?.startY ?? 0;
+    const startX = wall.texture?.startX ?? 0;
+
+    const s =
+      rayState.side === Axis.y
+        ? mod(rayState.axisY.cellIndex - startY, repeatX)
+        : mod(rayState.axisX.cellIndex - startX, repeatX);
+
+    const sideX = (rayState.sideX + s) / repeatX;
 
     if (wall.texture?.textureData) {
       const props: SpriteLineProps = {
@@ -56,10 +66,14 @@ class Render {
         y1: a - wall.bottom * fact,
         light,
         spriteX: wall.texture?.textureData
-          ? (rayState.sideX * wall.texture?.textureData.width) | 0
+          ? (sideX * wall.texture?.textureData.width) | 0
           : 0,
-        repeatedHeight: wall.texture.repeatedHeight!,
+        repeatedHeight:
+          ((wall.top - wall.bottom) * wall.texture.textureData.height) /
+          wall.texture.repeat,
+        //0.5 * (wall.top - wall.bottom) * wall.texture.textureData.height,
         checkAlpha: false,
+        revert: wall.texture.revert,
       };
       this.painter.drawSpriteLine(props, wall.texture?.textureData);
     } else {

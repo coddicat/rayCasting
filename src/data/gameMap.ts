@@ -6,7 +6,7 @@ type DoorSet = {
   y: number;
 }[];
 
-export type Door = {
+export type MovingItem = {
   mapItem: MapItem;
   set: DoorSet;
   state: boolean;
@@ -23,12 +23,12 @@ const gameMap = [
   '#.........................MMMMM...................#',
   '##################................................#',
   '#@@@@@@@@@@@@@@@@#................................#',
-  '#................@......................####DDD####',
-  '#................D......................#.........M',
-  '#................D......................@.........M',
-  '#................D......................#.........M',
-  '#......^^^^......@......................@.........M',
-  '#................#......................#.........M',
+  '#................#......................####DDD####',
+  '#................@......................#.........M',
+  '#................D......................D.........M',
+  '#................D......................D.........M',
+  '#......^^^^......D......................D.........M',
+  '#................@......................#.........M',
   '#................#......................@.........M',
   '#................#......................####YYY####',
   '#@@@@@@@@@@@@@@@@#......................@.........#',
@@ -55,18 +55,18 @@ const gameMap = [
   '#..............YYYY       YYYY..........',
   '#..................#YYYYY#..............                     12345678900',
   '#.......................................                     12345678900',
-  '###########..........##############################....MMMMMMMMMMMMMM#00',
+  '###########..........######################............MMMMMMMMMMMMMM#00',
   '#                                     ##............................##~~',
   '#                                     ## .........1.................##!!',
   '#                                     ##............................##%%',
   '#                                     ##............................##**',
   '#                                     ##............................##((',
   '#                                     ##............     ...........##))',
-  '#                                      M............     ...........##',
-  '#                                      M............     ...........##',
-  '#                                      M.............................M',
-  '#                                      M.............................M',
-  '#                                      M.............................M',
+  '#               PPPPPPP                M............     ...........##',
+  '#               PPPPPPP                M............     ...........##',
+  '#               PPPPPPP                M.............................M',
+  '#               PPPPPPP                M.............................M',
+  '#               PPPPPPP                M.............................M',
   '#                                      M.............................M',
   '#                                      M.............................M',
   '#                                      M.............................M',
@@ -114,31 +114,82 @@ const emptyItem: MapItem = {
 };
 
 const getDoorLevelTop = () => ({
-  color: 0xc800dc,
+  color: 0x02f00,
   bottom: 2.5,
   texture: null,
 });
 const getDoorLevelBottom = () => ({
-  color: 0xc800dc,
+  color: 0x002f00,
   bottom: 2.5,
   texture: null,
 });
-const getDoorWallTop = () => ({
+
+const getDoorWallTop = (
+  repeatX: number,
+  startX: number,
+  startY: number
+): Wall => ({
   color: 0x0000ff,
   top: 4,
   bottom: 2,
   render: true,
-  texture: null,
+  texture: {
+    type: TextureType.Door,
+    repeat: 2,
+    revert: true,
+    repeatX,
+    startX,
+    startY,
+  },
 });
-const getDoorWallBottom = () => ({
+const getDoorWallBottom = (
+  repeatX: number,
+  startX: number,
+  startY: number
+): Wall => ({
   color: 0x0000ff,
   top: 2,
   bottom: 0,
   render: true,
-  texture: null,
+  texture: {
+    type: TextureType.Door,
+    repeat: 2,
+    repeatX,
+    startX,
+    startY,
+  },
 });
 
-const getDoorItem = (): MapItem => ({
+const getPlatformItem = (
+  repeatX: number,
+  startX: number,
+  startY: number
+): MapItem => ({
+  walls: [
+    {
+      color: 0xc8c8dc,
+      top: 0.2,
+      bottom: 0,
+      render: true,
+      texture: null,
+    },
+  ],
+  levels: [
+    {
+      color: 0x00f00,
+      bottom: 0.2,
+      texture: null,
+    },
+    { color: 0, bottom: 0, texture: null },
+  ],
+  stopRay: false,
+});
+
+const getDoorItem = (
+  repeatX: number,
+  startX: number,
+  startY: number
+): MapItem => ({
   walls: [
     {
       color: 0xc8c8dc,
@@ -150,12 +201,22 @@ const getDoorItem = (): MapItem => ({
         repeat: 1,
       },
     },
-    getDoorWallBottom(),
-    getDoorWallTop(),
+    getDoorWallBottom(repeatX, startX, startY),
+    getDoorWallTop(repeatX, startX, startY),
   ],
   levels: [getDoorLevelBottom(), getDoorLevelTop()],
   stopRay: false,
 });
+
+const getMovingItem = (
+  typeCode: string,
+  repeatX: number,
+  startX: number,
+  startY: number
+): MapItem =>
+  typeCode === 'D'
+    ? getDoorItem(repeatX, startX, startY)
+    : getPlatformItem(repeatX, startX, startY);
 
 export enum MapItemType {
   Empty,
@@ -185,6 +246,7 @@ export enum MapItemType {
   Mirror,
   LowLedge,
   Door,
+  Platform,
 }
 
 const mapKeys = new Map<string, MapItemType>([
@@ -216,6 +278,7 @@ const mapKeys = new Map<string, MapItemType>([
   ['S', MapItemType.Selfs],
 
   ['D', MapItemType.Door],
+  ['P', MapItemType.Platform],
 ]);
 
 function getStair(top: number, open = true): MapItem {
@@ -324,7 +387,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           render: true,
           texture: {
             type: TextureType.WallBriks,
-            repeat: 5,
+            repeat: 1,
           },
         },
       ],
@@ -343,7 +406,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           render: true,
           texture: {
             type: TextureType.WallWood,
-            repeat: 5,
+            repeat: 1,
           },
         },
       ],
@@ -493,6 +556,11 @@ export class GameMap {
         d.set.find((s) => s.x === x && s.y === y)
       );
       item = door?.mapItem ?? emptyItem;
+    } else if (key === MapItemType.Platform) {
+      const platform = this.platforms.find((d) =>
+        d.set.find((s) => s.x === x && s.y === y)
+      );
+      item = platform?.mapItem ?? emptyItem;
     } else {
       item = (key && mapItems.get(key)) || emptyItem;
     }
@@ -504,7 +572,8 @@ export class GameMap {
   }
 
   public init(): void {
-    this.findDoors();
+    this.doors = this.findMovingItems('D');
+    this.platforms = this.findMovingItems('P');
     this.mapData = gameMap.map((row: string, y: number) =>
       [...row].map((c: string, x: number) => this.getItem(c, x, y))
     );
@@ -520,21 +589,26 @@ export class GameMap {
     return this.mapData[by][bx];
   }
 
-  private doorSet(arr: boolean[][], y: number, x: number): DoorSet | null {
+  private getItemSet(
+    arr: boolean[][],
+    typeCode: string,
+    y: number,
+    x: number
+  ): DoorSet | null {
     if (arr[y] && arr[y][x]) return null;
     let res = null as null | DoorSet;
-    if (gameMap[y][x] === 'D') {
+    if (gameMap[y][x] === typeCode) {
       res = [{ x, y }];
       //right
       if (x + 1 < gameMap[y].length - 1) {
-        const right = this.doorSet(arr, y, x + 1);
+        const right = this.getItemSet(arr, typeCode, y, x + 1);
         if (right) {
           res = [...res, ...right];
         }
       }
       //down
       if (y + 1 < gameMap.length - 1) {
-        const down = this.doorSet(arr, y + 1, x);
+        const down = this.getItemSet(arr, typeCode, y + 1, x);
         if (down) {
           res = [...res, ...down];
         }
@@ -547,29 +621,33 @@ export class GameMap {
     return res;
   }
 
-  public doors: Door[] = [];
+  public doors: MovingItem[] = [];
+  public platforms: MovingItem[] = [];
 
-  private findDoors(): void {
+  private findMovingItems(typeCode: string): MovingItem[] {
     const arr = [] as boolean[][];
+    const res: MovingItem[] = [];
     for (let r = 0; r < gameMap.length; r++) {
       const row = gameMap[r];
       for (let c = 0; c < row.length; c++) {
-        const doorSet = this.doorSet(arr, r, c);
+        const doorSet = this.getItemSet(arr, typeCode, r, c);
         if (doorSet) {
-          this.doors.push({
+          res.push({
             set: doorSet,
-            mapItem: getDoorItem(),
+            mapItem: getMovingItem(typeCode, doorSet.length, c, r),
             state: true, //closed
             timestamp: 0,
           });
         }
       }
     }
+    return res;
   }
 
-  private door: Door | null = null;
+  private door: MovingItem | null = null;
+  private platform: MovingItem | null = null;
 
-  public tick(timestamp: number): boolean {
+  public tickDoor(timestamp: number): boolean {
     if (!this.door) return false;
 
     const t = timestamp - this.door.timestamp;
@@ -599,10 +677,46 @@ export class GameMap {
     return true;
   }
 
-  public toggleDoor(door: Door, timestamp: number): void {
+  public toggleDoor(door: MovingItem, timestamp: number): void {
     if (this.door) return;
     this.door = door;
     this.door.timestamp = timestamp;
     this.door.state = !this.door.state;
+  }
+
+  public tickPlatform(timestamp: number): boolean {
+    if (!this.platform) return false;
+
+    const t = timestamp - this.platform.timestamp;
+    let s = 0.003 * t;
+    let finish = false;
+    if (s >= 2) {
+      s = 2;
+      finish = true;
+    }
+    const bottom = this.platform.state ? 2 - s : s;
+
+    const mapItem = this.platform.mapItem;
+    const wall = mapItem.walls[0];
+    const topLevel = mapItem.levels[1];
+    //const bottomLevel = mapItem.levels[1];
+    wall.top = bottom + 0.2;
+    wall.bottom = bottom;
+
+    topLevel.bottom = bottom + 0.2;
+    //bottomLevel.bottom = bottom;
+
+    if (finish) {
+      this.platform = null;
+    }
+
+    return true;
+  }
+
+  public togglePlatform(platform: MovingItem, timestamp: number): void {
+    if (this.platform) return;
+    this.platform = platform;
+    this.platform.timestamp = timestamp;
+    this.platform.state = !this.platform.state;
   }
 }

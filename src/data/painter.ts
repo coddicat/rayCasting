@@ -122,8 +122,13 @@ class Painter {
     this.refs.alphaMask = 0x00ffffff | (props.light << 24);
     this.initRefs(props);
 
-    let y = this.refs.top - props.y0;
     this.slRefs.hRate = props.repeatedHeight / (props.y1 - props.y0);
+    let y = props.revert
+      ? this.refs.top -
+        props.y0 +
+        (textureData.height - mod(props.repeatedHeight, textureData.height)) /
+          this.slRefs.hRate
+      : this.refs.top - props.y0;
 
     while (this.refs.top <= this.refs.bottom) {
       if (this.data[this.refs.dataIndex]) {
