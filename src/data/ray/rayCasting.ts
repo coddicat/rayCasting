@@ -1,10 +1,10 @@
-import consts from './consts';
-import { GameMap } from './gameMap';
-import { PlayerState } from './playerState';
+import consts from '../consts';
+import { GameMap } from '../gameMap';
+import PlayerState from '../player/playerState';
 import Ray from './ray';
 import { RayAngle } from './rayAngle';
 import RayHandler from './rayHandler';
-import { SpriteObject } from './types';
+import SpriteObject from '../sprite/spriteObject';
 
 const halfLookAngle = consts.lookAngle / 2;
 const buf = new ArrayBuffer(
@@ -42,7 +42,11 @@ class RayCasting {
       gameMap
     );
 
-    this.ray = new Ray(this.playerState, this.rayAngle, this.rayHandler);
+    this.ray = new Ray(
+      this.playerState.position,
+      this.rayAngle,
+      this.rayHandler
+    );
   }
 
   public reset(): void {
@@ -56,11 +60,11 @@ class RayCasting {
 
   public draw3D(): void {
     this.displayX = 0;
-    let angle = this.playerState.angle - halfLookAngle;
+    let angle = this.playerState.position.angle - halfLookAngle;
     do {
       this.rayAngle.setAngle({
         angle,
-        fixDistance: Math.cos(this.playerState.angle - angle),
+        fixDistance: Math.cos(this.playerState.position.angle - angle),
       });
 
       this.handleAngle();

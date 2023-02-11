@@ -1,11 +1,11 @@
 import consts from './consts';
-import { PlayerState } from './playerState';
-import RayHandler from './rayHandler';
+import PlayerState from './player/playerState';
+import RayHandler from './ray/rayHandler';
 import { Level } from './types';
 
 const maxLight = 255;
 const lightFact = maxLight / consts.lookLength;
-export class DynamicAlpha {
+export default class DynamicAlpha {
   private shift = 0;
   public distanceRate = 0;
   private lightRate = 0;
@@ -38,5 +38,3 @@ export class DynamicAlpha {
     this.alpha = (consts.lookLength - this.distance) * this.lightRate;
   }
 }
-
-export default DynamicAlpha;

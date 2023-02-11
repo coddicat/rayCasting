@@ -1,24 +1,17 @@
-import consts, { angle } from './consts';
-import { GameMap } from './gameMap';
-import { PlayerState } from './playerState';
+import consts, { angle, norm } from '../consts';
+import { GameMap } from '../gameMap';
+import PlayerState from '../player/playerState';
 import Ray from './ray';
 import RayCasting from './rayCasting';
-import Render from './render';
-import {
-  MapItem,
-  RayAction,
-  SpriteObject,
-  SpriteAngleState,
-  PixelCounter,
-  Level,
-} from './types';
+import Render from '../render/render';
+import SpriteObject from '../sprite/spriteObject';
+import { MapItem, RayAction, SpriteAngleState, PixelCounter } from '../types';
+import { rayHandler as refs } from '../variables';
 
 export interface CellHandler {
   handle(rayState: Ray, last: boolean): RayAction;
 }
 
-//const rad135 = Math.PI / 2;
-const rad90 = Math.PI / 2;
 const rad45 = Math.PI / 4;
 const rad180 = Math.PI;
 const rad360 = Math.PI * 2;
@@ -34,7 +27,6 @@ class RayHandler implements CellHandler {
 
   private pixelsCounter: PixelCounter;
   private playerState: PlayerState;
-  private emptyPixels: boolean;
   private rayCastingState: RayCasting;
   private render: Render;
 
@@ -56,8 +48,7 @@ class RayHandler implements CellHandler {
     this.prevDistance = 0.2;
     this.newDistance = 0.2;
     this.mirrorFact = 1;
-    this.emptyPixels = true;
-    this.pixelsCounter = { count: 0 };
+    this.pixelsCounter = new PixelCounter();
     this.playerState = playerState;
     this.gameMap = gameMap;
 
@@ -81,22 +72,18 @@ class RayHandler implements CellHandler {
     this.prevDistance = 0.2;
     this.newDistance = 0.2;
     this.mirrorFact = 1;
-    this.emptyPixels = true;
-    this.pixelsCounter.count = 0;
+    this.pixelsCounter.reset();
     this.spriteState.lastDistance = 0.6;
   }
 
-  public handle(rayState: Ray, last: boolean): RayAction {
-    this.newItem = this.gameMap.check(
-      rayState.axisX.cellIndex,
-      rayState.axisY.cellIndex
-    );
-    this.newDistance =
-      rayState.distance * this.rayCastingState.rayAngle.fixDistance;
+  public handle(ray: Ray, last: boolean): RayAction {
+    this.newItem = this.gameMap.check(ray.cellPosition);
+    this.newDistance = ray.distance * this.rayCastingState.rayAngle.fixDistance;
 
     if (this.newItem !== this.prevItem || last) {
-      this.emptyPixels = this.emptyPixels && this.handleLevels(rayState);
-      this.emptyPixels = this.emptyPixels && this.render.handleWalls(rayState);
+      this.handleLevels(ray);
+      if (!this.pixelsCounter.empty) return RayAction.stop;
+      this.render.handleWalls(ray);
 
       this.prevItem = this.newItem;
       this.prevDistance = this.newDistance < 0.2 ? 0.2 : this.newDistance;
@@ -107,7 +94,7 @@ class RayHandler implements CellHandler {
       return RayAction.mirror;
     }
 
-    return !this.emptyPixels || (this.newItem && this.newItem.stopRay)
+    return !this.pixelsCounter.empty || (this.newItem && this.newItem.stopRay)
       ? RayAction.stop
       : RayAction.continue;
   }
@@ -118,15 +105,15 @@ class RayHandler implements CellHandler {
     belowObjects: [] as SpriteObject[],
   };
 
-  private handleLevels(rayState: Ray): boolean {
-    if (!this.prevItem || this.prevDistance < 0.2) return true;
+  private handleLevels(ray: Ray): void {
+    if (!this.prevItem || this.prevDistance < 0.2) return;
 
     if (this.refs.playerStateTimestamp !== this.playerState.timestamp) {
       this.refs.aboveObjects = this.spriteObjects.filter(
-        (o) => o.z > this.playerState.lookZ
+        (o) => o.position.z > this.playerState.lookZ
       );
       this.refs.belowObjects = this.spriteObjects.filter(
-        (o) => o.z <= this.playerState.lookZ
+        (o) => o.position.z <= this.playerState.lookZ
       );
       this.refs.playerStateTimestamp = this.playerState.timestamp;
     }
@@ -143,70 +130,61 @@ class RayHandler implements CellHandler {
 
     for (const level of this.prevItem.belowLevels!) {
       for (const obj of this.refs.belowObjects) {
-        if (obj.z < level.bottom) continue;
-        if (!this.handleSprite(rayState, obj)) return false;
+        if (obj.position.z < level.bottom) continue;
+        this.handleSprite(ray, obj);
+        if (!this.pixelsCounter.empty) return;
       }
 
-      if (!this.render.handleLevel(rayState, level)) return false;
+      this.render.handleLevel(ray, level);
+      if (!this.pixelsCounter.empty) return;
     }
 
     for (const level of this.prevItem.aboveLevels!) {
-      if (!this.render.handleLevel(rayState, level)) return false;
+      this.render.handleLevel(ray, level);
+      if (!this.pixelsCounter.empty) return;
 
       for (const obj of this.refs.aboveObjects) {
-        if (obj.z > level.bottom) continue;
-        if (!this.handleSprite(rayState, obj)) return false;
+        if (obj.position.z > level.bottom) continue;
+        this.handleSprite(ray, obj);
+        if (!this.pixelsCounter.empty) return;
       }
     }
 
     for (const obj of this.spriteObjects) {
-      if (!this.handleSprite(rayState, obj)) return false;
+      this.handleSprite(ray, obj);
+      if (!this.pixelsCounter.empty) return;
     }
-
-    return this.pixelsCounter.count < consts.resolution.height;
   }
 
-  private handleSprite(rayState: Ray, sprite: SpriteObject): boolean {
-    if (sprite.timestamp === rayState.rayAngle.timestamp) return true;
+  private handleSprite(ray: Ray, sprite: SpriteObject): void {
+    if (sprite.timestamp === ray.rayAngle.timestamp) return;
 
-    const dx = sprite.x - rayState.axisX.from;
-    const dy = sprite.y - rayState.axisY.from;
+    refs.dx = sprite.position.x - ray.fromPosition.x;
+    refs.dy = sprite.position.y - ray.fromPosition.y;
 
-    const rayDistance =
-      (dy - dx * rayState.rayAngle.tan90) / rayState.rayAngle.spriteFact;
+    refs.rayDistance =
+      (refs.dy - refs.dx * ray.rayAngle.tan90) / ray.rayAngle.spriteFact;
 
-    if (rayDistance < 0.2) return true;
+    if (refs.rayDistance < 0.2) return;
 
-    const distance =
-      (rayState.mirrorDistance + rayDistance) *
+    refs.distance =
+      (ray.mirrorDistance + refs.rayDistance) *
       this.rayCastingState.rayAngle.fixDistance;
 
-    if (this.newDistance < distance) return true;
+    if (this.newDistance < refs.distance) return;
 
-    const sideDistance =
-      (rayState.rayAngle.sin * rayDistance - dy) / rayState.rayAngle.cos;
+    refs.sideDistance =
+      (ray.rayAngle.sin * refs.rayDistance - refs.dy) / ray.rayAngle.cos;
 
     let texture;
-    let m = 1;
+    let side = 1;
     if (sprite.textures.length > 2 && sprite !== this.playerState) {
-      let s = sprite.angle;
-      if (s < 0) {
-        s = rad360 + s;
-      }
-      s = s % rad360;
-
-      let a = angle(
-        sprite.x,
-        sprite.y,
+      const a0 = angle(
+        sprite.position,
         //todo should be due to user coordinates but with mirror fact
-        rayState.axisX.from,
-        rayState.axisY.from
+        ray.fromPosition
       );
-      a += s;
-      if (a < 0) {
-        a = rad360 + a;
-      }
-      a = a % rad360;
+      const a = norm(a0 + norm(sprite.position.angle));
 
       if (a < rad45 || a > rad360 - rad45) {
         texture = sprite.textures[1];
@@ -214,31 +192,22 @@ class RayHandler implements CellHandler {
         texture = sprite.textures[0];
       } else {
         texture = sprite.textures[2];
-        m = a < rad180 ? 1 : -1;
+        side = a < rad180 ? 1 : -1;
       }
     } else {
       texture = sprite.textures[0];
     }
-    const halfWidth = sprite.width / 2;
-    if (Math.abs(sideDistance) > halfWidth) return true;
+    if (Math.abs(refs.sideDistance) > sprite.halfWidth) return;
 
-    const wRate = texture.textureData!.width / sprite.width;
-
-    const spriteX = ((m * sideDistance + halfWidth) * wRate) | 0;
+    refs.spriteX =
+      ((side * refs.sideDistance + sprite.halfWidth) * sprite.wRate) | 0;
 
     sprite.timestamp = this.rayCastingState.rayAngle.timestamp;
 
-    return this.render.handleSprite({
-      spriteX,
-      distance,
+    this.render.handleSprite({
       top: sprite.top,
-      bottom: sprite.z,
-      textureData: texture.textureData!,
-      // sprite.textures.length > 2 && Math.abs(a) < rad45
-      //   ? sprite.textures[2].textureData!
-      //   : sprite.textures.length > 1 && Math.abs(a) < rad90
-      //   ? sprite.textures[1].textureData!
-      //   : sprite.textures[0].textureData!,
+      bottom: sprite.position.z,
+      textureData: texture.data!,
     });
   }
 }

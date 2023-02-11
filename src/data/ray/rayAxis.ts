@@ -1,8 +1,8 @@
 import { RayAngle } from './rayAngle';
-import { Axis, Coordinates } from './types';
-export default class RayAxis {
-  private step!: number;
+import { Axis, Coordinates } from '../types';
+import { sign } from '../consts';
 
+export default class RayAxis {
   public cellIndex!: number;
   public distance!: number;
   public sign!: number;
@@ -11,6 +11,10 @@ export default class RayAxis {
   private coordinates: Coordinates;
   private rayAngle: RayAngle;
   private axis: Axis;
+  private step!: number;
+  private tempStep!: number;
+  private shift = 0;
+  private prevDistance!: number;
 
   constructor(coordinates: Coordinates, rayAngle: RayAngle, axis: Axis) {
     this.coordinates = coordinates;
@@ -18,29 +22,25 @@ export default class RayAxis {
     this.axis = axis;
   }
 
-  private _step!: number;
   public init(): void {
     if (this.axis === Axis.x) {
-      this._step = 1 / this.rayAngle.cos;
+      this.tempStep = 1 / this.rayAngle.cos;
       this.from = this.coordinates.x;
     } else {
-      this._step = 1 / this.rayAngle.sin;
+      this.tempStep = 1 / this.rayAngle.sin;
       this.from = this.coordinates.y;
     }
 
-    this.sign = Math.sign(this._step);
-    this.step = Math.abs(this._step);
+    this.sign = sign(this.tempStep);
+    this.step = Math.abs(this.tempStep);
     this.cellIndex = this.from | 0;
-    this._shift = this.from - (this.from | 0);
+    this.shift = this.from - (this.from | 0);
     if (this.sign >= 0) {
-      this._shift = 1 - this._shift;
+      this.shift = 1 - this.shift;
     }
-    this.distance = this.step * this._shift;
+    this.distance = this.step * this.shift;
   }
 
-  private _shift = 0;
-
-  private prevDistance!: number;
   public nextStep(): number {
     this.prevDistance = this.distance;
     this.cellIndex += this.sign;

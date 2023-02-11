@@ -1,4 +1,6 @@
-import textureStore, { TextureType } from './textureStore';
+import Texture from './texture/texture';
+import TextureSet from './texture/textureSet';
+import textureStore, { TextureType } from './texture/textureStore';
 import { Level, MapItem, Wall } from './types';
 
 type DoorSet = {
@@ -77,28 +79,19 @@ const gameMap = [
 const ceil: Level = {
   color: 0xdcb9ac,
   bottom: 5,
-  texture: {
-    type: TextureType.FloorNumber,
-    repeat: 1,
-  },
+  texture: new Texture(TextureType.FloorNumber, 1),
 };
 
 const floor: Level = {
   color: 0xc8c8dc,
   bottom: 0,
-  texture: {
-    type: TextureType.FloorNumber,
-    repeat: 1,
-  },
+  texture: new Texture(TextureType.FloorNumber, 1),
 };
 
 const floorEmpty: Level = {
   color: 0xc8c8dc,
   bottom: 0,
-  texture: {
-    type: TextureType.FloorNumber,
-    repeat: 1,
-  },
+  texture: new Texture(TextureType.FloorNumber, 1),
 };
 
 const roomItem: MapItem = {
@@ -133,14 +126,7 @@ const getDoorWallTop = (
   top: 4,
   bottom: 2,
   render: true,
-  texture: {
-    type: TextureType.Door,
-    repeat: 2,
-    revert: true,
-    repeatX,
-    startX,
-    startY,
-  },
+  texture: new TextureSet(TextureType.Door, 2, startX, startY, repeatX, true),
 });
 const getDoorWallBottom = (
   repeatX: number,
@@ -151,13 +137,7 @@ const getDoorWallBottom = (
   top: 2,
   bottom: 0,
   render: true,
-  texture: {
-    type: TextureType.Door,
-    repeat: 2,
-    repeatX,
-    startX,
-    startY,
-  },
+  texture: new TextureSet(TextureType.Door, 2, startX, startY, repeatX, false),
 });
 
 const getPlatformItem = (
@@ -196,10 +176,7 @@ const getDoorItem = (
       top: 5,
       bottom: 4,
       render: true,
-      texture: {
-        type: TextureType.WallWood,
-        repeat: 1,
-      },
+      texture: new Texture(TextureType.WallWood, 1),
     },
     getDoorWallBottom(repeatX, startX, startY),
     getDoorWallTop(repeatX, startX, startY),
@@ -385,10 +362,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           top: 5,
           bottom: 0,
           render: true,
-          texture: {
-            type: TextureType.WallBriks,
-            repeat: 1,
-          },
+          texture: new Texture(TextureType.WallBriks, 1),
         },
       ],
       levels: [ceil],
@@ -404,10 +378,7 @@ const mapItems = new Map<MapItemType, MapItem>([
           top: 5,
           bottom: 0,
           render: true,
-          texture: {
-            type: TextureType.WallWood,
-            repeat: 1,
-          },
+          texture: new Texture(TextureType.WallWood, 1),
         },
       ],
       levels: [],
@@ -542,9 +513,10 @@ export class GameMap {
     arr
       .filter((l) => l.texture)
       .forEach((l) => {
-        l.texture!.textureData = textureStore.getTextureData(l.texture!.type);
-        l.texture!.repeatedHeight =
-          l.texture!.textureData!.height * l.texture!.repeat;
+        const data = textureStore.getTextureData(l.texture!.type);
+        if (data) {
+          l.texture!.setData(data);
+        }
       });
   }
 
@@ -579,14 +551,14 @@ export class GameMap {
     );
   }
 
-  public check(bx: number, by: number): MapItem {
-    if (by < 0 || by >= this.mapData.length || bx < 0) {
+  public check(cellPos: { x: number; y: number }): MapItem {
+    if (cellPos.y < 0 || cellPos.y >= this.mapData.length || cellPos.x < 0) {
       return emptyItem;
     }
-    if (bx >= this.mapData[by].length) {
+    if (cellPos.x >= this.mapData[cellPos.y].length) {
       return emptyItem;
     }
-    return this.mapData[by][bx];
+    return this.mapData[cellPos.y][cellPos.x];
   }
 
   private getItemSet(

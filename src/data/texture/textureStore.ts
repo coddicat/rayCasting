@@ -1,4 +1,4 @@
-import { TextureData } from './types';
+import { TextureData } from './textureData';
 
 export enum TextureType {
   FloorNumber,
@@ -14,16 +14,16 @@ export enum TextureType {
 }
 
 const textureFiles = new Map<TextureType, string>([
-  [TextureType.DukeFront, require('../assets/duke_front.png')],
-  [TextureType.DukeBack, require('../assets/duke_back.png')],
-  [TextureType.DukeSide, require('../assets/duke_side.png')],
-  [TextureType.WallBriks, require('../assets/wall_briks.png')],
-  [TextureType.WallWood, require('../assets/wall_wood.png')],
-  [TextureType.FloorNumber, require('../assets/floor1.png')],
-  [TextureType.Banan, require('../assets/banan.png')],
-  [TextureType.Parquet, require('../assets/parquet.png')],
-  [TextureType.Ground, require('../assets/ground.png')],
-  [TextureType.Door, require('../assets/door.png')],
+  [TextureType.DukeFront, require('../../assets/duke_front.png')],
+  [TextureType.DukeBack, require('../../assets/duke_back.png')],
+  [TextureType.DukeSide, require('../../assets/duke_side.png')],
+  [TextureType.WallBriks, require('../../assets/wall_briks.png')],
+  [TextureType.WallWood, require('../../assets/wall_wood.png')],
+  [TextureType.FloorNumber, require('../../assets/floor1.png')],
+  [TextureType.Banan, require('../../assets/banan.png')],
+  [TextureType.Parquet, require('../../assets/parquet.png')],
+  [TextureType.Ground, require('../../assets/ground.png')],
+  [TextureType.Door, require('../../assets/door.png')],
 ]);
 
 const store = {

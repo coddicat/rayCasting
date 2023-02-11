@@ -1,6 +1,6 @@
-import { PlayerState } from './playerState';
-import textureStore, { TextureType } from './textureStore';
-import { SpriteObject } from './types';
+import PlayerState from '../player/playerState';
+import SpriteObject from './spriteObject';
+import textureStore, { TextureType } from '../texture/textureStore';
 
 function getBanan(x: number, y: number, z: number): SpriteObject {
   return new SpriteObject(
@@ -8,6 +8,7 @@ function getBanan(x: number, y: number, z: number): SpriteObject {
       x,
       y,
       z,
+      angle: 0,
     },
     {
       height: 0.5,
@@ -17,8 +18,6 @@ function getBanan(x: number, y: number, z: number): SpriteObject {
     1
   );
 }
-const rad45 = Math.PI / 4;
-const rad90 = Math.PI / 2;
 
 const sprites = [
   new SpriteObject(
@@ -26,15 +25,14 @@ const sprites = [
       x: 50.5,
       y: 43.5,
       z: 0.3,
+      angle: 0,
     },
     {
       height: 1.8,
       width: 1.34,
     },
     [TextureType.DukeFront, TextureType.DukeBack, TextureType.DukeSide],
-    1,
-    -rad90,
-    true
+    1
   ),
   getBanan(39, 3.5, 3.1),
   getBanan(28.5, 1.5, 0.6),
@@ -48,20 +46,15 @@ export default class SpriteStore {
   constructor(playerState: PlayerState) {
     this.playerState = playerState;
   }
-  public tick(timestamp: number): void {
-    this.spriteObjects
-      .filter((x) => x.rotate)
-      .forEach((x) => x.tick(timestamp));
-  }
   public async init(): Promise<void> {
     this.spriteObjects = [this.playerState, ...sprites];
 
     this.spriteObjects.forEach((sprite) => {
       sprite.textures.forEach((texture) => {
-        const textureData = textureStore.getTextureData(texture.type);
-        if (textureData) {
-          sprite.setTextureData(texture.type, textureData);
-          texture.repeatedHeight = texture.textureData!.height * texture.repeat;
+        const data = textureStore.getTextureData(texture.type);
+        if (data) {
+          texture.setData(data);
+          sprite.setWRate(texture.type, data.width);
         }
       });
     });

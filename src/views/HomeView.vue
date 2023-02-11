@@ -9,18 +9,19 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import Player from '@/data/player';
-import { PlayerState } from '@/data/playerState';
+import Player from '@/data/player/player';
+import PlayerState from '@/data/player/playerState';
 import { Main3D } from '@/data/main3D';
 import consts, { mod } from '@/data/consts';
 import { GameMap } from '@/data/gameMap';
-import textureStore, { TextureType } from '@/data/textureStore';
-import SpriteStore from '@/data/spriteStore';
+import textureStore, { TextureType } from '@/data/texture/textureStore';
+import SpriteStore from '@/data/sprite/spriteStore';
 const playerState = new PlayerState(
   {
     x: 3,
     y: 3,
     z: 0,
+    angle: 0,
   },
   { width: consts.playerWidth, height: consts.playerWidth },
   [TextureType.DukeFront, TextureType.DukeBack, TextureType.DukeSide],
@@ -46,7 +47,7 @@ export default defineComponent({
     canvas.onmousemove = (ev: MouseEvent) => {
       if (document.pointerLockElement !== canvas) return;
 
-      playerState.angle += consts.turnSpeed * ev.movementX;
+      playerState.position.angle += consts.turnSpeed * ev.movementX;
       playerState.lookVertical -= ev.movementY;
       if (playerState.lookVertical > 300) {
         playerState.lookVertical = 300;
@@ -144,7 +145,6 @@ export default defineComponent({
       gameMap.tickDoor(timestamp);
       gameMap.tickPlatform(timestamp);
       player.tick(timestamp);
-      spriteStore.tick(timestamp);
       main3D.renderMain();
       prevTimestamp = timestamp;
       animationFrame = window.requestAnimationFrame(tick);

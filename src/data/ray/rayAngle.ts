@@ -1,3 +1,5 @@
+import { sign } from '../consts';
+
 const rad90 = Math.PI / 2;
 
 export class RayAngle {
@@ -37,8 +39,8 @@ export class RayAngle {
     this.cos = Math.cos(this.angle);
     this.sin = Math.sin(this.angle);
     this.tan90 = Math.tan(this.angle + rad90);
-    this.cosSign = Math.sign(this.cos);
-    this.sinSign = Math.sign(this.sin);
+    this.cosSign = sign(this.cos);
+    this.sinSign = sign(this.sin);
     this.cosAbs = this.cos * this.cosSign;
     this.sinAbs = Math.abs(this.sin);
     this.spriteFact = this.sin - this.cos * this.tan90;
