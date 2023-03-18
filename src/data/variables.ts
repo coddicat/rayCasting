@@ -36,6 +36,7 @@ export const render = {
 
   y0: 0,
   y1: 0,
+  wall: null as null | Wall,
 };
 
 export const rayHandler = {

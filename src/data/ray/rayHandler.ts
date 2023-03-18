@@ -1,5 +1,5 @@
 import consts, { angle, norm } from '../consts';
-import { GameMap } from '../gameMap';
+import { GameMap } from '../gameMap/gameMap';
 import PlayerState from '../player/playerState';
 import Ray from './ray';
 import RayCasting from './rayCasting';

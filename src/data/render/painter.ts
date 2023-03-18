@@ -110,6 +110,7 @@ class Painter {
     let y = props.revert
       ? refs.top -
         renderRefs.y0 +
+        //todo
         (textureData.height - mod(props.repeatedHeight, textureData.height)) /
           refs.hRate
       : refs.top - renderRefs.y0;

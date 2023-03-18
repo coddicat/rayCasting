@@ -2,8 +2,8 @@ import { Position } from './types';
 
 const lookAngleDegrees = 60;
 const resolution = {
-  width: 320,
-  height: 240,
+  width: 640,
+  height: 480,
 };
 const rad = Math.PI / 180;
 const rad360 = Math.PI * 2;

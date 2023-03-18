@@ -1,4 +1,4 @@
-import { GameMap } from '../gameMap';
+import { GameMap } from '../gameMap/gameMap';
 import Ray from '../ray/ray';
 import { CellHandler } from '../ray/rayHandler';
 import { Position, RayAction } from '../types';

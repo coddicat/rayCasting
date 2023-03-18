@@ -13,9 +13,9 @@ import Player from '@/data/player/player';
 import PlayerState from '@/data/player/playerState';
 import { Main3D } from '@/data/main3D';
 import consts, { mod } from '@/data/consts';
-import { GameMap } from '@/data/gameMap';
 import textureStore, { TextureType } from '@/data/texture/textureStore';
 import SpriteStore from '@/data/sprite/spriteStore';
+import { GameMap } from '@/data/gameMap/gameMap';
 const playerState = new PlayerState(
   {
     x: 3,
@@ -104,13 +104,13 @@ export default defineComponent({
       const enter = currentKey.value.get('Enter');
 
       if (enter) {
-        const res = player.checkDoor();
-        if (res.door) {
-          gameMap.toggleDoor(res.door, timestamp);
+        const res = player.checkMovingItem();
+        if (res) {
+          gameMap.toggleMovingItem(res, timestamp);
         }
-        if (res.platform) {
-          gameMap.togglePlatform(res.platform, timestamp);
-        }
+        // if (res.platform) {
+        //   gameMap.togglePlatform(res.platform, timestamp);
+        // }
       }
 
       player.move(
@@ -142,8 +142,8 @@ export default defineComponent({
         fpsDisplay.value = fps;
       }
       keyHandler(timestamp);
-      gameMap.tickDoor(timestamp);
-      gameMap.tickPlatform(timestamp);
+      gameMap.tickMovingItem(timestamp);
+      //gameMap.tickPlatform(timestamp);
       player.tick(timestamp);
       main3D.renderMain();
       prevTimestamp = timestamp;

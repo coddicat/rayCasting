@@ -1,8 +1,8 @@
 import consts from './consts';
+import { MapItemType } from './gameMap/mapItemType';
 import Ray from './ray/ray';
 import Texture from './texture/texture';
 import { TextureData } from './texture/textureData';
-import { TextureType } from './texture/textureStore';
 
 export interface Position {
   x: number;
@@ -18,6 +18,8 @@ export type Level = {
   color: number;
   bottom: number;
   texture: null | Texture;
+  name?: string | undefined;
+  speed?: number | undefined;
 };
 
 export type Wall = {
@@ -26,6 +28,7 @@ export type Wall = {
   bottom: number;
   render: boolean;
   texture: null | Texture;
+  name?: string | undefined;
 };
 
 export type MapItem = {
@@ -93,3 +96,25 @@ export class PixelCounter {
     return (this.empty = ++this.count < consts.resolution.height);
   }
 }
+
+export type ItemSet = {
+  set: { x: number; y: number }[];
+  mapItem: MapItem;
+};
+
+export type ItemSetByKey = {
+  type: MapItemType;
+  sets: ItemSet[];
+};
+
+export type MovingItem = {
+  props: MovingItemProps;
+  set: ItemSet;
+  state: boolean;
+  timestamp: number;
+};
+
+export type MovingItemProps = {
+  initMovingItem: (set: ItemSet, props: MovingItemProps) => MovingItem;
+  tick: (t: number, item: MovingItem) => boolean;
+};

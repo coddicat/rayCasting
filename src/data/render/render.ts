@@ -38,13 +38,13 @@ class Render {
     );
   }
 
-  private drawWall(rayState: Ray, wall: Wall): void {
+  private drawWall(rayState: Ray): void {
     refs.fact = consts.resolution.width / this.rayHandlerState.newDistance;
     refs.a =
       this.playerState.halfLookVertical + refs.fact * this.playerState.lookZ;
-    refs.repeatX = wall.texture?.repeatX ?? 1;
-    refs.startY = wall.texture?.startY ?? 0;
-    refs.startX = wall.texture?.startX ?? 0;
+    refs.repeatX = refs.wall!.texture?.repeatX ?? 1;
+    refs.startY = refs.wall!.texture?.startY ?? 0;
+    refs.startX = refs.wall!.texture?.startX ?? 0;
 
     refs.s =
       rayState.side === Axis.y
@@ -53,26 +53,27 @@ class Render {
 
     refs.sideX = (rayState.sideX + refs.s) / refs.repeatX;
 
-    refs.y0 = refs.a - wall.top * refs.fact;
-    refs.y1 = refs.a - wall.bottom * refs.fact;
+    refs.y0 = refs.a - refs.wall!.top * refs.fact;
+    refs.y1 = refs.a - refs.wall!.bottom * refs.fact;
 
-    if (wall.texture?.data) {
+    if (refs.wall!.texture?.data) {
       this.painter.drawSpriteLine(
         {
-          spriteX: wall.texture?.data
-            ? (refs.sideX * wall.texture?.data.width) | 0
+          spriteX: refs.wall!.texture?.data
+            ? (refs.sideX * refs.wall!.texture?.data.width) | 0
             : 0,
           repeatedHeight:
-            ((wall.top - wall.bottom) * wall.texture.data.height) /
-            wall.texture.repeat,
+            ((refs.wall!.top - refs.wall!.bottom) *
+              refs.wall!.texture.data.height) /
+            refs.wall!.texture.repeat,
           checkAlpha: false,
-          revert: wall.texture.revert,
+          revert: refs.wall!.texture.revert,
         },
-        wall.texture?.data
+        refs.wall!.texture?.data
       );
     } else {
       this.painter.drawLineStatic({
-        color: wall.color,
+        color: refs.wall!.color,
       });
     }
   }
@@ -131,14 +132,16 @@ class Render {
   public handleWalls(rayState: Ray): void {
     if (!this.rayHandlerState.newItem || this.rayHandlerState.newDistance <= 0)
       return;
+
     refs.light =
       ((maxLight * (consts.lookLength - this.rayHandlerState.newDistance)) /
         consts.lookLength) *
       this.rayHandlerState.mirrorFact;
+
     if (refs.light < 1) return;
 
-    for (const wall of this.rayHandlerState.newItem.walls) {
-      if (wall.render) this.drawWall(rayState, wall);
+    for (refs.wall of this.rayHandlerState.newItem.walls) {
+      if (refs.wall.render) this.drawWall(rayState);
       if (!this.pixelCounter.empty) return;
     }
   }

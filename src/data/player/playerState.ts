@@ -11,6 +11,7 @@ export default class PlayerState extends SpriteObject {
   public halfWidth: number = consts.playerWidth / 2;
   public width: number = consts.playerWidth;
   public height: number = consts.playerHeight;
+  public halfHeight: number = consts.playerHeight / 2;
   public lookHeight: number = consts.playerHeight * 0.9;
   public lookZ = consts.playerHeight * 0.9;
   public top = consts.playerHeight;
@@ -34,4 +35,13 @@ export default class PlayerState extends SpriteObject {
 
   public movingTimestamp: number | null = null;
   public turningTimestamp: number | null = null;
+
+  public setZ(value: number, jump: boolean): void {
+    this.position.z = value;
+    this.lookZ = this.position.z + this.lookHeight;
+    this.top = this.position.z + this.height;
+    if (jump) {
+      this.jumpingFloor = this.position.z;
+    }
+  }
 }

@@ -24,7 +24,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx"
-  ],
+, "src/data/gameMap/grid.ts", "src/data/gameMap/grid.bin"  ],
   "exclude": [
     "node_modules"
     //"web-worker.js"

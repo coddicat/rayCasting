@@ -1,11 +1,11 @@
 import consts, { sign } from '../consts';
-import { MovingItem, GameMap } from '../gameMap';
+import { GameMap } from '../gameMap/gameMap';
 import PlayerState from '../player/playerState';
 import Ray from '../ray/ray';
 import { RayAngle } from '../ray/rayAngle';
-import { Position } from '../types';
+import { MovingItem, Position } from '../types';
 import CollisionHandler from './collisionHandler';
-import DoorHandler from './doorHandler';
+import MovingItemRayHandler from './movingItemRayHandler';
 
 const collisionDistance = 0.6;
 const quartPi = Math.PI / 4;
@@ -24,6 +24,7 @@ export default class Player {
     this.gameMap = gameMap;
     this.collisionHandler = new CollisionHandler(state, gameMap);
   }
+
   private fixDistance(d: number): number {
     d -= collisionDistance;
     if (d < 0) d = 0;
@@ -98,7 +99,6 @@ export default class Player {
       this.state.position.x = nx;
       this.state.position.y = ny;
     }
-
     this.checkFloor(this.state.position, timestamp);
     this.state.movingTimestamp = timestamp;
   }
@@ -111,29 +111,29 @@ export default class Player {
       this.fall(timestamp);
       return;
     }
-    const fl = item.levels.find(
-      (level) =>
-        this.state.position.z <= level.bottom + 0.1 &&
-        this.state.position.z >= level.bottom - 0.1
-    );
+    const levels = item.levels
+      .filter(
+        (level) =>
+          level.bottom >= this.state.position.z && level.bottom < this.state.top
+      )
+      .map((x) => x.bottom);
+    const level = levels.length > 0 ? Math.max(...levels) : null;
     const cl = item.levels.find(
       (level) =>
-        this.state.position.z + this.state.height > level.bottom &&
-        this.state.position.z < level.bottom &&
-        level != fl
+        level.bottom < this.state.top &&
+        level.bottom > this.state.position.z + this.state.halfHeight
     );
-    if (fl) {
-      if (fl && cl) {
-        //dead;
-        alert('dead');
-        this.state.position.x = 3;
-        this.state.position.y = 3;
-        return;
-      }
-      this.state.position.z = fl.bottom;
-      this.state.lookZ = this.state.position.z + this.state.lookHeight;
-      this.state.top = this.state.position.z + this.state.height;
-      this.state.jumpingFloor = this.state.position.z;
+
+    if (cl) {
+      //dead;
+      alert('dead');
+      this.state.position.x = 3;
+      this.state.position.y = 3;
+      return;
+    }
+
+    if (level != null) {
+      this.state.setZ(level, true);
       return;
     }
     this.fall(timestamp);
@@ -164,19 +164,16 @@ export default class Player {
     this.state.jumpingSpeed = 0.02;
   }
 
-  public checkDoor(): { door: MovingItem | null; platform: MovingItem | null } {
-    const doorHandler = new DoorHandler(this.gameMap);
+  public checkMovingItem(): MovingItem | null {
+    const handler = new MovingItemRayHandler(this.gameMap);
     const ray = new Ray(
       this.state.position,
       new RayAngle(this.state.position.angle),
-      doorHandler
+      handler
     );
     ray.send(5, false);
 
-    return {
-      door: doorHandler.door ?? null,
-      platform: doorHandler.platform ?? null,
-    };
+    return handler.item ?? null;
   }
 
   public tick(timestamp: number): void {
@@ -201,35 +198,33 @@ export default class Player {
     const topLevels = levels
       .filter(
         (x) =>
-          this.state.position.z + this.state.height <= x.bottom &&
-          newZ + this.state.height >= x.bottom
+          this.state.top <= x.bottom && newZ + this.state.height >= x.bottom
       )
       .map((x) => x.bottom);
 
     const topLevel = Math.min.apply(null, topLevels);
+
     if (topLevels.length > 0) {
       this.state.jumpingSpeed = 0;
-      this.state.position.z = topLevel - this.state.height;
-      this.state.lookZ = this.state.position.z + this.state.lookHeight;
-      this.state.top = this.state.position.z + this.state.height;
-      this.state.jumpingFloor = this.state.position.z;
+      this.state.setZ(topLevel - this.state.height, true);
       return;
     }
 
-    const bottomLevels = levels
-      .filter((x) => this.state.position.z >= x.bottom && newZ < x.bottom)
-      .map((x) => x.bottom);
+    const bottom = levels.filter(
+      (x) => this.state.position.z >= x.bottom && newZ < x.bottom
+    );
+    const bottomLevels = bottom.map((x) => x.bottom);
     const bottomLevel = Math.max.apply(null, bottomLevels);
 
     if (bottomLevels.length > 0) {
-      this.state.jumpingTimestamp = null;
-      this.state.jumpingSpeed = 0;
-      this.state.position.z = bottomLevel;
-      this.state.jumpingFloor = this.state.position.z;
+      this.state.jumpingSpeed =
+        bottom.find((x) => x.bottom === bottomLevel)?.speed ?? 0;
+      if (this.state.jumpingSpeed === 0) {
+        this.state.jumpingTimestamp = null;
+      }
+      this.state.setZ(bottomLevel, true);
     } else {
-      this.state.position.z = newZ;
+      this.state.setZ(newZ, false);
     }
-    this.state.lookZ = this.state.position.z + this.state.lookHeight;
-    this.state.top = this.state.position.z + this.state.height;
   }
 }
