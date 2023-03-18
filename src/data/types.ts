@@ -1,4 +1,4 @@
-import consts from './consts';
+import settings from './settings';
 import { MapItemType } from './gameMap/mapItemType';
 import Ray from './ray/ray';
 import Texture from './texture/texture';
@@ -93,7 +93,7 @@ export class PixelCounter {
     this.empty = true;
   }
   public increse(): boolean {
-    return (this.empty = ++this.count < consts.resolution.height);
+    return (this.empty = ++this.count < settings.resolution.height);
   }
 }
 

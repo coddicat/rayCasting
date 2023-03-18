@@ -1,4 +1,5 @@
-import consts, { mod } from '../consts';
+import { mod } from '../exts';
+import settings from '../settings';
 import DynamicAlpha from '../dynamicAlpha';
 import Painter from './painter';
 import PlayerState from '../player/playerState';
@@ -6,11 +7,8 @@ import Ray from '../ray/ray';
 import RayCasting from '../ray/rayCasting';
 import RayHandler from '../ray/rayHandler';
 import { TextureData } from '../texture/textureData';
-import { Level, Wall, PixelCounter, SpriteProps, Axis } from '../types';
+import { Level, PixelCounter, SpriteProps, Axis } from '../types';
 import { render as refs, rayHandler as rayHandlerRefs } from '../variables';
-
-const maxLight = 255;
-const maxFact = maxLight / consts.lookLength;
 
 class Render {
   private rayHandlerState: RayHandler;
@@ -20,7 +18,6 @@ class Render {
   private dynamicAlpha: DynamicAlpha;
 
   constructor(
-    data: Uint32Array,
     rayCastingState: RayCasting,
     rayHandlerState: RayHandler,
     playerState: PlayerState,
@@ -33,13 +30,12 @@ class Render {
     this.painter = new Painter(
       pixelCounter,
       this.dynamicAlpha,
-      data,
       rayCastingState
     );
   }
 
   private drawWall(rayState: Ray): void {
-    refs.fact = consts.resolution.width / this.rayHandlerState.newDistance;
+    refs.fact = settings.resolution.width / this.rayHandlerState.newDistance;
     refs.a =
       this.playerState.halfLookVertical + refs.fact * this.playerState.lookZ;
     refs.repeatX = refs.wall!.texture?.repeatX ?? 1;
@@ -56,7 +52,7 @@ class Render {
     refs.y0 = refs.a - refs.wall!.top * refs.fact;
     refs.y1 = refs.a - refs.wall!.bottom * refs.fact;
 
-    if (refs.wall!.texture?.data) {
+    if (settings.wallTexture && refs.wall!.texture?.data) {
       this.painter.drawSpriteLine(
         {
           spriteX: refs.wall!.texture?.data
@@ -79,7 +75,7 @@ class Render {
   }
 
   private drawSprite(props: SpriteProps, textureData: TextureData): void {
-    refs.fact = consts.resolution.width / rayHandlerRefs.distance;
+    refs.fact = settings.resolution.width / rayHandlerRefs.distance;
     refs.a =
       this.playerState.halfLookVertical + refs.fact * this.playerState.lookZ;
     refs.y0 = refs.a - props.top * refs.fact;
@@ -104,7 +100,7 @@ class Render {
       this.playerState.halfLookVertical +
       this.dynamicAlpha.distanceRate / this.rayHandlerState.prevDistance;
 
-    if (level.texture?.data) {
+    if (settings.levelTexture && level.texture?.data) {
       this.painter.drawSpriteLineDynamic({
         rayState,
         textureData: level.texture?.data,
@@ -120,8 +116,8 @@ class Render {
     if (rayHandlerRefs.distance <= 0) return;
 
     refs.light =
-      maxFact *
-      (consts.lookLength - rayHandlerRefs.distance) *
+      settings.maxLightFact *
+      (settings.lookLength - rayHandlerRefs.distance) *
       this.rayHandlerState.mirrorFact;
 
     if (refs.light < 1) return;
@@ -134,8 +130,8 @@ class Render {
       return;
 
     refs.light =
-      ((maxLight * (consts.lookLength - this.rayHandlerState.newDistance)) /
-        consts.lookLength) *
+      ((255 * (settings.lookLength - this.rayHandlerState.newDistance)) /
+        settings.lookLength) *
       this.rayHandlerState.mirrorFact;
 
     if (refs.light < 1) return;

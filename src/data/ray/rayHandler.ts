@@ -1,4 +1,4 @@
-import consts, { angle, norm } from '../consts';
+import { angle, norm } from '../exts';
 import { GameMap } from '../gameMap/gameMap';
 import PlayerState from '../player/playerState';
 import Ray from './ray';
@@ -17,7 +17,6 @@ const rad180 = Math.PI;
 const rad360 = Math.PI * 2;
 
 class RayHandler implements CellHandler {
-  public data: Uint32Array;
   public prevItem: MapItem | null;
   public newItem: MapItem | null;
   public prevDistance: number;
@@ -34,14 +33,12 @@ class RayHandler implements CellHandler {
   private spriteState: SpriteAngleState;
 
   constructor(
-    data: Uint32Array,
     playerState: PlayerState,
 
     spriteObjects: SpriteObject[],
     rayCastingState: RayCasting,
     gameMap: GameMap
   ) {
-    this.data = data;
     this.rayCastingState = rayCastingState;
     this.prevItem = null;
     this.newItem = null;
@@ -58,7 +55,6 @@ class RayHandler implements CellHandler {
     };
 
     this.render = new Render(
-      data,
       this.rayCastingState,
       this,
       this.playerState,

@@ -1,10 +1,10 @@
-import consts from './consts';
+import settings from './settings';
 import PlayerState from './player/playerState';
 import RayHandler from './ray/rayHandler';
 import { Level } from './types';
 
-const maxLight = 255;
-const lightFact = maxLight / consts.lookLength;
+// const maxLight = 255;
+// const lightFact = maxLight / consts.lookLength;
 export default class DynamicAlpha {
   private shift = 0;
   public distanceRate = 0;
@@ -19,8 +19,8 @@ export default class DynamicAlpha {
 
   public init(level: Level): void {
     this.distanceRate =
-      consts.resolution.width * (this.playerState.lookZ - level.bottom);
-    this.lightRate = lightFact * this.rayHandlerState.mirrorFact;
+      settings.resolution.width * (this.playerState.lookZ - level.bottom);
+    this.lightRate = settings.maxLightFact * this.rayHandlerState.mirrorFact;
   }
 
   public alpha = 0;
@@ -30,11 +30,11 @@ export default class DynamicAlpha {
     this.shift = y - this.playerState.halfLookVertical;
     if (!this.shift) {
       this.alpha = 0;
-      this.distance = consts.lookLength;
+      this.distance = settings.lookLength;
       return;
     }
 
     this.distance = this.distanceRate / this.shift;
-    this.alpha = (consts.lookLength - this.distance) * this.lightRate;
+    this.alpha = (settings.lookLength - this.distance) * this.lightRate;
   }
 }

@@ -1,4 +1,4 @@
-import consts from '../consts';
+import settings from '../settings';
 import { GameMap } from '../gameMap/gameMap';
 import PlayerState from '../player/playerState';
 import Ray from './ray';
@@ -6,13 +6,13 @@ import { RayAngle } from './rayAngle';
 import RayHandler from './rayHandler';
 import SpriteObject from '../sprite/spriteObject';
 
-const halfLookAngle = consts.lookAngle / 2;
-const buf = new ArrayBuffer(
-  consts.resolution.height * consts.resolution.width * 4
-);
-const buf8 = new Uint8ClampedArray(buf);
-const data = new Uint32Array(buf);
-const angleStep = consts.lookAngle / consts.resolution.width;
+// const halfLookAngle = consts.lookAngle / 2;
+// const buf = new ArrayBuffer(
+//   consts.resolution.height * consts.resolution.width * 4
+// );
+// const buf8 = new Uint8ClampedArray(buf);
+// const data = new Uint32Array(buf);
+// const angleStep = consts.lookAngle / consts.resolution.width;
 
 class RayCasting {
   private imageData: ImageData;
@@ -33,14 +33,8 @@ class RayCasting {
     this.playerState = playerState;
 
     this.rayAngle = new RayAngle();
-    data.fill(0);
-    this.rayHandler = new RayHandler(
-      data,
-      playerState,
-      spriteObjects,
-      this,
-      gameMap
-    );
+    settings.data.fill(0);
+    this.rayHandler = new RayHandler(playerState, spriteObjects, this, gameMap);
 
     this.ray = new Ray(
       this.playerState.position,
@@ -50,31 +44,33 @@ class RayCasting {
   }
 
   public reset(): void {
-    data.fill(0);
+    settings.data.fill(0);
   }
 
   private handleAngle(): void {
     this.ray.init();
-    this.ray.send(consts.lookLength / this.rayAngle.fixDistance);
+    this.ray.send(settings.lookLength / this.rayAngle.fixDistance);
   }
 
   public draw3D(): void {
     this.displayX = 0;
-    let angle = this.playerState.position.angle - halfLookAngle;
+    let angle = this.playerState.position.angle - settings.halfLookAngle;
     do {
       this.rayAngle.setAngle({
         angle,
-        fixDistance: Math.cos(this.playerState.position.angle - angle),
+        fixDistance: Math.cos(
+          (this.playerState.position.angle - angle) * settings.fixFact
+        ),
       });
 
       this.handleAngle();
 
       this.displayX++;
-      angle += angleStep;
+      angle += settings.angleStep;
       this.rayHandler.reset();
-    } while (this.displayX < consts.resolution.width);
+    } while (this.displayX < settings.resolution.width);
 
-    this.imageData.data.set(buf8);
+    this.imageData.data.set(settings.buf8);
   }
 }
 

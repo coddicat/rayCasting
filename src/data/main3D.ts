@@ -1,13 +1,13 @@
-import consts from './consts';
+import settings from './settings';
 import { GameMap } from './gameMap/gameMap';
 import PlayerState from './player/playerState';
 import RayCasting from './ray/rayCasting';
 import SpriteStore from './sprite/spriteStore';
 
 export class Main3D {
-  private interCtx: CanvasRenderingContext2D;
-  private interCanvas: HTMLCanvasElement;
-  private imageData: ImageData;
+  private interCtx!: CanvasRenderingContext2D;
+  private interCanvas!: HTMLCanvasElement;
+  private imageData!: ImageData;
   private context!: CanvasRenderingContext2D;
   private rayCasting!: RayCasting;
   private playerState: PlayerState;
@@ -19,9 +19,15 @@ export class Main3D {
     gameMap: GameMap,
     spriteStore: SpriteStore
   ) {
+    this.playerState = playerState;
+    this.gameMap = gameMap;
+    this.spriteStore = spriteStore;
+  }
+
+  public init(mainCanvas: HTMLCanvasElement): void {
     this.interCanvas = document.createElement('canvas') as HTMLCanvasElement;
-    this.interCanvas.width = consts.resolution.width;
-    this.interCanvas.height = consts.resolution.height;
+    this.interCanvas.width = settings.resolution.width;
+    this.interCanvas.height = settings.resolution.height;
     const interCtx = this.interCanvas.getContext('2d', {
       alpha: true,
       willReadFrequently: true,
@@ -29,15 +35,10 @@ export class Main3D {
     if (!interCtx) throw 'Cannot get context';
     this.interCtx = interCtx;
     this.imageData = interCtx.createImageData(
-      consts.resolution.width,
-      consts.resolution.height
+      settings.resolution.width,
+      settings.resolution.height
     );
-    this.playerState = playerState;
-    this.gameMap = gameMap;
-    this.spriteStore = spriteStore;
-  }
 
-  public init(mainCanvas: HTMLCanvasElement): void {
     const ctx = mainCanvas.getContext('2d', {
       alpha: false,
       willReadFrequently: true,
@@ -65,8 +66,8 @@ export class Main3D {
       this.context.canvas.height
     );
     this.context.scale(
-      this.context.canvas.width / consts.resolution.width,
-      this.context.canvas.height / consts.resolution.height
+      this.context.canvas.width / settings.resolution.width,
+      this.context.canvas.height / settings.resolution.height
     );
     this.context.drawImage(this.interCanvas, 0, 0);
     this.context.restore();

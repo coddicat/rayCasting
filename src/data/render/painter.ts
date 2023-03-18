@@ -1,4 +1,6 @@
-import consts, { mod } from '../consts';
+import { mod } from '../exts';
+import settings from '../settings';
+
 import DynamicAlpha from '../dynamicAlpha';
 import RayCasting from '../ray/rayCasting';
 import { TextureData } from '../texture/textureData';
@@ -11,23 +13,18 @@ import {
 } from '../types';
 import { painter as refs, render as renderRefs } from '../variables';
 
-const maxBottom = consts.resolution.height - 1;
-
 class Painter {
   private dynamicAlpha;
   private pixelsCounter: PixelCounter;
-  private data: Uint32Array;
   private rayCastingState: RayCasting;
 
   constructor(
     pixelsCounter: PixelCounter,
     dynamicAlpha: DynamicAlpha,
-    data: Uint32Array,
     rayCastingState: RayCasting
   ) {
     this.pixelsCounter = pixelsCounter;
     this.dynamicAlpha = dynamicAlpha;
-    this.data = data;
     this.rayCastingState = rayCastingState;
   }
 
@@ -41,10 +38,11 @@ class Painter {
     }
 
     if (refs.top < 0) refs.top = 0;
-    if (refs.bottom >= consts.resolution.height) refs.bottom = maxBottom;
+    if (refs.bottom >= settings.resolution.height)
+      refs.bottom = settings.maxBottom;
 
     refs.dataIndex =
-      Math.imul(refs.top, consts.resolution.width) +
+      Math.imul(refs.top, settings.resolution.width) +
       (this.rayCastingState.displayX | 0);
   }
 
@@ -53,13 +51,13 @@ class Painter {
     this.initRefs();
     refs.alphaMask = renderRefs.light << 24;
     while (refs.top <= refs.bottom) {
-      if (this.data[refs.dataIndex]) {
+      if (settings.data[refs.dataIndex]) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         continue;
       }
 
-      this.data[refs.dataIndex] = props.color | refs.alphaMask;
+      settings.data[refs.dataIndex] = props.color | refs.alphaMask;
       // (color.b << 16) |
       // (color.g << 8) |
       // (color.r);
@@ -67,7 +65,7 @@ class Painter {
       if (!this.pixelsCounter.increse()) return;
 
       refs.top++;
-      refs.dataIndex += consts.resolution.width;
+      refs.dataIndex += settings.resolution.width;
     }
   }
 
@@ -75,9 +73,9 @@ class Painter {
     this.initRefs();
 
     while (refs.top <= refs.bottom) {
-      if (this.data[refs.dataIndex]) {
+      if (settings.data[refs.dataIndex]) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         continue;
       }
 
@@ -85,16 +83,17 @@ class Painter {
 
       if (this.dynamicAlpha.alpha < 1) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         continue;
       }
 
-      this.data[refs.dataIndex] = props.color | (this.dynamicAlpha.alpha << 24);
+      settings.data[refs.dataIndex] =
+        props.color | (this.dynamicAlpha.alpha << 24);
 
       if (!this.pixelsCounter.increse()) return;
 
       refs.top++;
-      refs.dataIndex += consts.resolution.width;
+      refs.dataIndex += settings.resolution.width;
     }
   }
 
@@ -116,9 +115,9 @@ class Painter {
       : refs.top - renderRefs.y0;
 
     while (refs.top <= refs.bottom) {
-      if (this.data[refs.dataIndex]) {
+      if (settings.data[refs.dataIndex]) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         y++;
         continue;
       }
@@ -133,17 +132,17 @@ class Painter {
 
       if (props.checkAlpha && !refs.pixel) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         y++;
         continue;
       }
 
-      this.data[refs.dataIndex] = refs.pixel & refs.alphaMask;
+      settings.data[refs.dataIndex] = refs.pixel & refs.alphaMask;
 
       if (!this.pixelsCounter.increse()) return;
 
       refs.top++;
-      refs.dataIndex += consts.resolution.width;
+      refs.dataIndex += settings.resolution.width;
       y++;
     }
   }
@@ -203,9 +202,9 @@ class Painter {
 
     refs.diff = 0;
     while (refs.top <= refs.bottom) {
-      if (this.data[refs.dataIndex]) {
+      if (settings.data[refs.dataIndex]) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         continue;
       }
 
@@ -213,7 +212,7 @@ class Painter {
 
       if (this.dynamicAlpha.alpha < 1) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         continue;
       }
 
@@ -227,17 +226,17 @@ class Painter {
 
       if (!refs.pixel) {
         refs.top++;
-        refs.dataIndex += consts.resolution.width;
+        refs.dataIndex += settings.resolution.width;
         continue;
       }
 
-      this.data[refs.dataIndex] =
+      settings.data[refs.dataIndex] =
         (this.dynamicAlpha.alpha << 24) | (refs.pixel & 0x00ffffff);
 
       if (!this.pixelsCounter.increse()) return;
 
       refs.top++;
-      refs.dataIndex += consts.resolution.width;
+      refs.dataIndex += settings.resolution.width;
     }
   }
 }

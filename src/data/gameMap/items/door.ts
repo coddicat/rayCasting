@@ -67,8 +67,6 @@ export const doorMovingItemProps: MovingItemProps = {
     topWall!.bottom = top;
     topLevel.bottom = top;
 
-    //bottomLevel.speed = finish ? 0 : item.state ? -speed : speed;
-
     return finish;
   },
 };

@@ -1,20 +1,18 @@
-import consts from '../consts';
+import settings from '../settings';
 import SpriteObject from '../sprite/spriteObject';
 import { TextureType } from '../texture/textureStore';
 import { Coordinates } from '../types';
 
-const halfHeight = consts.resolution.height / 2;
-
 export default class PlayerState extends SpriteObject {
   //object props
   public timestamp = 0;
-  public halfWidth: number = consts.playerWidth / 2;
-  public width: number = consts.playerWidth;
-  public height: number = consts.playerHeight;
-  public halfHeight: number = consts.playerHeight / 2;
-  public lookHeight: number = consts.playerHeight * 0.9;
-  public lookZ = consts.playerHeight * 0.9;
-  public top = consts.playerHeight;
+  public halfWidth: number = settings.playerWidth / 2;
+  public width: number = settings.playerWidth;
+  public height: number = settings.playerHeight;
+  public halfHeight: number = settings.playerHeight / 2;
+  public lookHeight: number = settings.playerHeight * 0.9;
+  public lookZ = settings.playerHeight * 0.9;
+  public top = settings.playerHeight;
 
   constructor(
     position: Coordinates,
@@ -26,7 +24,7 @@ export default class PlayerState extends SpriteObject {
   }
 
   public lookVertical = 0;
-  public halfLookVertical = halfHeight;
+  public halfLookVertical = settings.halfHeight;
 
   //player props
   public jumpingTimestamp: number | null = null;

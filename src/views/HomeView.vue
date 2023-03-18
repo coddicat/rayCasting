@@ -1,9 +1,42 @@
 <template>
   <div class="home">
-    <span>fps: {{ fpsDisplay }}</span>
-    <div>
-      <canvas width="800" height="600" class="canvas" ref="mainCanvas"></canvas>
+    <div class="settings">
+      <select class="resolution" v-model="resolution">
+        <option value="2048,1536">2048x1536</option>
+        <option value="1024,768">1024x768</option>
+        <option value="800,600">800x600</option>
+        <option value="640,480">640x480</option>
+        <option value="320,240">320x240</option>
+      </select>
+      <label
+        ><span>Level texture</span
+        ><input type="checkbox" v-model="levelTexture" />
+      </label>
+      <label
+        ><span>Wall texture</span
+        ><input type="checkbox" v-model="wallTexture" />
+      </label>
+      <label>
+        <span>Fish eye</span>
+        <input v-model="fixFact" type="range" min="0" max="1.5" step="0.1" />
+      </label>
+      <label>
+        <span>Distance</span>
+        <input v-model="lookLength" type="range" min="20" max="80" step="5" />
+      </label>
     </div>
+    <div class="main">
+      <span>fps: {{ fpsDisplay }}</span>
+      <div>
+        <canvas
+          width="800"
+          height="600"
+          class="canvas"
+          ref="mainCanvas"
+        ></canvas>
+      </div>
+    </div>
+    <div></div>
   </div>
 </template>
 
@@ -12,10 +45,12 @@ import { defineComponent, ref } from 'vue';
 import Player from '@/data/player/player';
 import PlayerState from '@/data/player/playerState';
 import { Main3D } from '@/data/main3D';
-import consts, { mod } from '@/data/consts';
+import { mod } from '@/data/exts';
 import textureStore, { TextureType } from '@/data/texture/textureStore';
 import SpriteStore from '@/data/sprite/spriteStore';
 import { GameMap } from '@/data/gameMap/gameMap';
+import settings, { setLookLength, setResolution } from '@/data/settings';
+
 const playerState = new PlayerState(
   {
     x: 3,
@@ -23,11 +58,10 @@ const playerState = new PlayerState(
     z: 0,
     angle: 0,
   },
-  { width: consts.playerWidth, height: consts.playerWidth },
+  { width: settings.playerWidth, height: settings.playerWidth },
   [TextureType.DukeFront, TextureType.DukeBack, TextureType.DukeSide],
   1
 );
-const halfHeight = consts.resolution.height / 2;
 
 export default defineComponent({
   name: 'HomeView',
@@ -47,7 +81,7 @@ export default defineComponent({
     canvas.onmousemove = (ev: MouseEvent) => {
       if (document.pointerLockElement !== canvas) return;
 
-      playerState.position.angle += consts.turnSpeed * ev.movementX;
+      playerState.position.angle += settings.turnSpeed * ev.movementX;
       playerState.lookVertical -= ev.movementY;
       if (playerState.lookVertical > 300) {
         playerState.lookVertical = 300;
@@ -55,7 +89,8 @@ export default defineComponent({
       if (playerState.lookVertical < -300) {
         playerState.lookVertical = -300;
       }
-      playerState.halfLookVertical = halfHeight + playerState.lookVertical;
+      playerState.halfLookVertical =
+        settings.halfHeight + playerState.lookVertical;
     };
 
     // if ('onpointerlockchange' in document) {
@@ -81,6 +116,31 @@ export default defineComponent({
     window.onkeyup = null;
     this.stop();
   },
+  watch: {
+    resolution() {
+      const dims = this.resolution.split(',');
+      const width = parseInt(dims[0]);
+      const height = parseInt(dims[1]);
+      setResolution(width, height);
+      playerState.halfLookVertical =
+        settings.halfHeight + playerState.lookVertical;
+
+      if (!this.mainCanvas) throw 'no canvas';
+      this.main3D.init(this.mainCanvas);
+    },
+    wallTexture() {
+      settings.wallTexture = this.wallTexture;
+    },
+    levelTexture() {
+      settings.levelTexture = this.levelTexture;
+    },
+    fixFact() {
+      settings.fixFact = this.fixFact;
+    },
+    lookLength() {
+      setLookLength(this.lookLength);
+    },
+  },
   setup() {
     const mainCanvas = ref(null as HTMLCanvasElement | null);
     const keyMap = new Map<string, boolean>();
@@ -104,13 +164,8 @@ export default defineComponent({
       const enter = currentKey.value.get('Enter');
 
       if (enter) {
-        const res = player.checkMovingItem();
-        if (res) {
-          gameMap.toggleMovingItem(res, timestamp);
-        }
-        // if (res.platform) {
-        //   gameMap.togglePlatform(res.platform, timestamp);
-        // }
+        const item = player.checkMovingItem();
+        if (item) gameMap.toggleMovingItem(item, timestamp);
       }
 
       player.move(
@@ -149,8 +204,20 @@ export default defineComponent({
       prevTimestamp = timestamp;
       animationFrame = window.requestAnimationFrame(tick);
     }
+    const resolution = ref(
+      `${settings.resolution.width},${settings.resolution.height}`
+    );
+    const levelTexture = ref(true);
+    const wallTexture = ref(true);
+    const fixFact = ref(settings.fixFact);
+    const lookLength = ref(settings.lookLength);
 
     return {
+      lookLength,
+      fixFact,
+      wallTexture,
+      levelTexture,
+      resolution,
       gameMap,
       currentKey,
       mainCanvas,
@@ -175,10 +242,18 @@ export default defineComponent({
 <style lang="scss">
 .home {
   display: flex;
+  flex-direction: row;
+}
+.main,
+.settings {
+  display: flex;
   flex-direction: column;
 }
 .canvas {
   border: 1px black solid;
   background-color: #000;
+}
+.resolution {
+  width: 200px;
 }
 </style>

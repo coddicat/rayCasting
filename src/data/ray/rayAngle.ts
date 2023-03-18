@@ -1,4 +1,4 @@
-import { sign } from '../consts';
+import { sign } from '../exts';
 
 const rad90 = Math.PI / 2;
 

@@ -1,6 +1,6 @@
 import { RayAngle } from './rayAngle';
 import { Axis, Coordinates } from '../types';
-import { sign } from '../consts';
+import { sign } from '../exts';
 
 export default class RayAxis {
   public cellIndex!: number;

@@ -1,8 +1,9 @@
-import consts, { sign } from '../consts';
+import { sign } from '../exts';
 import { GameMap } from '../gameMap/gameMap';
 import PlayerState from '../player/playerState';
 import Ray from '../ray/ray';
 import { RayAngle } from '../ray/rayAngle';
+import settings from '../settings';
 import { MovingItem, Position } from '../types';
 import CollisionHandler from './collisionHandler';
 import MovingItemRayHandler from './movingItemRayHandler';
@@ -48,7 +49,7 @@ export default class Player {
 
       const cos = Math.cos(userAngle);
       const sin = Math.sin(userAngle);
-      const distance = consts.moveSpeed * t;
+      const distance = settings.moveSpeed * t;
       const xDistance = cos * distance;
       const yDistance = sin * distance;
 
@@ -129,6 +130,7 @@ export default class Player {
       alert('dead');
       this.state.position.x = 3;
       this.state.position.y = 3;
+      this.state.setZ(0, false);
       return;
     }
 
@@ -150,7 +152,7 @@ export default class Player {
     }
     if (this.state.turningTimestamp) {
       const t = timestamp - this.state.turningTimestamp;
-      this.state.position.angle += consts.turnSpeed * t * direction;
+      this.state.position.angle += settings.turnSpeed * t * direction;
     }
     this.state.turningTimestamp = timestamp;
   }
