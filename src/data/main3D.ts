@@ -1,7 +1,7 @@
 import settings from './settings';
 import { GameMap } from './gameMap/gameMap';
 import PlayerState from './player/playerState';
-import RayCasting from './ray/rayCasting';
+import rayCasting from './ray/rayCasting';
 import SpriteStore from './sprite/spriteStore';
 
 export class Main3D {
@@ -9,7 +9,7 @@ export class Main3D {
   private interCanvas!: HTMLCanvasElement;
   private imageData!: ImageData;
   private context!: CanvasRenderingContext2D;
-  private rayCasting!: RayCasting;
+  // private rayCasting!: RayCasting;
   private playerState: PlayerState;
   private gameMap: GameMap;
   private spriteStore: SpriteStore;
@@ -46,7 +46,7 @@ export class Main3D {
     if (!ctx) throw 'cannot get context';
     this.context = ctx;
 
-    this.rayCasting = new RayCasting(
+    rayCasting.init(
       this.imageData,
       this.playerState,
       this.spriteStore.spriteObjects,
@@ -55,8 +55,8 @@ export class Main3D {
   }
 
   public renderMain() {
-    this.rayCasting.reset();
-    this.rayCasting.draw3D();
+    rayCasting.reset();
+    rayCasting.draw3D();
     this.interCtx.putImageData(this.imageData, 0, 0);
     this.context.save();
     this.context.clearRect(

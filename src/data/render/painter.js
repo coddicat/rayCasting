@@ -1,54 +1,39 @@
 import { mod } from '../exts';
 import settings from '../settings';
-
-import DynamicAlpha from '../dynamicAlpha';
-import RayCasting from '../ray/rayCasting';
-import { TextureData } from '../texture/textureData';
-import {
-  PixelCounter,
-  StaticLineProps,
-  SpriteLineProps,
-  DynamicLineProps,
-  DynamicSpriteLineProps,
-} from '../types';
 import { painter as refs, render as renderRefs } from '../variables';
+import dynamicAlpha from '../dynamicAlpha';
+import { props as dynamicAlphaProps } from '../dynamicAlpha';
 
-class Painter {
-  private dynamicAlpha;
-  private pixelsCounter: PixelCounter;
-  private rayCastingState: RayCasting;
+let _pixelsCounter;
+let _rayCastingState;
 
-  constructor(
-    pixelsCounter: PixelCounter,
-    dynamicAlpha: DynamicAlpha,
-    rayCastingState: RayCasting
-  ) {
-    this.pixelsCounter = pixelsCounter;
-    this.dynamicAlpha = dynamicAlpha;
-    this.rayCastingState = rayCastingState;
+function _initRefs() {
+  if (renderRefs.y0 > renderRefs.y1) {
+    refs.top = renderRefs.y1 | 0;
+    refs.bottom = renderRefs.y0 | 0;
+  } else {
+    refs.top = renderRefs.y0 | 0;
+    refs.bottom = renderRefs.y1 | 0;
   }
 
-  private initRefs() {
-    if (renderRefs.y0 > renderRefs.y1) {
-      refs.top = renderRefs.y1 | 0;
-      refs.bottom = renderRefs.y0 | 0;
-    } else {
-      refs.top = renderRefs.y0 | 0;
-      refs.bottom = renderRefs.y1 | 0;
-    }
+  if (refs.top < 0) refs.top = 0;
+  if (refs.bottom >= settings.resolution.height)
+    refs.bottom = settings.maxBottom;
 
-    if (refs.top < 0) refs.top = 0;
-    if (refs.bottom >= settings.resolution.height)
-      refs.bottom = settings.maxBottom;
+  refs.dataIndex =
+    Math.imul(refs.top, settings.resolution.width) +
+    (_rayCastingState.displayX | 0);
+}
 
-    refs.dataIndex =
-      Math.imul(refs.top, settings.resolution.width) +
-      (this.rayCastingState.displayX | 0);
-  }
+export default {
+  init: (pixelsCounter, rayCastingState) => {
+    _pixelsCounter = pixelsCounter;
+    _rayCastingState = rayCastingState;
+  },
 
-  public drawLineStatic(props: StaticLineProps): void {
+  drawLineStatic: (props) => {
     if (renderRefs.light < 1) return;
-    this.initRefs();
+    _initRefs();
     refs.alphaMask = renderRefs.light << 24;
     while (refs.top <= refs.bottom) {
       if (settings.data[refs.dataIndex]) {
@@ -62,15 +47,15 @@ class Painter {
       // (color.g << 8) |
       // (color.r);
 
-      if (!this.pixelsCounter.increse()) return;
+      if (!_pixelsCounter.increse()) return;
 
       refs.top++;
       refs.dataIndex += settings.resolution.width;
     }
-  }
+  },
 
-  public drawLineDynamic(props: DynamicLineProps): void {
-    this.initRefs();
+  drawLineDynamic: (props) => {
+    _initRefs();
 
     while (refs.top <= refs.bottom) {
       if (settings.data[refs.dataIndex]) {
@@ -79,31 +64,28 @@ class Painter {
         continue;
       }
 
-      this.dynamicAlpha.setDistanceAlpha(refs.top);
+      dynamicAlpha.setDistanceAlpha(refs.top);
 
-      if (this.dynamicAlpha.alpha < 1) {
+      if (dynamicAlphaProps.alpha < 1) {
         refs.top++;
         refs.dataIndex += settings.resolution.width;
         continue;
       }
 
       settings.data[refs.dataIndex] =
-        props.color | (this.dynamicAlpha.alpha << 24);
+        props.color | (dynamicAlphaProps.alpha << 24);
 
-      if (!this.pixelsCounter.increse()) return;
+      if (!_pixelsCounter.increse()) return;
 
       refs.top++;
       refs.dataIndex += settings.resolution.width;
     }
-  }
+  },
 
-  public drawSpriteLine(
-    props: SpriteLineProps,
-    textureData: TextureData
-  ): void {
+  drawSpriteLine: (props, textureData) => {
     if (renderRefs.light < 1 || renderRefs.y1 === renderRefs.y0) return;
     refs.alphaMask = 0x00ffffff | (renderRefs.light << 24);
-    this.initRefs();
+    _initRefs();
 
     refs.hRate = props.repeatedHeight / (renderRefs.y1 - renderRefs.y0);
     let y = props.revert
@@ -139,16 +121,16 @@ class Painter {
 
       settings.data[refs.dataIndex] = refs.pixel & refs.alphaMask;
 
-      if (!this.pixelsCounter.increse()) return;
+      if (!_pixelsCounter.increse()) return;
 
       refs.top++;
       refs.dataIndex += settings.resolution.width;
       y++;
     }
-  }
+  },
 
-  public setSpriteIndexBySideX_positive(props: DynamicSpriteLineProps): void {
-    refs.fixCosDiff = this.rayCastingState.rayAngle.fixCos * refs.diff;
+  setSpriteIndexBySideX_positive: (props) => {
+    refs.fixCosDiff = _rayCastingState.rayAngle.fixCos * refs.diff;
     refs.sideX =
       props.rayState.sideX - refs.fixCosDiff + (refs.fixCosDiff | 0) + 1;
     refs.spriteX =
@@ -157,9 +139,9 @@ class Painter {
     refs.fixedX =
       props.textureData.maxY - mod(refs.spriteY, props.textureData.height);
     refs.index = Math.imul(refs.fixedX, props.textureData.width) + refs.spriteX;
-  }
-  public setSpriteIndexBySideY_positive(props: DynamicSpriteLineProps): void {
-    refs.fixSinDiff = this.rayCastingState.rayAngle.fixSin * refs.diff;
+  },
+  setSpriteIndexBySideY_positive: (props) => {
+    refs.fixSinDiff = _rayCastingState.rayAngle.fixSin * refs.diff;
     refs.side =
       props.rayState.sideX - refs.fixSinDiff + (refs.fixSinDiff | 0) + 1;
     refs.spriteY = (refs.side - (refs.side | 0)) * props.textureData.height;
@@ -167,9 +149,9 @@ class Painter {
     refs.fixedX =
       props.textureData.maxX - mod(refs.spriteX, props.textureData.width);
     refs.index = Math.imul(refs.spriteY, props.textureData.width) + refs.fixedX;
-  }
-  public setSpriteIndexBySideX_negative(props: DynamicSpriteLineProps): void {
-    refs.fixCosDiff = this.rayCastingState.rayAngle.fixCos * refs.diff;
+  },
+  setSpriteIndexBySideX_negative: (props) => {
+    refs.fixCosDiff = _rayCastingState.rayAngle.fixCos * refs.diff;
     refs.sideX =
       props.rayState.sideX - refs.fixCosDiff + (refs.fixCosDiff | 0) + 1;
     refs.spriteX =
@@ -177,25 +159,25 @@ class Painter {
     refs.spriteY = (refs.diff * props.textureData.factY) | 0;
     refs.fixedX = mod(refs.spriteY, props.textureData.height);
     refs.index = Math.imul(refs.fixedX, props.textureData.width) + refs.spriteX;
-  }
-  public setSpriteIndexBySideY_negative(props: DynamicSpriteLineProps): void {
-    refs.fixSinDiff = this.rayCastingState.rayAngle.fixSin * refs.diff;
+  },
+  setSpriteIndexBySideY_negative: (props) => {
+    refs.fixSinDiff = _rayCastingState.rayAngle.fixSin * refs.diff;
     refs.side =
       props.rayState.sideX - refs.fixSinDiff + (refs.fixSinDiff | 0) + 1;
     refs.spriteY = (refs.side - (refs.side | 0)) * props.textureData.height;
     refs.spriteX = (refs.diff * props.textureData.factX) | 0;
     refs.fixedX = mod(refs.spriteX, props.textureData.width);
     refs.index = Math.imul(refs.spriteY, props.textureData.width) + refs.fixedX;
-  }
+  },
 
-  public drawSpriteLineDynamic(props: DynamicSpriteLineProps): void {
-    this.initRefs();
+  drawSpriteLineDynamic: (props) => {
+    _initRefs();
 
     if (props.textureData.rayTimestamp !== props.rayState.rayAngle.timestamp) {
       props.textureData.factX =
-        props.textureData.width * this.rayCastingState.rayAngle.fixCosAbs;
+        props.textureData.width * _rayCastingState.rayAngle.fixCosAbs;
       props.textureData.factY =
-        props.textureData.height * this.rayCastingState.rayAngle.fixSinAbs;
+        props.textureData.height * _rayCastingState.rayAngle.fixSinAbs;
 
       props.textureData.rayTimestamp = props.rayState.rayAngle.timestamp;
     }
@@ -208,16 +190,16 @@ class Painter {
         continue;
       }
 
-      this.dynamicAlpha.setDistanceAlpha(refs.top);
+      dynamicAlpha.setDistanceAlpha(refs.top);
 
-      if (this.dynamicAlpha.alpha < 1) {
+      if (dynamicAlphaProps.alpha < 1) {
         refs.top++;
         refs.dataIndex += settings.resolution.width;
         continue;
       }
 
       refs.diff = Math.abs(
-        props.rayState.fixedDistance - this.dynamicAlpha.distance
+        props.rayState.fixedDistance - dynamicAlphaProps.distance
       );
 
       props.rayState.spriteIndexSetter.call(this, props);
@@ -231,14 +213,12 @@ class Painter {
       }
 
       settings.data[refs.dataIndex] =
-        (this.dynamicAlpha.alpha << 24) | (refs.pixel & 0x00ffffff);
+        (dynamicAlphaProps.alpha << 24) | (refs.pixel & 0x00ffffff);
 
-      if (!this.pixelsCounter.increse()) return;
+      if (!_pixelsCounter.increse()) return;
 
       refs.top++;
       refs.dataIndex += settings.resolution.width;
     }
-  }
-}
-
-export default Painter;
+  },
+};

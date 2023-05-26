@@ -1,7 +1,6 @@
-import Painter from '../render/painter';
+import painter from '../render/painter';
 import { RayAngle } from '../ray/rayAngle';
 import RayAxis from '../ray/rayAxis';
-import { CellHandler } from '../ray/rayHandler';
 import {
   Coordinates,
   RayAction,
@@ -11,7 +10,7 @@ import {
 } from '../types';
 
 export default class Ray {
-  private cellHandler: CellHandler;
+  private cellHandler: any;
   private action!: RayAction;
 
   public cellPosition!: Position;
@@ -27,11 +26,7 @@ export default class Ray {
 
   public spriteIndexSetter!: (props: DynamicSpriteLineProps) => void;
 
-  constructor(
-    coordinates: Coordinates,
-    rayAngle: RayAngle,
-    cellHandler: CellHandler
-  ) {
+  constructor(coordinates: Coordinates, rayAngle: RayAngle, cellHandler: any) {
     this.cellHandler = cellHandler;
 
     this.rayAngle = rayAngle;
@@ -100,14 +95,14 @@ export default class Ray {
     if (this.side === Axis.x) {
       this.spriteIndexSetter =
         this.rayAngle.sinSign > 0
-          ? Painter.prototype.setSpriteIndexBySideX_positive
-          : Painter.prototype.setSpriteIndexBySideX_negative;
+          ? painter.setSpriteIndexBySideX_positive
+          : painter.setSpriteIndexBySideX_negative;
       this.distance = this.axisY.nextStep();
     } else {
       this.spriteIndexSetter =
         this.rayAngle.cosSign > 0
-          ? Painter.prototype.setSpriteIndexBySideY_positive
-          : Painter.prototype.setSpriteIndexBySideY_negative;
+          ? painter.setSpriteIndexBySideY_positive
+          : painter.setSpriteIndexBySideY_negative;
       this.distance = this.axisX.nextStep();
     }
 

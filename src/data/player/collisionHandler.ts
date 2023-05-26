@@ -1,10 +1,10 @@
 import { GameMap } from '../gameMap/gameMap';
 import Ray from '../ray/ray';
-import { CellHandler } from '../ray/rayHandler';
+//import { CellHandler } from '../ray/rayHandler';
 import { Position, RayAction } from '../types';
 import PlayerState from './playerState';
 
-export default class CollisionHandler implements CellHandler {
+export default class CollisionHandler {
   private state: PlayerState;
   private gameMap: GameMap;
 

@@ -1,9 +1,9 @@
 import { GameMap } from '../gameMap/gameMap';
 import Ray from '../ray/ray';
-import { CellHandler } from '../ray/rayHandler';
+//import { CellHandler } from '../ray/rayHandler';
 import { MovingItem, RayAction } from '../types';
 
-export default class MovingItemRayHandler implements CellHandler {
+export default class MovingItemRayHandler {
   public item?: MovingItem;
   private gameMap: GameMap;
 
