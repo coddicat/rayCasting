@@ -1,4 +1,3 @@
-import Ray from './ray/ray';
 import { Wall } from './types';
 
 export const painter = {

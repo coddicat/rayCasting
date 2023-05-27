@@ -3,16 +3,20 @@ import TextureSet from '../../texture/textureSet';
 import { TextureType } from '../../texture/textureStore';
 import { ItemSet, MovingItem, MovingItemProps, Wall } from '../../types';
 
+const _top = 5;
+const _bottom = 1;
+const _middle = 3;
+
 const getDoorLevelTop = () => ({
   color: 0x02f00,
-  bottom: 2.5,
-  texture: null,
+  bottom: _middle,
+  texture: new Texture(TextureType.FloorMetal, 1),
 });
 
 const getDoorLevelBottom = () => ({
   color: 0x002f00,
-  bottom: 2.5,
-  texture: null,
+  bottom: _middle,
+  texture: new Texture(TextureType.FloorMetal, 1),
 });
 
 const getDoorWallTop = (
@@ -21,8 +25,8 @@ const getDoorWallTop = (
   startY: number
 ): Wall => ({
   color: 0x0000ff,
-  top: 4,
-  bottom: 2,
+  top: _top,
+  bottom: _middle,
   render: true,
   texture: new TextureSet(TextureType.Door, 2, startX, startY, repeatX, true),
 });
@@ -32,8 +36,8 @@ const getDoorWallBottom = (
   startY: number
 ): Wall => ({
   color: 0x0000ff,
-  top: 2,
-  bottom: 0,
+  top: _middle,
+  bottom: _bottom,
   render: true,
   texture: new TextureSet(TextureType.Door, 2, startX, startY, repeatX, false),
 });
@@ -54,12 +58,12 @@ export const doorMovingItemProps: MovingItemProps = {
       s = 2;
       finish = true;
     }
-    const top = item.state ? 4 - s : 2 + s;
-    const bottom = item.state ? s : 2 - s;
+    const top = item.state ? _top - s : _middle + s;
+    const bottom = item.state ? s + 1 : 3 - s;
 
     const mapItem = item.set.mapItem;
-    const topWall = mapItem.walls.find((w) => w.top === 4);
-    const bottomWall = mapItem.walls.find((w) => w.bottom === 0);
+    const topWall = mapItem.walls.find((w) => w.top === _top);
+    const bottomWall = mapItem.walls.find((w) => w.bottom === _bottom);
     const topLevel = mapItem.levels[0];
     const bottomLevel = mapItem.levels[1];
     bottomWall!.top = bottom;
@@ -74,16 +78,9 @@ export const doorMovingItemProps: MovingItemProps = {
 export default (repeatX: number, startX: number, startY: number) => ({
   walls: [
     {
-      color: 0xcccccc,
-      top: 6,
-      bottom: 5,
-      render: true,
-      texture: new Texture(TextureType.WallBriks, 1),
-    },
-    {
       color: 0xc8c8dc,
-      top: 5,
-      bottom: 4,
+      top: _bottom,
+      bottom: 0,
       render: true,
       texture: new Texture(TextureType.WallWood, 1),
     },

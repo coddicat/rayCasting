@@ -1,6 +1,7 @@
 import { TextureData } from './textureData';
 
 export enum TextureType {
+  FloorMetal,
   FloorNumber,
   WallBriks,
   DukeFront,
@@ -10,10 +11,15 @@ export enum TextureType {
   WallWood,
   Parquet,
   Ground,
+  Sand,
   Door,
+  WelcomeWall,
+  Ceil,
+  Window,
 }
 
 const textureFiles = new Map<TextureType, string>([
+  [TextureType.FloorMetal, require('../../assets/floor2.png')],
   [TextureType.DukeFront, require('../../assets/duke_front.png')],
   [TextureType.DukeBack, require('../../assets/duke_back.png')],
   [TextureType.DukeSide, require('../../assets/duke_side.png')],
@@ -24,6 +30,10 @@ const textureFiles = new Map<TextureType, string>([
   [TextureType.Parquet, require('../../assets/parquet.png')],
   [TextureType.Ground, require('../../assets/ground.png')],
   [TextureType.Door, require('../../assets/door.png')],
+  [TextureType.WelcomeWall, require('../../assets/welcome_wall.png')],
+  [TextureType.Ceil, require('../../assets/ceil.png')],
+  [TextureType.Sand, require('../../assets/sand.png')],
+  [TextureType.Window, require('../../assets/window.png')],
 ]);
 
 const store = {

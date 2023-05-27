@@ -2,9 +2,10 @@ import { TextureData } from './textureData';
 import { TextureType } from './textureStore';
 
 export default class Texture {
-  constructor(type: TextureType, repeat: number) {
+  constructor(type: TextureType, repeat: number, transparent = false) {
     this.type = type;
     this.repeat = repeat;
+    this.transparent = transparent;
   }
 
   public type: TextureType;
@@ -14,6 +15,7 @@ export default class Texture {
   public startX?: number;
   public startY?: number;
   public data?: TextureData;
+  public transparent: boolean;
 
   public setData(data: TextureData): void {
     this.data = data;

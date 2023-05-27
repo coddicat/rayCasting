@@ -1,3 +1,5 @@
+import Texture from '@/data/texture/texture';
+import { TextureType } from '@/data/texture/textureStore';
 import { MapItem } from '@/data/types';
 
 export default {
@@ -7,14 +9,14 @@ export default {
       top: 5,
       bottom: 4,
       render: true,
-      texture: null,
+      texture: new Texture(TextureType.WallWood, 1),
     },
     {
       color: 0xffffff,
       top: 0.25,
       bottom: 0,
       render: true,
-      texture: null,
+      texture: new Texture(TextureType.WallWood, 1),
     },
     //for collision
     {

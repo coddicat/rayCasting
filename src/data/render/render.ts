@@ -62,7 +62,7 @@ class Render {
             ((refs.wall!.top - refs.wall!.bottom) *
               refs.wall!.texture.data.height) /
             refs.wall!.texture.repeat,
-          checkAlpha: false,
+          checkAlpha: refs.wall!.texture.transparent,
           revert: refs.wall!.texture.revert,
         },
         refs.wall!.texture?.data

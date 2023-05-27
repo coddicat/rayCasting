@@ -11,19 +11,19 @@ import { TextureType } from '../../texture/textureStore';
 const getLevelTop = (): Level => ({
   color: 0x02f00,
   bottom: 0.3,
-  texture: null,
+  texture: new Texture(TextureType.FloorMetal, 1),
 });
 
 const getLevelBottom = (): Level => ({
   color: 0x002f00,
   bottom: 0,
-  texture: null,
+  texture: new Texture(TextureType.FloorMetal, 1),
 });
 
 const getLevelFloor = (): Level => ({
   color: 0,
   bottom: 0,
-  texture: new Texture(TextureType.FloorNumber, 1),
+  texture: new Texture(TextureType.Ground, 1),
   name: 'floor',
 });
 
@@ -34,7 +34,7 @@ export default (): MapItem => ({
       top: 0.3,
       bottom: 0,
       render: true,
-      texture: new Texture(TextureType.WallBriks, 1),
+      texture: new Texture(TextureType.FloorMetal, 1),
     },
   ],
   levels: [getLevelBottom(), getLevelTop(), getLevelFloor()],
@@ -48,7 +48,7 @@ const initMovingItem = (set: ItemSet, props: MovingItemProps): MovingItem => ({
   state: false,
 });
 
-const height = 5;
+const height = 6;
 const speed = 0.01;
 
 export const platformMovingItemProps: MovingItemProps = {

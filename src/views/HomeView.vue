@@ -1,6 +1,9 @@
 <template>
   <div class="home">
     <div class="settings">
+      <label>
+        <span>fps: {{ fpsDisplay }}</span>
+      </label>
       <select class="resolution" v-model="resolution">
         <option value="2048,1536">2048x1536</option>
         <option value="1024,768">1024x768</option>
@@ -26,15 +29,7 @@
       </label>
     </div>
     <div class="main">
-      <span>fps: {{ fpsDisplay }}</span>
-      <div>
-        <canvas
-          width="800"
-          height="600"
-          class="canvas"
-          ref="mainCanvas"
-        ></canvas>
-      </div>
+      <canvas width="800" height="600" class="canvas" ref="mainCanvas"></canvas>
     </div>
     <div></div>
   </div>
@@ -254,6 +249,11 @@ export default defineComponent({
   background-color: #000;
 }
 .resolution {
+  width: 200px;
+}
+.settings {
+  margin-left: -90px;
+  margin-right: 10px;
   width: 200px;
 }
 </style>

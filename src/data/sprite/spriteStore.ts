@@ -34,11 +34,11 @@ const sprites = [
     [TextureType.DukeFront, TextureType.DukeBack, TextureType.DukeSide],
     1
   ),
-  getBanan(39, 3.5, 3.1),
-  getBanan(28.5, 1.5, 0.6),
-  getBanan(28.5, 1.5, 1.2),
-  getBanan(28.5, 1.5, 1.8),
-  getBanan(28.5, 1.5, 2.4),
+  //getBanan(39, 3.5, 3.1),
+  getBanan(21.5, 8.5, 0.6),
+  getBanan(21.5, 8.5, 1.2),
+  getBanan(21.5, 8.5, 1.8),
+  getBanan(21.5, 8.5, 2.4),
 ];
 
 export default class SpriteStore {
